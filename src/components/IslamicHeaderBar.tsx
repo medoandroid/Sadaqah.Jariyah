@@ -3,6 +3,8 @@ import { Calendar, Heart, Sparkles, BookOpen, User, Wifi, WifiOff, Clock, Compas
 import { PWAInstallButton } from './PWAInstallButton';
 import { userProfileService, UserProfile } from '../services/userProfileService';
 import { useOfflineSync } from '../hooks/useOfflineSync';
+import { calculatePrayerTimes, POPULAR_CITIES } from '../utils/prayerTimes';
+import { storageService } from '../services/storageService';
 
 export const IslamicHeaderBar: React.FC<{
   onOpenKhatmah: () => void;
@@ -11,9 +13,53 @@ export const IslamicHeaderBar: React.FC<{
   onOpenOfflineManager?: () => void;
   onOpenPrayerTimes?: () => void;
   onOpenBackup?: () => void;
-}> = ({ onOpenKhatmah, onOpenDedication, onOpenProfile, onOpenOfflineManager, onOpenPrayerTimes, onOpenBackup }) => {
+  onOpenEgyptianCompanion?: () => void;
+}> = ({
+  onOpenKhatmah,
+  onOpenDedication,
+  onOpenProfile,
+  onOpenOfflineManager,
+  onOpenPrayerTimes,
+  onOpenBackup,
+  onOpenEgyptianCompanion,
+}) => {
   const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
   const { isOnline, isFullyOfflineReady, downloadedSurahsCount } = useOfflineSync();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextPrayerPreview = useMemo(() => {
+    try {
+      const cityId = storageService.getString('prayer_selected_city', 'cairo');
+      const customCoords = storageService.get<{ lat: number; lng: number } | null>('prayer_custom_coords', null);
+      const methodId = storageService.getNumber('prayer_selected_method', 5);
+      
+      let lat = 30.0444;
+      let lng = 31.2357;
+      let tz = -now.getTimezoneOffset() / 60;
+
+      if (customCoords) {
+        lat = customCoords.lat;
+        lng = customCoords.lng;
+      } else {
+        const found = POPULAR_CITIES.find((c) => c.id === cityId);
+        if (found) {
+          lat = found.latitude;
+          lng = found.longitude;
+          tz = found.timezone;
+        }
+      }
+
+      const res = calculatePrayerTimes(now, lat, lng, tz, methodId);
+      return res.nextPrayer;
+    } catch (e) {
+      return null;
+    }
+  }, [now]);
 
   useEffect(() => {
     return userProfileService.subscribe((updated) => {
@@ -89,16 +135,37 @@ export const IslamicHeaderBar: React.FC<{
             <span>ختمة القرآن (٣٠ جزءاً)</span>
           </button>
 
-          {/* Prayer Times & Qibla Modal Trigger */}
+          {/* Egyptian Companion Trigger */}
+          {onOpenEgyptianCompanion && (
+            <button
+              onClick={onOpenEgyptianCompanion}
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 hover:text-amber-100 transition-colors cursor-pointer text-[11px] font-bold"
+              title="رفيقك الطيب (بالمصري): فضفضة وتشجيع على القرآن ونصائح من القلب"
+            >
+              <span>🇪🇬</span>
+              <span className="hidden sm:inline">رفيقك بالمصري</span>
+              <span className="sm:hidden">فضفضة</span>
+            </button>
+          )}
+
+          {/* Prayer Times & Qibla Modal Trigger with 12-Hour format */}
           {onOpenPrayerTimes && (
             <button
               onClick={onOpenPrayerTimes}
-              className="flex items-center gap-1 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
-              title="مواقيت الصلاة واتجاه القبلة"
+              className="flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
+              title="مواقيت الصلاة واتجاه القبلة (نظام ١٢ ساعة)"
             >
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">مواقيت الصلاة والقبلة</span>
-              <span className="sm:hidden">المواقيت</span>
+              {nextPrayerPreview ? (
+                <span>
+                  {nextPrayerPreview.arabicName} <strong className="text-amber-300">{nextPrayerPreview.time}</strong>
+                </span>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">مواقيت الصلاة (١٢ س)</span>
+                  <span className="sm:hidden">المواقيت</span>
+                </>
+              )}
             </button>
           )}
 

@@ -19,6 +19,7 @@ import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import { OfflineQuranModal } from './components/OfflineQuranModal';
 import { PrayerTimesModal } from './components/PrayerTimesModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
+import { EgyptianCompanionModal } from './components/EgyptianCompanionModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sparkles } from 'lucide-react';
 
@@ -80,6 +81,7 @@ function AppContent() {
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState<boolean>(false);
   const [isPrayerTimesOpen, setIsPrayerTimesOpen] = useState<boolean>(false);
   const [isBackupOpen, setIsBackupOpen] = useState<boolean>(false);
+  const [isEgyptianCompanionOpen, setIsEgyptianCompanionOpen] = useState<boolean>(false);
   const [dedicationPersonId, setDedicationPersonId] = useState<string>('all');
   const [dedicationType, setDedicationType] = useState<'surah' | 'tasbeeh' | 'dua' | 'khatmah'>('dua');
 
@@ -123,6 +125,7 @@ function AppContent() {
         setIsOfflineModalOpen(false);
         setIsPrayerTimesOpen(false);
         setIsBackupOpen(false);
+        setIsEgyptianCompanionOpen(false);
       }
     };
 
@@ -162,6 +165,7 @@ function AppContent() {
         onOpenOfflineManager={() => setIsOfflineModalOpen(true)}
         onOpenPrayerTimes={() => setIsPrayerTimesOpen(true)}
         onOpenBackup={() => setIsBackupOpen(true)}
+        onOpenEgyptianCompanion={() => setIsEgyptianCompanionOpen(true)}
       />
 
       {/* Floating Liquid Glass Navigation Bar */}
@@ -192,6 +196,7 @@ function AppContent() {
             onOpenPrayerTimes={() => setIsPrayerTimesOpen(true)}
             onOpenBackup={() => setIsBackupOpen(true)}
             onOpenSearch={() => setIsSearchOpen(true)}
+            onOpenEgyptianCompanion={() => setIsEgyptianCompanionOpen(true)}
           />
         )}
 
@@ -326,6 +331,18 @@ function AppContent() {
       <BackupRestoreModal
         isOpen={isBackupOpen}
         onClose={() => setIsBackupOpen(false)}
+      />
+
+      {/* Egyptian Companion & Heartfelt Advice Modal */}
+      <EgyptianCompanionModal
+        isOpen={isEgyptianCompanionOpen}
+        onClose={() => setIsEgyptianCompanionOpen(false)}
+        onNavigateTab={(tab, extra) => {
+          setActiveTab(tab);
+          if (extra?.surahNumber) {
+            setSelectedSurahNumber(extra.surahNumber);
+          }
+        }}
       />
 
       {/* Floating Offline & Reconnected Toast Banner */}

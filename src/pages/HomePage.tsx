@@ -24,7 +24,10 @@ import {
   Moon,
   Sun,
   CheckCircle2,
-  Bookmark
+  Bookmark,
+  Shuffle,
+  Quote,
+  MessageCircle
 } from 'lucide-react';
 import { HONORED_PERSONS, GENERAL_DEDICATION_DUA } from '../data/persons';
 import { Star8Rosette, ArabesqueDivider, BismillahHeader } from '../components/IslamicDecoration';
@@ -35,41 +38,14 @@ import { userProfileService, UserProfile, UNCLE_NAMES, TargetUncleId } from '../
 import { playTasbeehBeadSound, playPeacefulChime } from '../utils/soundEffects';
 import { calculatePrayerTimes, POPULAR_CITIES, PrayerTimesResult } from '../utils/prayerTimes';
 import { dailyWirdService } from '../services/dailyWirdService';
-
-const DAILY_TADABBUR_LIST = [
-  {
-    surahNumber: 2,
-    ayahNumber: 186,
-    surahName: 'البقرة',
-    text: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ ۖ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ',
-    tadabbur: 'لم يقل الله عز وجل "فقل إني قريب"، بل تولى الإجابة بنفسه مبيناً كمال قربه وسرعة إجابته؛ فلا واسطة ولا حجاب بينك وبين ربك في الدعاء.',
-    action: 'ارفع كفيك الآن وتضرع بدعوة من قلبك لمن تحب واهدِ ثوابها لأرواحهم الكريمة.'
-  },
-  {
-    surahNumber: 94,
-    ayahNumber: 5,
-    surahName: 'الشرح',
-    text: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا',
-    tadabbur: 'العسر معرف بال التعريف (عسر واحد)، واليسر منكر مكرر؛ ولن يغلب عسر يسرين أبداً، واليسر ليس بعد العسر بل ملازم ومصاحب له.',
-    action: 'استبشر بلطف الله الخفي، وأحسن الظن بمولاك في تفريج كل كرب وفتح كل باب مغلق.'
-  },
-  {
-    surahNumber: 65,
-    ayahNumber: 3,
-    surahName: 'الطلاق',
-    text: 'وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ ۚ إِنَّ اللَّهَ بَالِغُ أَمْرِهِ',
-    tadabbur: 'كفاية الله لعبده المتوكل لا حصر لها، وكل أمر قدره الله في الأزل سينفذ بحكمته ورحمته في وقته الأجمل.',
-    action: 'فوّض أمرك كله لله، واستودعه أهلك وآخرتك ورزقك بقلب مطمئن ساكن.'
-  },
-  {
-    surahNumber: 39,
-    ayahNumber: 53,
-    surahName: 'الزمر',
-    text: 'قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا',
-    tadabbur: 'أرجى آية في كتاب الله؛ ناداهم بـ "يا عبادي" تلطفاً وتودداً رغم إسرافهم، ونهاهم عن اليأس من رحمته ومغفرته الشاملة.',
-    action: 'جدد استغفارك وتوبتك في هذه اللحظة، فباب الكريم مفتوح لا يُغلق أبداً.'
-  }
-];
+import { TadabburStationCard } from '../components/TadabburStationCard';
+import {
+  EGYPTIAN_MOODS,
+  EGYPTIAN_COMPANION_ENTRIES,
+  getEgyptianEntryByMood,
+  EgyptianMoodKey,
+  EgyptianCompanionEntry,
+} from '../data/egyptianCompanionData';
 
 interface HomePageProps {
   setActiveTab: (tab: string) => void;
@@ -80,6 +56,7 @@ interface HomePageProps {
   onOpenPrayerTimes?: () => void;
   onOpenBackup?: () => void;
   onOpenSearch?: () => void;
+  onOpenEgyptianCompanion?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -91,6 +68,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOpenPrayerTimes,
   onOpenBackup,
   onOpenSearch,
+  onOpenEgyptianCompanion,
 }) => {
   const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
 
@@ -114,15 +92,32 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, []);
 
   const prayerResult: PrayerTimesResult = useMemo(() => {
-    const selectedCityId = storageService.getString('prayer_selected_city', 'makkah');
+    const selectedCityId = storageService.getString('prayer_selected_city', 'cairo');
     const customCoords = storageService.get<{ lat: number; lng: number } | null>('prayer_custom_coords', null);
+    const methodId = storageService.getNumber('prayer_selected_method', 5);
 
     if (customCoords) {
-      return calculatePrayerTimes(nowDate, customCoords.lat, customCoords.lng, -nowDate.getTimezoneOffset() / 60);
+      return calculatePrayerTimes(nowDate, customCoords.lat, customCoords.lng, -nowDate.getTimezoneOffset() / 60, methodId);
     }
     const city = POPULAR_CITIES.find((c) => c.id === selectedCityId) || POPULAR_CITIES[0];
-    return calculatePrayerTimes(nowDate, city.latitude, city.longitude, city.timezone);
+    return calculatePrayerTimes(nowDate, city.latitude, city.longitude, city.timezone, methodId);
   }, [nowDate]);
+
+  // Egyptian Companion Quick Widget State
+  const [egyptianMood, setEgyptianMood] = useState<EgyptianMoodKey>('lazy_quran');
+  const [egyptianEntry, setEgyptianEntry] = useState<EgyptianCompanionEntry>(() => getEgyptianEntryByMood('lazy_quran'));
+
+  const handleSelectEgyptianMood = (mood: EgyptianMoodKey) => {
+    playTasbeehBeadSound();
+    setEgyptianMood(mood);
+    setEgyptianEntry(getEgyptianEntryByMood(mood));
+  };
+
+  const handleNextEgyptianEntry = () => {
+    playTasbeehBeadSound();
+    setEgyptianEntry(getEgyptianEntryByMood(egyptianMood, egyptianEntry.id));
+    showToast('تم استدعاء نصيحة طيبة جديدة 🌿');
+  };
 
   // Daily Wird Tracker Checklist
   const todayKey = useMemo(() => {
@@ -219,8 +214,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
   }, [nowDate, onSelectSurah, setActiveTab]);
 
-  const [currentTadabburIndex, setCurrentTadabburIndex] = useState<number>(0);
-  const [copiedTadabbur, setCopiedTadabbur] = useState<boolean>(false);
   const [quickTasbeehCount, setQuickTasbeehCount] = useState<number>(() => {
     return storageService.getNumber('tasbeeh_total', 0);
   });
@@ -229,20 +222,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 2500);
-  };
-
-  const currentTadabbur = DAILY_TADABBUR_LIST[currentTadabburIndex];
-
-  const handleNextTadabbur = () => {
-    setCurrentTadabburIndex((prev) => (prev + 1) % DAILY_TADABBUR_LIST.length);
-  };
-
-  const handleCopyTadabbur = () => {
-    const text = `﴿${currentTadabbur.text}﴾ [سورة ${currentTadabbur.surahName} : ${currentTadabbur.ayahNumber}]\n\n✨ ومضة تدبر: ${currentTadabbur.tadabbur}\n🌿 أثر وتطبيق: ${currentTadabbur.action}`;
-    navigator.clipboard.writeText(text);
-    setCopiedTadabbur(true);
-    showToast('تم نسخ ومضة التدبر لمشاركتها');
-    setTimeout(() => setCopiedTadabbur(false), 2000);
   };
 
   const handleQuickDhikr = (phrase: string) => {
@@ -395,6 +374,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {
+      id: 'companion',
+      title: 'رفيقك الطيب (بالمصري)',
+      subtitle: 'فضفضة وتشجيع على القرآن وزقة للورد اليومي بأسلوب مصري حنين وخفيف ع القلب مع نصائح إيمانية.',
+      icon: MessageCircle,
+      category: 'فضفضة وتشجيع',
+      actionText: 'تحدث مع رفيقك 🇪🇬',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
       id: 'backup',
       title: 'النسخ الاحتياطي وحفظ البيانات',
       subtitle: 'تصدير نسخة احتياطية لبياناتك وعلاماتك وأدعيتك واسترجاعها بأمان على أي جهاز دون فقدان.',
@@ -418,20 +406,32 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
-          {/* Top Live Prayer Status & Universal Search Trigger Pill */}
+          {/* Top Live Prayer Status & Universal Search & Egyptian Companion Trigger Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs">
             {prayerResult && (
               <button
                 onClick={onOpenPrayerTimes}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-900 dark:text-amber-300 font-medium hover:bg-amber-500/15 transition-all cursor-pointer shadow-xs group"
-                title="اضغط لعرض مواقيت الصلوات اليومية وبوصلة القبلة"
+                title="اضغط لعرض مواقيت الصلوات اليومية وبوصلة القبلة (نظام ١٢ ساعة)"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>
-                  الصلاة القادمة: <strong>{prayerResult.nextPrayer.arabicName}</strong> (متبقي {prayerResult.nextPrayer.remainingFormatted})
+                  الصلاة القادمة: <strong>{prayerResult.nextPrayer.arabicName} ({prayerResult.nextPrayer.time})</strong> (متبقي {prayerResult.nextPrayer.remainingFormatted})
                 </span>
-                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت ↗</span>
+                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت والقبلة ↗</span>
+              </button>
+            )}
+
+            {onOpenEgyptianCompanion && (
+              <button
+                onClick={onOpenEgyptianCompanion}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-950 dark:text-amber-200 font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                title="رفيقك الطيب (بالمصري): فضفضة، زقة للمصحف، ونصائح من القلب"
+              >
+                <span>🇪🇬</span>
+                <span>رفيقك بالمصري (فضفضة وذكر)</span>
+                <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
               </button>
             )}
 
@@ -790,87 +790,133 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
-      {/* Interactive Ayah & Tadabbur of the Day Card */}
+      {/* Professional Tadabbur & Daily Quranic Station */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-amber-50/30 to-amber-100/20 dark:from-stone-900 dark:via-stone-900/90 dark:to-amber-950/20 border border-amber-600/30 dark:border-amber-500/20 shadow-lg p-6 sm:p-8 space-y-5 text-right">
+        <TadabburStationCard
+          onSelectSurah={onSelectSurah}
+          onOpenMushaf={() => setActiveTab('mushaf')}
+          showToast={showToast}
+        />
+      </section>
+
+      {/* Egyptian Companion Interactive Corner (رفيقك الطيب بالمصري) */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCFBF8] via-amber-50/50 to-amber-100/30 dark:from-stone-900 dark:via-stone-900/90 dark:to-amber-950/20 border border-amber-500/30 dark:border-amber-600/30 shadow-md p-5 sm:p-7 space-y-4 text-right">
           
-          {/* Header Strip */}
-          <div className="flex items-center justify-between gap-3 border-b border-amber-200/50 dark:border-stone-800 pb-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
-              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>آية ومحطة تدبر اليوم</span>
-              <span className="text-stone-400 font-normal">
-                (سورة {currentTadabbur.surahName} : الآية {currentTadabbur.ayahNumber})
-              </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-amber-500/20 dark:border-stone-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">🇪🇬</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-amiri text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
+                    رفيقك الطيب (بالمصري) 🌿
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30">
+                    فضفضة وذكر
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 dark:text-stone-400">
+                  اختر حالتك دلوقتي وهتلاقي تشجيع للمصحف ونصح من القلب لقلبك
+                </p>
+              </div>
             </div>
 
-            <button
-              onClick={handleNextTadabbur}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700 text-amber-900 dark:text-amber-300 border border-amber-200/60 dark:border-stone-700 text-xs font-semibold transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>تدبر آية أخرى</span>
-            </button>
-          </div>
-
-          {/* Verse Text */}
-          <div className="p-4 sm:p-6 rounded-2xl bg-white/80 dark:bg-stone-950/60 border border-amber-200/40 dark:border-stone-800/80">
-            <p className="font-amiri text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 dark:text-stone-100 leading-loose text-center">
-              ﴿{currentTadabbur.text}﴾
-            </p>
-          </div>
-
-          {/* Tadabbur Insight & Action Step */}
-          <div className="space-y-2.5 bg-amber-500/10 dark:bg-amber-950/25 p-4 sm:p-5 rounded-2xl border border-amber-500/20 text-right">
-            <div>
-              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block mb-1">
-                💡 ومضة تدبر:
-              </span>
-              <p className="text-sm sm:text-base text-stone-800 dark:text-stone-200 font-sans leading-relaxed">
-                {currentTadabbur.tadabbur}
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-amber-500/15">
-              <span className="text-xs font-bold text-amber-800 dark:text-amber-400 block mb-0.5">
-                🌿 أثر وتطبيق في يومك:
-              </span>
-              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-sans">
-                {currentTadabbur.action}
-              </p>
-            </div>
-          </div>
-
-          {/* Actions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
               <button
-                onClick={handleCopyTadabbur}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-all cursor-pointer font-medium"
+                onClick={handleNextEgyptianEntry}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs"
               >
-                {copiedTadabbur ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedTadabbur ? 'تم النسخ' : 'نسخ التدبر'}</span>
+                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                <span>نصيحة تانية 🔄</span>
+              </button>
+
+              {onOpenEgyptianCompanion && (
+                <button
+                  onClick={onOpenEgyptianCompanion}
+                  className="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  فتح الرفيق كاملاً ↗
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Mood Selector Buttons */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {EGYPTIAN_MOODS.map((m) => {
+              const isSelected = egyptianMood === m.key;
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => handleSelectEgyptianMood(m.key)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shrink-0 ${
+                    isSelected
+                      ? 'bg-amber-600 text-white shadow-xs font-bold'
+                      : 'bg-white/80 dark:bg-stone-800 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400'
+                  }`}
+                >
+                  <span>{m.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Egyptian Advice Snippet */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-950/70 border border-amber-500/20 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                ✨ {egyptianEntry.title}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 font-bold">
+                {egyptianEntry.badge}
+              </span>
+            </div>
+
+            <p className="font-sans text-sm sm:text-base text-stone-800 dark:text-stone-200 leading-relaxed">
+              "{egyptianEntry.egyptianText}"
+            </p>
+
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 dark:border-stone-850">
+              <button
+                onClick={() => {
+                  playPeacefulChime();
+                  if (egyptianEntry.actionType === 'quran' && egyptianEntry.targetSurahNumber) {
+                    onSelectSurah(egyptianEntry.targetSurahNumber);
+                    setActiveTab('quran');
+                  } else if (egyptianEntry.actionType === 'mushaf') {
+                    setActiveTab('mushaf');
+                  } else if (egyptianEntry.actionType === 'tasbeeh') {
+                    setActiveTab('tasbeeh');
+                  } else if (egyptianEntry.actionType === 'dedications') {
+                    setActiveTab('dedications');
+                  } else if (egyptianEntry.actionType === 'duas') {
+                    setActiveTab('duas');
+                  } else if (egyptianEntry.actionType === 'adhkar') {
+                    setActiveTab('adhkar');
+                  } else {
+                    setActiveTab(egyptianEntry.actionType);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-200" />
+                <span>{egyptianEntry.actionText} ↗</span>
               </button>
 
               <button
                 onClick={() => {
-                  onSelectSurah(currentTadabbur.surahNumber);
+                  const text = `رسالة من القلب ليك يا غالي 🌿:\n\n"${egyptianEntry.egyptianText}"\n\n- صدقة جارية`;
+                  navigator.clipboard.writeText(text);
+                  showToast('تم نسخ النصيحة لمشاركتها');
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-700/10 hover:bg-amber-700 hover:text-white text-amber-900 dark:text-amber-300 transition-all cursor-pointer font-medium"
+                className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 text-xs font-medium transition cursor-pointer flex items-center gap-1"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>فتح السورة في المصحف</span>
+                <Copy className="w-3 h-3" />
+                <span>نسخ النصيحة</span>
               </button>
             </div>
-
-            <button
-              onClick={() => playSurah(currentTadabbur.surahNumber)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-700 text-white hover:bg-amber-800 transition-all cursor-pointer font-semibold shadow-xs"
-            >
-              <Volume2 className="w-3.5 h-3.5" />
-              <span>استماع للسورة كاملة</span>
-            </button>
           </div>
+
         </div>
       </section>
 
@@ -964,6 +1010,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                     onOpenPrayerTimes?.();
                   } else if (card.id === 'backup') {
                     onOpenBackup?.();
+                  } else if (card.id === 'companion') {
+                    onOpenEgyptianCompanion?.();
                   } else {
                     setActiveTab(card.id);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
