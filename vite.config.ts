@@ -4,6 +4,8 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const base = '/Sadaqah.Jariyah/';
+
 export default defineConfig(() => {
   return {
     plugins: [
