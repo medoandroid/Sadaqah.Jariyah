@@ -78,7 +78,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "registerSW.js",
-    "revision": "1872c500de691dce40960bb85481de07"
+    "revision": "19ca3a12506a8de67c98566a133664aa"
   }, {
     "url": "pwa-maskable-512x512.png",
     "revision": "83423f508744d8c356768edc9d160412"
@@ -90,7 +90,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "2d9d56faa26a9fa051fe19055ea0dab1"
   }, {
     "url": "index.html",
-    "revision": "3eec55ac3c46ff9e1efaf64bb98002a2"
+    "revision": "9d1618a89bf4e3ce624edf064f5ae38d"
   }, {
     "url": "icon.svg",
     "revision": "284a485e7db5229b984547a4bfbf77c8"
@@ -107,7 +107,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/vendor-icons-FMtl_drs.js",
     "revision": null
   }, {
-    "url": "assets/vendor-export-DcVFCfpa.js",
+    "url": "assets/vendor-export-BZI95pUo.js",
     "revision": null
   }, {
     "url": "assets/rolldown-runtime-CbXtAM7H.js",
@@ -116,61 +116,61 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/purify.es-Bvo9QlJ8.js",
     "revision": null
   }, {
-    "url": "assets/index.es-DvObnP2e.js",
-    "revision": null
-  }, {
-    "url": "assets/index-pQLAPTeq.js",
+    "url": "assets/index.es-BrWYheZ2.js",
     "revision": null
   }, {
     "url": "assets/index-ClmZXpHo.css",
     "revision": null
   }, {
+    "url": "assets/index-BnscE203.js",
+    "revision": null
+  }, {
     "url": "assets/dedicationService-DSPpzHJL.js",
     "revision": null
   }, {
-    "url": "assets/TasbeehPage-4sQAr-RW.js",
+    "url": "assets/TasbeehPage-DckSbl9e.js",
     "revision": null
   }, {
-    "url": "assets/RuqyahPage-Bs-3vKWU.js",
+    "url": "assets/RuqyahPage-DtNF94SM.js",
     "revision": null
   }, {
-    "url": "assets/RecitationsPage-Dh1mqQt2.js",
+    "url": "assets/RecitationsPage-DJ9IY6sV.js",
     "revision": null
   }, {
-    "url": "assets/QuranPage-BtFfDY5_.js",
+    "url": "assets/QuranPage-6UsrKgjI.js",
     "revision": null
   }, {
-    "url": "assets/PersonsPage--cnmPmVP.js",
+    "url": "assets/PersonsPage-CzG6mBsh.js",
     "revision": null
   }, {
-    "url": "assets/PersonalDuaPage-fbCXUA2i.js",
+    "url": "assets/PersonalDuaPage-D_C_7DlY.js",
     "revision": null
   }, {
-    "url": "assets/PaperMushafPage-Dse9Wgxa.js",
+    "url": "assets/PaperMushafPage-C-im-rs2.js",
     "revision": null
   }, {
-    "url": "assets/KhatmahPage-DvK5YPv5.js",
+    "url": "assets/KhatmahPage-DsST_Kng.js",
     "revision": null
   }, {
-    "url": "assets/HadithPage-CmSA-o6_.js",
+    "url": "assets/HadithPage-DA9boJ3T.js",
     "revision": null
   }, {
-    "url": "assets/DuasPage-DZhxbguD.js",
+    "url": "assets/DuasPage-7fyZ7BGI.js",
     "revision": null
   }, {
-    "url": "assets/DedicationsPage-DfDdqOGZ.js",
+    "url": "assets/DedicationsPage-D9w_vs6p.js",
     "revision": null
   }, {
     "url": "assets/CustomSelect-uLTFRwLu.js",
     "revision": null
   }, {
-    "url": "assets/AyahShareModal-I1wvzOZj.js",
+    "url": "assets/AyahShareModal-CNvgss8b.js",
     "revision": null
   }, {
-    "url": "assets/AsmaAlHusnaPage-CeyMBjqm.js",
+    "url": "assets/AsmaAlHusnaPage-Dh5pfH8Q.js",
     "revision": null
   }, {
-    "url": "assets/AdhkarPage-Du4gBgtr.js",
+    "url": "assets/AdhkarPage-CZRYosCX.js",
     "revision": null
   }, {
     "url": "apple-touch-icon.png",
@@ -182,20 +182,11 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "icon.svg",
     "revision": "284a485e7db5229b984547a4bfbf77c8"
   }, {
-    "url": "pwa-192x192.png",
-    "revision": "2d9d56faa26a9fa051fe19055ea0dab1"
-  }, {
-    "url": "pwa-512x512.png",
-    "revision": "ec18b85ef4ff58422189a2ae9948343e"
-  }, {
-    "url": "pwa-maskable-512x512.png",
-    "revision": "83423f508744d8c356768edc9d160412"
-  }, {
     "url": "manifest.webmanifest",
-    "revision": "16f1e0e9d32c7f8a6b3b64bee43e91f4"
+    "revision": "e8656f6bee1e9cf24417e2362bcd189e"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html")));
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/Sadaqah.Jariyah/index.html")));
   workbox.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i, new workbox.CacheFirst({
     "cacheName": "google-fonts-cache",
     plugins: [new workbox.ExpirationPlugin({
