@@ -48,6 +48,11 @@ export interface Reciter {
   style: string;
 }
 
+export type CardTheme = 'parchment' | 'royalDark' | 'emerald' | 'midnight' | 'ruby' | 'amber';
+export type CardAspectRatio = 'portrait' | 'story' | 'square' | 'banner';
+export type CardFontFamily = 'amiri' | 'ibm' | 'cairo';
+export type CardFontSize = 'auto' | 'small' | 'normal' | 'large' | 'huge';
+
 export interface DuaItem {
   id: string;
   title: string;

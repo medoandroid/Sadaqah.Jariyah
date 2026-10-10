@@ -1,4 +1,4 @@
-import { CardTheme, CardAspectRatio } from '../components/AyahShareModal';
+import { CardTheme, CardAspectRatio } from '../types';
 
 export interface QuranPreset {
   id: string;

@@ -53,7 +53,6 @@ import {
   MushafFrameTheme,
   PdfGenerationProgress,
 } from '../services/quranPdfService';
-import { jsPDF } from 'jspdf';
 import { SurahPickerModal } from './SurahPickerModal';
 import { POPULAR_QURAN_PRESETS, QuranPreset } from '../data/quranPresets';
 import { CustomSelect } from './CustomSelect';
@@ -764,10 +763,11 @@ export const AyahShareModal: React.FC<AyahShareModalProps> = ({
   };
 
   // Export Ayah Card as PDF
-  const handleDownloadAyahPdf = () => {
+  const handleDownloadAyahPdf = async () => {
     const canvas = ayahCanvasRef.current;
     if (!canvas) return;
     try {
+      const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF({
         orientation: cardAspectRatio === 'story' ? 'portrait' : 'portrait',
         unit: 'mm',

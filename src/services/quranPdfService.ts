@@ -1,5 +1,13 @@
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas-pro';
+async function getJsPdfClass() {
+  const mod = await import('jspdf');
+  return mod.jsPDF || mod.default;
+}
+
+async function getHtml2CanvasFn() {
+  const mod = await import('html2canvas-pro');
+  return mod.default || mod;
+}
+
 import { Ayah, SurahDetail } from '../types';
 import { toArabicDigits } from '../components/IslamicDecoration';
 
@@ -666,7 +674,8 @@ export async function generateMushafPagePdf(
     if (!pageElement) throw canvasErr;
 
     // 2. Fallback using html2canvas-pro which natively supports modern CSS color functions
-    canvas = await html2canvas(pageElement, {
+    const h2c = await getHtml2CanvasFn();
+    canvas = await h2c(pageElement, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
@@ -675,7 +684,8 @@ export async function generateMushafPagePdf(
     });
   }
 
-  const pdf = new jsPDF({
+  const JsPdfClass = await getJsPdfClass();
+  const pdf = new JsPdfClass({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
@@ -707,7 +717,8 @@ export async function generateCustomRangePdf(
   const toPage = Math.min(604, Math.max(startPage, endPage));
   const totalPages = toPage - fromPage + 1;
 
-  const pdf = new jsPDF({
+  const JsPdfClass = await getJsPdfClass();
+  const pdf = new JsPdfClass({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
@@ -801,7 +812,8 @@ export async function generateSurahPdf(
   pageElements: HTMLElement[],
   onProgress?: (p: PdfGenerationProgress) => void
 ): Promise<Blob> {
-  const pdf = new jsPDF({
+  const JsPdfClass = await getJsPdfClass();
+  const pdf = new JsPdfClass({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
@@ -811,6 +823,7 @@ export async function generateSurahPdf(
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
   const totalPages = pageElements.length;
+  const h2c = await getHtml2CanvasFn();
 
   for (let i = 0; i < totalPages; i++) {
     if (onProgress) {
@@ -824,7 +837,7 @@ export async function generateSurahPdf(
     const element = pageElements[i];
 
     // High quality canvas capture using html2canvas-pro
-    const canvas = await html2canvas(element, {
+    const canvas = await h2c(element, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
