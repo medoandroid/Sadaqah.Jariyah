@@ -160,18 +160,28 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
 
               <div>
                 {/* Kinship badge highlight */}
-                {isCompanion && (
-                  <div className="mb-3">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-300 dark:border-amber-700/60 shadow-xs">
-                      🤝 رفيق وصاحب دربك رحمه الله
+                {profile.targetUncleId === person.id ? (
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-3 py-1 rounded-full border border-amber-400 dark:border-amber-600 shadow-xs">
+                      ✨ طرفك المختار ({profile.kinshipTitle || 'صلة وقرابة'})
                     </span>
+                    <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">الطرف الأقرب لك</span>
                   </div>
-                )}
-                {isFamily && (
-                  <div className="mb-3">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
-                      🌿 من أهلك وذويك الكرام ({profile.kinshipTitle})
+                ) : (
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                      {isCompanion ? '🤝 رفيق درب' : isFamily ? '🌿 صلة قرابة' : 'رحمه الله وأسكنه الجنة'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        userProfileService.setQuickParty(person.id as any, profile.connectionType || 'friend', profile.kinshipTitle);
+                        showToast(`تم تحديد ${person.name} كطرفك الأقرب 🤍`);
+                      }}
+                      className="text-[11px] px-2.5 py-0.5 rounded-lg border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/80 dark:bg-stone-800 text-amber-900 dark:text-amber-300 hover:bg-amber-100 font-semibold cursor-pointer transition-all active:scale-95"
+                    >
+                      تحديد كطرفي الأقرب 🌿
+                    </button>
                   </div>
                 )}
 

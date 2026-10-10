@@ -152,24 +152,45 @@ export const userProfileService = {
   },
 
   /**
+   * Sets a quick party/connection with one click
+   */
+  setQuickParty(targetUncleId: TargetUncleId, connectionType: ConnectionType = 'friend', kinshipTitle?: string): UserProfile {
+    const defaultTitles: Record<ConnectionType, string> = {
+      friend: 'صديق ورفيق درب',
+      family_relative: 'من الأهل والأقارب',
+      benefactor: 'محب للخير وداعٍ بالرحمة'
+    };
+    return this.saveProfile({
+      targetUncleId,
+      connectionType,
+      kinshipTitle: kinshipTitle || defaultTitles[connectionType],
+      hasConfigured: true,
+    });
+  },
+
+  /**
    * Returns a friendly visual connection badge text.
    */
   getConnectionBadge(p?: UserProfile): string {
     const profile = p || this.getProfile();
     if (!profile.hasConfigured) {
-      return 'صلتك بهم (اضغط للتحديد)';
+      return 'تحديد الطرف والصلة (اضغط للتخصيص)';
     }
 
+    const uncleName = UNCLE_NAMES[profile.targetUncleId];
+
     if (profile.connectionType === 'friend') {
-      const uncleName = UNCLE_NAMES[profile.targetUncleId];
       if (profile.targetUncleId === 'all') {
         return '🤝 رفيق درب وصديق العائلة الكريمة';
       }
-      return `🤝 صديق ورفيق درب ${uncleName}`;
+      return `🤝 من طرف ${uncleName} (${profile.kinshipTitle || 'صديق ورفيق درب'})`;
     }
 
     if (profile.connectionType === 'family_relative') {
-      return `🌿 من أهل وذوي المغفور لهم (${profile.kinshipTitle || 'قريب العائلة'})`;
+      if (profile.targetUncleId === 'all') {
+        return `🌿 من أهل وذوي المغفور لهم (${profile.kinshipTitle || 'صلة قرابة'})`;
+      }
+      return `🌿 من طرف ${uncleName} (${profile.kinshipTitle || 'من الأهل والأقارب'})`;
     }
 
     return '🤍 محب للخير وداعٍ بالرحمة';
@@ -180,22 +201,26 @@ export const userProfileService = {
    */
   getGreetingText(p?: UserProfile): string {
     const profile = p || this.getProfile();
-    const displayName = profile.userName ? `يا ${profile.userName}` : '';
+    const displayName = profile.userName ? `يا ${profile.userName}` : 'يا ضيفنا الكريم';
 
     if (!profile.hasConfigured) {
-      return 'أهلاً بك يا ضيفنا الكريم في الروضة المباركة.. تقبل الله طاعاتكم';
+      return 'أهلاً بك يا كريم في روضة الصدقة الجارية المباركة.. تقبل الله طاعاتكم وصالح أعمالكم';
     }
 
+    const uncleName = UNCLE_NAMES[profile.targetUncleId];
+
     if (profile.connectionType === 'friend') {
-      const uncleName = UNCLE_NAMES[profile.targetUncleId];
       if (profile.targetUncleId === 'all') {
         return `مرحباً بك ${displayName} يا رفيق درب العائلة وصديقهم الوفي.. جزاك الله خيراً على صدق الوفاء`;
       }
-      return `مرحباً بك ${displayName} يا صاحب ورفيق درب ${uncleName} رحمه الله.. شكر الله وفاءك وبرك بصحبته`;
+      return `مرحباً بك ${displayName} يا صاحب ورفيق درب ${uncleName} رحمه الله.. شكر الله وفاءك وبرك بصحبته الطيبة`;
     }
 
     if (profile.connectionType === 'family_relative') {
-      return `أهلاً بك ${displayName} يا كريم الأصل من أهلنا وذوي الأعمام الغاليين.. تقبل الله بركم المستمر ودعاءكم`;
+      if (profile.targetUncleId === 'all') {
+        return `أهلاً بك ${displayName} يا كريم الأصل من أهلنا وذوي الأعمام الغاليين.. تقبل الله بركم المستمر ودعاءكم`;
+      }
+      return `أهلاً بك ${displayName} من أهل وذوي ${uncleName} رحمه الله.. جمعكم الله به في جنات النعيم على سرر متقابلين`;
     }
 
     return `أهلاً بك ${displayName} يا باغي الخير ورافع أكف الضراعة.. كتب الله لك أجر كل حرف ودعوة مباركة`;
