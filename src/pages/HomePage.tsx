@@ -1,0 +1,741 @@
+import React, { useState, useEffect } from 'react';
+import {
+  BookOpen,
+  Headphones,
+  Flame,
+  CircleDot,
+  Users,
+  Sparkles,
+  Heart,
+  ArrowLeft,
+  Volume2,
+  Calendar,
+  Compass,
+  Award,
+  User,
+  ShieldCheck,
+  Clock,
+  FileJson,
+  Trophy,
+  RotateCcw,
+  Copy,
+  Check
+} from 'lucide-react';
+import { HONORED_PERSONS, GENERAL_DEDICATION_DUA } from '../data/persons';
+import { Star8Rosette, ArabesqueDivider, BismillahHeader } from '../components/IslamicDecoration';
+import { getDedicationStats, recordDedication } from '../services/dedicationService';
+import { useAudio } from '../context/AudioContext';
+import { storageService } from '../services/storageService';
+import { userProfileService, UserProfile } from '../services/userProfileService';
+import { playTasbeehBeadSound } from '../utils/soundEffects';
+
+const DAILY_TADABBUR_LIST = [
+  {
+    surahNumber: 2,
+    ayahNumber: 186,
+    surahName: 'البقرة',
+    text: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ ۖ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ',
+    tadabbur: 'لم يقل الله عز وجل "فقل إني قريب"، بل تولى الإجابة بنفسه مبيناً كمال قربه وسرعة إجابته؛ فلا واسطة ولا حجاب بينك وبين ربك في الدعاء.',
+    action: 'ارفع كفيك الآن وتضرع بدعوة من قلبك لمن تحب واهدِ ثوابها لأرواحهم الكريمة.'
+  },
+  {
+    surahNumber: 94,
+    ayahNumber: 5,
+    surahName: 'الشرح',
+    text: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا',
+    tadabbur: 'العسر معرف بال التعريف (عسر واحد)، واليسر منكر مكرر؛ ولن يغلب عسر يسرين أبداً، واليسر ليس بعد العسر بل ملازم ومصاحب له.',
+    action: 'استبشر بلطف الله الخفي، وأحسن الظن بمولاك في تفريج كل كرب وفتح كل باب مغلق.'
+  },
+  {
+    surahNumber: 65,
+    ayahNumber: 3,
+    surahName: 'الطلاق',
+    text: 'وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ ۚ إِنَّ اللَّهَ بَالِغُ أَمْرِهِ',
+    tadabbur: 'كفاية الله لعبده المتوكل لا حصر لها، وكل أمر قدره الله في الأزل سينفذ بحكمته ورحمته في وقته الأجمل.',
+    action: 'فوّض أمرك كله لله، واستودعه أهلك وآخرتك ورزقك بقلب مطمئن ساكن.'
+  },
+  {
+    surahNumber: 39,
+    ayahNumber: 53,
+    surahName: 'الزمر',
+    text: 'قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا',
+    tadabbur: 'أرجى آية في كتاب الله؛ ناداهم بـ "يا عبادي" تلطفاً وتودداً رغم إسرافهم، ونهاهم عن اليأس من رحمته ومغفرته الشاملة.',
+    action: 'جدد استغفارك وتوبتك في هذه اللحظة، فباب الكريم مفتوح لا يُغلق أبداً.'
+  }
+];
+
+interface HomePageProps {
+  setActiveTab: (tab: string) => void;
+  onOpenDedication: () => void;
+  onSelectPerson: (personId: string) => void;
+  onSelectSurah: (surahNum: number) => void;
+  onOpenProfile?: () => void;
+  onOpenPrayerTimes?: () => void;
+  onOpenBackup?: () => void;
+}
+
+export const HomePage: React.FC<HomePageProps> = ({
+  setActiveTab,
+  onOpenDedication,
+  onSelectPerson,
+  onSelectSurah,
+  onOpenProfile,
+  onOpenPrayerTimes,
+  onOpenBackup,
+}) => {
+  const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
+
+  useEffect(() => {
+    return userProfileService.subscribe((updated) => {
+      setProfile(updated);
+    });
+  }, []);
+
+  const stats = getDedicationStats();
+  const realTasbeehCount = storageService.getNumber('tasbeeh_total', 0);
+  const totalTasbeehDisplay = Math.max(stats.totalTasbeehs, realTasbeehCount);
+  const { playSurah } = useAudio();
+
+  const [currentTadabburIndex, setCurrentTadabburIndex] = useState<number>(0);
+  const [copiedTadabbur, setCopiedTadabbur] = useState<boolean>(false);
+  const [quickTasbeehCount, setQuickTasbeehCount] = useState<number>(() => {
+    return storageService.getNumber('tasbeeh_total', 0);
+  });
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  const currentTadabbur = DAILY_TADABBUR_LIST[currentTadabburIndex];
+
+  const handleNextTadabbur = () => {
+    setCurrentTadabburIndex((prev) => (prev + 1) % DAILY_TADABBUR_LIST.length);
+  };
+
+  const handleCopyTadabbur = () => {
+    const text = `﴿${currentTadabbur.text}﴾ [سورة ${currentTadabbur.surahName} : ${currentTadabbur.ayahNumber}]\n\n✨ ومضة تدبر: ${currentTadabbur.tadabbur}\n🌿 أثر وتطبيق: ${currentTadabbur.action}`;
+    navigator.clipboard.writeText(text);
+    setCopiedTadabbur(true);
+    showToast('تم نسخ ومضة التدبر لمشاركتها');
+    setTimeout(() => setCopiedTadabbur(false), 2000);
+  };
+
+  const handleQuickDhikr = (phrase: string) => {
+    playTasbeehBeadSound();
+    const next = quickTasbeehCount + 1;
+    setQuickTasbeehCount(next);
+    storageService.setNumber('tasbeeh_total', next);
+    recordDedication('tasbeeh', phrase, 'all', 1, profile.userName || 'مسبح');
+    showToast(`كتب الله أجرك: "${phrase}"`);
+  };
+
+  const portalCards = [
+    {
+      id: 'quran',
+      title: 'القرآن الكريم كاملاً',
+      subtitle: '١١٤ سورة مرتلة بالرسم العثماني برواية حفص عن عاصم، مع القراءة المتصلة والتفسير والاستماع.',
+      icon: BookOpen,
+      category: 'تلاوة وقراءة',
+      actionText: 'بدء التلاوة المباركة',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'mushaf',
+      title: 'المصحف الورقي المصور',
+      subtitle: 'طبعة مجمع الملك فهد ٦٠٤ صفحة بدقة متناهية، وتقليب صفحات واقعي باللمس وتكبير مريح.',
+      icon: BookOpen,
+      category: 'طبعة المدينة المنورة',
+      actionText: 'تصفح المصحف',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'recitations',
+      title: 'التلاوات العطرة',
+      subtitle: 'استماع متواصل وخاشع بأصوات كبار قراء العالم الإسلامي (العفاسي، الحصري، عبدالباسط، المعيقلي).',
+      icon: Headphones,
+      category: 'تلاوات صوتية',
+      actionText: 'الاستماع الآن',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'tasbeeh',
+      title: 'السبحة الإلكترونية المطورة',
+      subtitle: 'سبحة تفاعلية واقعية مع عداد إجمالي فردي يبدأ من الصفر، وأصوات خرز واقعية واهتزاز لمسي.',
+      icon: Sparkles,
+      category: 'ذكر وتسبيح',
+      actionText: 'بدء التسبيح',
+      highlightColor: 'from-emerald-600/10 to-emerald-700/5',
+    },
+    {
+      id: 'duas',
+      title: 'مكتبة أدعية المتوفين',
+      subtitle: 'أدعية نبوية ومأثورة للمغفرة ونور القبر والفسحة فيه، وجوامع الدعاء وتفريج الكروب.',
+      icon: Flame,
+      category: 'أدعية مأثورة',
+      actionText: 'قراءة الأدعية',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'personalDua',
+      title: 'أدعيتي ومناجاتي الخاصة',
+      subtitle: 'اكتب أدعيتك الخاصة بقلب حاضر واحفظها محلياً لترديدها في أوقات الإجابة أو إهداء ثوابها.',
+      icon: Heart,
+      category: 'مناجاة شخصية',
+      actionText: 'أدعيتي المحفوظة',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'adhkar',
+      title: 'حصن المسلم والأذكار',
+      subtitle: 'أذكار الصباح والمساء وأذكار الصلاة والنوم والاستيقاظ مع عدادات تفاعلية ميسرة.',
+      icon: CircleDot,
+      category: 'حصن المسلم',
+      actionText: 'تصفح الأذكار',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'asma',
+      title: 'أسماء الله الحسنى ومعانيها',
+      subtitle: '٩٩ اسماً مباركاً مع المعاني والشرح الإيماني المستفيض وتدبر صفات الجلال والجمال.',
+      icon: Compass,
+      category: 'معرفة وتأمل',
+      actionText: 'تدبر الأسماء',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'khatmah',
+      title: 'الختمة القرآنية المهداة',
+      subtitle: 'ختمة تشاركية مباركة (٣٠ جزءاً) لإهداء ثوابها كاملة لأرواح المتوفين الكرام.',
+      icon: Award,
+      category: 'ختمات تشاركية',
+      actionText: 'المشاركة في الختمة',
+      highlightColor: 'from-emerald-600/10 to-emerald-700/5',
+    },
+    {
+      id: 'persons',
+      title: 'عنهم (سيرتهم ووفاء لهم)',
+      subtitle: 'صفحات تذكارية ودعاء خالص لعمامي الأربعة رحمهم الله، مع حفظ طيب ذكراهم.',
+      icon: Users,
+      category: 'تخليد ووفاء',
+      actionText: 'سيرتهم والدعاء لهم',
+      highlightColor: 'from-stone-600/10 to-stone-700/5',
+    },
+    {
+      id: 'ruqyah',
+      title: 'الرقية الشرعية الشاملة',
+      subtitle: 'آيات وأدعية الشفاء والتحصين من القرآن الكريم وصحيح السنة المطهرة مع عدادات تكرار تفاعلية.',
+      icon: ShieldCheck,
+      category: 'شفاء وتحصين',
+      actionText: 'قراءة الرقية الشرعية',
+      highlightColor: 'from-emerald-600/10 to-emerald-700/5',
+    },
+    {
+      id: 'hadith',
+      title: 'الأربعون النووية كاملة',
+      subtitle: 'جوامع الكلم النبوي مع التشكيل والشرح الميسر والفوائد المستفادة والاستماع الصوتي.',
+      icon: BookOpen,
+      category: 'السنة المطهرة',
+      actionText: 'تصفح الأحاديث والفوائد',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'prayer',
+      title: 'مواقيت الصلاة والقبلة',
+      subtitle: 'حساب فلكي دقيق لمواقيت الصلاة اليومية مع عداد تنازلي وبوصلة مباشرة لاتجاه الكعبة المشرفة.',
+      icon: Clock,
+      category: 'شعائر وفلك',
+      actionText: 'عرض المواقيت والقبلة',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
+      id: 'backup',
+      title: 'النسخ الاحتياطي وحفظ البيانات',
+      subtitle: 'تصدير نسخة احتياطية لبياناتك وعلاماتك وأدعيتك واسترجاعها بأمان على أي جهاز دون فقدان.',
+      icon: FileJson,
+      category: 'أمان وتخزين',
+      actionText: 'إدارة النسخ الاحتياطي',
+      highlightColor: 'from-emerald-600/10 to-emerald-700/5',
+    },
+  ];
+
+  return (
+    <div className="space-y-16 sm:space-y-24 pb-16">
+      
+      {/* Hero Section with Royal Islamic Arch Motif */}
+      <section className="relative overflow-hidden pt-8 pb-14 sm:pt-16 sm:pb-24 border-b border-stone-200/80 dark:border-stone-800 bg-gradient-to-b from-[#F7F4EC] via-[#F8F6F0] to-[#FAF8F3] dark:from-stone-925 dark:via-stone-900 dark:to-stone-950">
+        
+        {/* Subtle geometric watermark */}
+        <div className="absolute inset-0 opacity-[0.035] dark:opacity-[0.05] pointer-events-none flex items-center justify-center">
+          <Star8Rosette className="w-[640px] h-[640px] text-amber-950 dark:text-amber-200" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          
+          <BismillahHeader className="mb-6" />
+
+          {/* Main Title */}
+          <div className="inline-block relative mb-4">
+            <h1 className="font-amiri text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-900 dark:text-stone-100 tracking-tight leading-[1.25]">
+              صَدَقَةٌ جَارِيَة
+            </h1>
+            <div className="h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto mt-2" />
+          </div>
+
+          <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-8">
+            منصة إسلامية قرآنية جامعة، مهداة خالصاً لوجه الله تعالى من <span className="font-bold text-amber-900 dark:text-amber-400">محمد أيمن</span> عن أرواح عمامه الغاليين المغفور لهم بإذن الله:
+          </p>
+
+          {/* The Four Honored Names Card Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-10 text-right">
+            {HONORED_PERSONS.map((person, index) => (
+              <div
+                key={person.id}
+                onClick={() => {
+                  onSelectPerson(person.id);
+                  setActiveTab('persons');
+                }}
+                className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/90 dark:border-stone-800 hover:border-amber-600/60 shadow-xs hover:shadow-md hover-lift transition-all duration-200 cursor-pointer text-center"
+              >
+                <div className="w-9 h-9 mx-auto mb-2 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-700/50 flex items-center justify-center text-amber-800 dark:text-amber-300 font-amiri font-bold text-sm group-hover:scale-105 transition-transform">
+                  ٠{index + 1}
+                </div>
+                <h3 className="font-amiri text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors">
+                  {person.name}
+                </h3>
+                <div className="text-xs text-amber-800/90 dark:text-amber-400/90 font-medium mt-1">
+                  {person.relationTitle}
+                </div>
+                <div className="text-[11px] text-stone-400 mt-2.5 flex items-center justify-center gap-1 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                  <span>دعاء خاص وإهداء</span>
+                  <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Main Hero Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <button
+              onClick={() => setActiveTab('quran')}
+              className="px-6 sm:px-7 py-3 rounded-2xl bg-amber-800 hover:bg-amber-900 text-white font-amiri text-lg font-bold shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+            >
+              <BookOpen className="w-5 h-5 text-amber-300" />
+              <span>القرآن الكريم والتلاوة</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('mushaf')}
+              className="px-6 sm:px-7 py-3 rounded-2xl bg-white dark:bg-stone-900 hover:bg-amber-50 dark:hover:bg-stone-800 border border-amber-700/30 text-amber-950 dark:text-amber-200 font-amiri text-lg font-bold shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+            >
+              <BookOpen className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+              <span>المصحف الورقي (٦٠٤ صفحة)</span>
+            </button>
+
+            <button
+              onClick={onOpenDedication}
+              className="px-6 sm:px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-700 to-amber-850 hover:from-amber-600 hover:to-amber-800 text-white font-amiri text-lg font-bold shadow-md hover:shadow-amber-900/20 transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+            >
+              <Sparkles className="w-5 h-5 text-amber-200" />
+              <span>إهداء ثواب عمل صالح</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* General Dedication Prayer Box */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="relative p-6 sm:p-8 rounded-3xl bg-amber-50/80 dark:bg-stone-900/90 border border-amber-200/90 dark:border-amber-700/40 shadow-xs text-center">
+          <div className="flex items-center justify-center gap-2 text-amber-800 dark:text-amber-400 text-xs font-semibold mb-3">
+            <Heart className="w-4 h-4 fill-amber-700 text-amber-700" />
+            <span>دعاء افتتاح المنصة الواصل لأرواحهم الكريمة</span>
+          </div>
+
+          <p className="font-amiri text-lg sm:text-xl text-stone-800 dark:text-stone-200 leading-relaxed max-w-2xl mx-auto">
+            {GENERAL_DEDICATION_DUA}
+          </p>
+
+          <div className="mt-4 pt-4 border-t border-amber-200/60 dark:border-stone-800 flex items-center justify-center gap-4 text-xs text-amber-900 dark:text-amber-300 font-medium">
+            <span>آمين يا رب العالمين</span>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={onOpenDedication}
+              className="underline hover:text-amber-950 dark:hover:text-amber-200 cursor-pointer font-bold"
+            >
+              شارك بالدعاء أو إهداء ثواب تلاوة
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Smart Kinship & Connection Identity Strip */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-50/95 via-stone-50/80 to-amber-50/95 dark:from-stone-900 dark:via-stone-850 dark:to-stone-900 border border-amber-300/80 dark:border-amber-700/40 shadow-sm flex flex-col gap-4 text-right">
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700/60 flex items-center justify-center text-amber-800 dark:text-amber-300 shrink-0 shadow-xs">
+                <Heart className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-900 dark:text-amber-300 text-[11px] font-bold mb-1">
+                  <span>{userProfileService.getConnectionBadge(profile)}</span>
+                </div>
+                <h3 className="font-amiri text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100 leading-snug">
+                  {userProfileService.getGreetingText(profile)}
+                </h3>
+              </div>
+            </div>
+
+            {onOpenProfile && (
+              <button
+                onClick={onOpenProfile}
+                className="self-end sm:self-auto px-4 py-2 rounded-xl bg-amber-800/10 dark:bg-amber-950/50 hover:bg-amber-800 hover:text-white text-amber-900 dark:text-amber-300 border border-amber-700/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{profile.hasConfigured ? 'تعديل صلتك بهم' : 'حدد صلتك بالأعمام 🌿'}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Quick Tailored Prayer Snippet */}
+          {profile.hasConfigured && (
+            <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-stone-950/60 border border-amber-200/60 dark:border-stone-800/80 space-y-1.5 text-right">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-800 dark:text-amber-400">
+                  ✨ دعاء مخصص ومناسب لصلتك بالأعمام الكرام:
+                </span>
+                <button
+                  onClick={onOpenDedication}
+                  className="text-xs text-amber-700 dark:text-amber-400 hover:underline font-bold cursor-pointer"
+                >
+                  إهداء هذا الدعاء الآن 🤲
+                </button>
+              </div>
+              <p className="font-amiri text-sm sm:text-base text-stone-800 dark:text-stone-200 leading-relaxed text-justify">
+                "{userProfileService.getSmartTailoredPrayers(profile)[0]?.arabic}"
+              </p>
+            </div>
+          )}
+
+        </div>
+      </section>
+
+      {/* Floating Toast Notification */}
+      {toastMsg && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 dark:bg-stone-100/95 text-stone-100 dark:text-stone-900 px-5 py-2.5 rounded-2xl shadow-xl text-sm font-medium border border-amber-500/30 flex items-center gap-2 backdrop-blur-md animate-in fade-in duration-200">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* Interactive Ayah & Tadabbur of the Day Card */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-amber-50/30 to-amber-100/20 dark:from-stone-900 dark:via-stone-900/90 dark:to-amber-950/20 border border-amber-600/30 dark:border-amber-500/20 shadow-lg p-6 sm:p-8 space-y-5 text-right">
+          
+          {/* Header Strip */}
+          <div className="flex items-center justify-between gap-3 border-b border-amber-200/50 dark:border-stone-800 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>آية ومحطة تدبر اليوم</span>
+              <span className="text-stone-400 font-normal">
+                (سورة {currentTadabbur.surahName} : الآية {currentTadabbur.ayahNumber})
+              </span>
+            </div>
+
+            <button
+              onClick={handleNextTadabbur}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700 text-amber-900 dark:text-amber-300 border border-amber-200/60 dark:border-stone-700 text-xs font-semibold transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>تدبر آية أخرى</span>
+            </button>
+          </div>
+
+          {/* Verse Text */}
+          <div className="p-4 sm:p-6 rounded-2xl bg-white/80 dark:bg-stone-950/60 border border-amber-200/40 dark:border-stone-800/80">
+            <p className="font-amiri text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 dark:text-stone-100 leading-loose text-center">
+              ﴿{currentTadabbur.text}﴾
+            </p>
+          </div>
+
+          {/* Tadabbur Insight & Action Step */}
+          <div className="space-y-2.5 bg-amber-500/10 dark:bg-amber-950/25 p-4 sm:p-5 rounded-2xl border border-amber-500/20 text-right">
+            <div>
+              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block mb-1">
+                💡 ومضة تدبر:
+              </span>
+              <p className="text-sm sm:text-base text-stone-800 dark:text-stone-200 font-sans leading-relaxed">
+                {currentTadabbur.tadabbur}
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-amber-500/15">
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-400 block mb-0.5">
+                🌿 أثر وتطبيق في يومك:
+              </span>
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-sans">
+                {currentTadabbur.action}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyTadabbur}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-all cursor-pointer font-medium"
+              >
+                {copiedTadabbur ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedTadabbur ? 'تم النسخ' : 'نسخ التدبر'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onSelectSurah(currentTadabbur.surahNumber);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-700/10 hover:bg-amber-700 hover:text-white text-amber-900 dark:text-amber-300 transition-all cursor-pointer font-medium"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>فتح السورة في المصحف</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => playSurah(currentTadabbur.surahNumber)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-700 text-white hover:bg-amber-800 transition-all cursor-pointer font-semibold shadow-xs"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>استماع للسورة كاملة</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* One-Tap Fast Dhikr Station */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-sm space-y-4 text-right">
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
+                  محطة الذكر السريع بنقرة واحدة
+                </h3>
+                <p className="text-xs text-stone-500 dark:text-stone-400">
+                  انقر على أي ذكر ليُسجل فوراً في عداد حسناتك مع صوت تسبيح مريح
+                </p>
+              </div>
+            </div>
+
+            <div className="text-left">
+              <span className="text-[11px] text-stone-400 block font-mono">عدادك الحالي</span>
+              <span className="font-mono text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                {quickTasbeehCount}
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Click Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {[
+              'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+              'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
+              'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
+              'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ'
+            ].map((phrase, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickDhikr(phrase)}
+                className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/70 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-stone-200 dark:border-stone-750 hover:border-emerald-500/40 text-stone-900 dark:text-stone-100 transition-all active:scale-95 cursor-pointer text-center group"
+              >
+                <span className="font-amiri text-sm sm:text-base font-bold group-hover:text-emerald-800 dark:group-hover:text-emerald-300 block leading-tight">
+                  {phrase}
+                </span>
+                <span className="text-[10px] text-stone-400 mt-1 block">
+                  +١ تسبيحة
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Portals Grid (Anti-pill clean metadata discipline) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <h2 className="font-amiri text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 mb-2">
+            أبواب القرآن الكريم والذكر المبارك
+          </h2>
+          <p className="text-sm text-stone-600 dark:text-stone-400">
+            أقسام متكاملة مصممة بعناية فائقة لتجربة إيمانية هادئة ومريحة
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {portalCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.id}
+                onClick={() => {
+                  if (card.id === 'prayer') {
+                    onOpenPrayerTimes?.();
+                  } else if (card.id === 'backup') {
+                    onOpenBackup?.();
+                  } else {
+                    setActiveTab(card.id);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                className="group relative p-6 sm:p-7 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-amber-600/50 shadow-xs hover:shadow-xl hover-lift transition-all duration-300 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-stone-800 border border-amber-200/70 dark:border-stone-700 text-amber-800 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 group-hover:bg-amber-100 dark:group-hover:bg-stone-750 transition-all">
+                      <Icon className="w-6 h-6 stroke-[1.8]" />
+                    </div>
+                    {/* Clean unboxed metadata separator */}
+                    <span className="text-xs text-stone-400 dark:text-stone-500 font-medium group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                      {card.category}
+                    </span>
+                  </div>
+
+                  <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors mb-2">
+                    {card.title}
+                  </h3>
+
+                  <p className="font-amiri text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
+                    {card.subtitle}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-800 text-xs font-semibold text-amber-800 dark:text-amber-400 group-hover:text-amber-950 dark:group-hover:text-amber-200">
+                  <span>{card.actionText}</span>
+                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+      </section>
+
+      {/* Quick Recitation Spotlight (Surah Yaseen / Al-Mulk / Al-Kahf) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="p-6 sm:p-10 rounded-3xl bg-[#1C1A17] border border-amber-900/40 text-stone-100 relative overflow-hidden shadow-2xl">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div className="lg:col-span-6 space-y-3 text-right">
+              <span className="text-xs uppercase tracking-wider text-amber-400 font-medium">
+                تلاوات خاشعة للأموات
+              </span>
+              <h3 className="font-amiri text-3xl sm:text-4xl font-bold text-white">
+                استمع لسور يس، والملك، والواقعة
+              </h3>
+              <p className="font-amiri text-stone-300 text-sm leading-relaxed">
+                استمع بخشوع لسور القرآن المباركة بصوت كبار القراء، وأهدِ ثواب الاستماع لفقداء العائلة الكريمة ليؤنس وحشتهم ونوراً في قبورهم.
+              </p>
+            </div>
+
+            <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { number: 36, name: 'يس', virtue: 'قلب القرآن ومغفرة للذنب' },
+                { number: 67, name: 'الملك', virtue: 'المانعة من عذاب القبر' },
+                { number: 56, name: 'الواقعة', virtue: 'سورة الرزق والنعيم' },
+              ].map((s) => (
+                <button
+                  key={s.number}
+                  onClick={() => playSurah(s.number)}
+                  className="p-4 rounded-2xl bg-stone-900/90 hover:bg-amber-950/80 border border-stone-800 hover:border-amber-600/70 text-right transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-amiri text-lg font-bold text-white group-hover:text-amber-300">
+                      سورة {s.name}
+                    </span>
+                    <Volume2 className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="text-[11px] text-stone-400 leading-tight">
+                    {s.virtue}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Real Impact & Personal Dedications Record (100% Real Numbers, starts at 0) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative rounded-3xl border border-stone-200/90 dark:border-stone-800 bg-gradient-to-b from-white via-[#FCFBF8] to-stone-50/80 dark:from-stone-900 dark:via-stone-900/90 dark:to-stone-950 p-6 sm:p-10 shadow-lg overflow-hidden">
+          
+          {/* Subtle Islamic background accents */}
+          <div className="absolute top-0 right-0 w-36 h-36 bg-[radial-gradient(#b45309_1.2px,transparent_1.2px)] [background-size:18px_18px] opacity-15 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-36 h-36 bg-[radial-gradient(#b45309_1.2px,transparent_1.2px)] [background-size:18px_18px] opacity-15 pointer-events-none" />
+
+          <div className="text-center max-w-xl mx-auto mb-8 relative z-10">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/70 dark:bg-stone-800 text-amber-900 dark:text-amber-300 text-xs font-semibold mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <span>إحصائياتك الحقيقية المسجلة</span>
+            </div>
+            <h3 className="font-amiri text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mb-1.5">
+              سجل أعمالك الصالحة والتسابيح المهداة
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+              أرقام حقيقية دقيقة تبدأ من الصفر وتزداد مع كل تلاوة، تسبيحة، أو دعوة تهديها لأرواحهم الطاهرة.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 text-center relative z-10">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+                {stats.totalSurahsRecited}
+              </div>
+              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+                سور مقروءة ومستمعة
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+                {totalTasbeehDisplay}
+              </div>
+              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+                تسبيحة واستغفار
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+                {stats.totalPrayers}
+              </div>
+              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+                دعوة خالصة بالرحمة
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+                {stats.totalKhatmahs}
+              </div>
+              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+                ختمة وأجزاء مهداة
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ArabesqueDivider />
+
+    </div>
+  );
+};

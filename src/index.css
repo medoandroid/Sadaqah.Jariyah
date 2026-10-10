@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    scroll-behavior: smooth;
+    direction: rtl;
+  }
+}
+
+.font-amiri {
+  font-family: 'Amiri', serif;
+}
+
+.font-quran {
+  font-family: 'Amiri Quran', 'Amiri', serif;
+}
+
+/* Snug inline Ayah highlighter that contours naturally to text lines */
+.ayah-snug {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  display: inline;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.18s ease-in-out;
+}
+
+.ayah-selected-active {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-color: rgba(245, 158, 11, 0.22);
+  border-bottom: 2.5px solid rgba(180, 83, 9, 0.85);
+  color: #1c1917;
+  text-shadow: 0 0 1px rgba(217, 119, 6, 0.2);
+}
+
+[data-theme="night"] .ayah-selected-active,
+.dark .ayah-selected-active {
+  background-color: rgba(245, 158, 11, 0.28);
+  border-bottom: 2.5px solid rgba(251, 191, 36, 0.9);
+  color: #fef3c7;
+  text-shadow: 0 0 2px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="emerald"] .ayah-selected-active {
+  background-color: rgba(16, 185, 129, 0.26);
+  border-bottom: 2.5px solid rgba(52, 211, 153, 0.95);
+  color: #ecfdf5;
+  text-shadow: 0 0 2px rgba(16, 185, 129, 0.4);
+}
+
+.ayah-playing-active {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-color: rgba(16, 185, 129, 0.18);
+  border-bottom: 2.5px solid rgba(5, 150, 105, 0.85);
+  color: #064e3b;
+}
+
+/* 3D Realistic Paper Mushaf Page Flip */
+.mushaf-perspective {
+  perspective: 2200px;
+  perspective-origin: center center;
+}
+
+.mushaf-page-leaf {
+  transform-style: preserve-3d;
+  transform-origin: right center;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.mushaf-page-curl-shadow {
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.15) 15%,
+    rgba(255, 255, 255, 0.3) 30%,
+    rgba(0, 0, 0, 0.08) 55%,
+    transparent 100%
+  );
+}
+
+.mushaf-spine-shadow {
+  box-shadow: inset -12px 0 20px -8px rgba(0, 0, 0, 0.35);
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f0ec;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6cebe;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b5a995;
+}
+
+/* Professional Islamic UI Animations & Transitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale3d(0.96, 0.96, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes amberGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px -3px rgba(217, 119, 6, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 25px 2px rgba(217, 119, 6, 0.45);
+  }
+}
+
+@keyframes shimmerEffect {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-fade-scale {
+  animation: fadeInScale 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-subtle-float {
+  animation: subtleFloat 4s ease-in-out infinite;
+}
+
+.animate-amber-glow {
+  animation: amberGlowPulse 2.5s infinite ease-in-out;
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerEffect 3s infinite;
+}
+
+/* Micro-interaction hover lift */
+.hover-lift {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2.5px);
+}
+
+.hover-lift:active {
+  transform: translateY(0px) scale(0.98);
+}

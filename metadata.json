@@ -1,0 +1,6 @@
+{
+  "name": "صدقة جارية",
+  "description": "منصة دينية متكاملة كصدقة جارية وإهداء الأعمال الصالحة وقراءة القرآن والتلاوات والأذكار والسبحة الإلكترونية عن أرواح المغفور لهم بإذن الله.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

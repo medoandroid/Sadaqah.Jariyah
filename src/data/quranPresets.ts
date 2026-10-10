@@ -1,0 +1,148 @@
+import { CardTheme, CardAspectRatio } from '../components/AyahShareModal';
+
+export interface QuranPreset {
+  id: string;
+  title: string;
+  badge: string;
+  surahNumber: number;
+  startAyah: number;
+  endAyah: number;
+  description: string;
+  recommendedTheme?: CardTheme;
+  recommendedRatio?: CardAspectRatio;
+}
+
+export const POPULAR_QURAN_PRESETS: QuranPreset[] = [
+  {
+    id: 'kursi-single',
+    title: 'آية الكرسي',
+    badge: 'أعظم آية',
+    surahNumber: 2,
+    startAyah: 255,
+    endAyah: 255,
+    description: 'سورة البقرة: ٢٥٥ - سيدة آي القرآن وتحفظ قارئها',
+    recommendedTheme: 'parchment',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'kursi-extended',
+    title: 'آية الكرسي والآيتان بعدها',
+    badge: 'حفظ وتوحيد',
+    surahNumber: 2,
+    startAyah: 255,
+    endAyah: 257,
+    description: 'سورة البقرة: ٢٥٥ - ٢٥٧ (الله لا إله إلا هو الحي القيوم ... أصحاب النار)',
+    recommendedTheme: 'royalDark',
+    recommendedRatio: 'story',
+  },
+  {
+    id: 'baqarah-endings',
+    title: 'خواتيم سورة البقرة',
+    badge: 'كفتاه',
+    surahNumber: 2,
+    startAyah: 284,
+    endAyah: 286,
+    description: 'سورة البقرة: ٢٨٤ - ٢٨٦ (من قرأ بهما في ليلة كفتاه)',
+    recommendedTheme: 'emerald',
+    recommendedRatio: 'story',
+  },
+  {
+    id: 'kahf-start',
+    title: 'أوائل سورة الكهف (١ - ١٠)',
+    badge: 'نور الجمعة',
+    surahNumber: 18,
+    startAyah: 1,
+    endAyah: 10,
+    description: 'سورة الكهف: ١ - ١٠ (عصمة من فتنة المسيح الدجال ونور ما بين الجمعتين)',
+    recommendedTheme: 'emerald',
+    recommendedRatio: 'story',
+  },
+  {
+    id: 'kahf-end',
+    title: 'أواخر سورة الكهف (١٠٧ - ١١٠)',
+    badge: 'جنات الفردوس',
+    surahNumber: 18,
+    startAyah: 107,
+    endAyah: 110,
+    description: 'سورة الكهف: ١٠٧ - ١١٠ (إن الذين آمنوا وعملوا الصالحات كانت لهم جنات الفردوس)',
+    recommendedTheme: 'parchment',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'hashr-endings',
+    title: 'أواخر سورة الحشر (٢٢ - ٢٤)',
+    badge: 'أسماء الله الحسنى',
+    surahNumber: 59,
+    startAyah: 22,
+    endAyah: 24,
+    description: 'سورة الحشر: ٢٢ - ٢٤ (هو الله الذي لا إله إلا هو الملك القدوس السلام...)',
+    recommendedTheme: 'royalDark',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'mulk-start',
+    title: 'أوائل سورة الملك (١ - ٥)',
+    badge: 'المنجية',
+    surahNumber: 67,
+    startAyah: 1,
+    endAyah: 5,
+    description: 'سورة الملك: ١ - ٥ (تبارك الذي بيده الملك وهو على كل شيء قدير)',
+    recommendedTheme: 'midnight',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'fatiha-complete',
+    title: 'سورة الفاتحة كاملة',
+    badge: 'أم الكتاب',
+    surahNumber: 1,
+    startAyah: 1,
+    endAyah: 7,
+    description: 'سورة الفاتحة: ١ - ٧ (السبع المثاني والشفاء التام)',
+    recommendedTheme: 'parchment',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'nur-ayah',
+    title: 'آية النور',
+    badge: 'نور على نور',
+    surahNumber: 24,
+    startAyah: 35,
+    endAyah: 35,
+    description: 'سورة النور: ٣٥ (الله نور السماوات والأرض مثل نوره كمشكاة)',
+    recommendedTheme: 'amber',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'rad-sakina',
+    title: 'آية الطمأنينة والسكينة',
+    badge: 'ألا بذكر الله',
+    surahNumber: 13,
+    startAyah: 28,
+    endAyah: 28,
+    description: 'سورة الرعد: ٢٨ (الذين آمنوا وتطمئن قلوبهم بذكر الله)',
+    recommendedTheme: 'emerald',
+    recommendedRatio: 'square',
+  },
+  {
+    id: 'sharh-complete',
+    title: 'سورة الشرح كاملة',
+    badge: 'انشراح الصدر',
+    surahNumber: 94,
+    startAyah: 1,
+    endAyah: 8,
+    description: 'سورة الشرح: ١ - ٨ (فإن مع العسر يسراً · إن مع العسر يسراً)',
+    recommendedTheme: 'parchment',
+    recommendedRatio: 'portrait',
+  },
+  {
+    id: 'younus-dua',
+    title: 'دعاء ذي النون في بطن الحوت',
+    badge: 'تفريج الكرب',
+    surahNumber: 21,
+    startAyah: 87,
+    endAyah: 87,
+    description: 'سورة الأنبياء: ٨٧ (لا إله إلا أنت سبحانك إني كنت من الظالمين)',
+    recommendedTheme: 'ruby',
+    recommendedRatio: 'square',
+  },
+];

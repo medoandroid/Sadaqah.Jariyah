@@ -1,0 +1,322 @@
+import React, { useState, useMemo } from 'react';
+import { Search, X, BookOpen, Flame, CircleDot, ArrowRight, Sparkles } from 'lucide-react';
+import { ALL_SURAHS } from '../data/quranMeta';
+import { DUAS_LIST } from '../data/duas';
+import { ADHKAR_LIST } from '../data/adhkar';
+import { ASMA_AL_HUSNA } from '../data/asmaAlHusna';
+import { NAWAWI_HADITHS } from '../data/hadithData';
+import { RUQYAH_ITEMS } from '../data/ruqyahData';
+import { ShieldCheck } from 'lucide-react';
+
+interface SearchModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectSurah: (surahNumber: number) => void;
+  onNavigateTab: (tab: string) => void;
+}
+
+export const SearchModal: React.FC<SearchModalProps> = ({
+  isOpen,
+  onClose,
+  onSelectSurah,
+  onNavigateTab,
+}) => {
+  const [query, setQuery] = useState('');
+
+  const filteredSurahs = useMemo(() => {
+    if (!query.trim()) return ALL_SURAHS.slice(0, 6);
+    const q = query.trim().toLowerCase();
+    return ALL_SURAHS.filter(
+      (s) =>
+        s.name.includes(q) ||
+        s.englishName.toLowerCase().includes(q) ||
+        String(s.number) === q
+    ).slice(0, 8);
+  }, [query]);
+
+  const filteredAsma = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return ASMA_AL_HUSNA.filter(
+      (item) =>
+        item.name.includes(q) ||
+        item.meaning.includes(q) ||
+        item.transliteration.toLowerCase().includes(q)
+    ).slice(0, 4);
+  }, [query]);
+
+  const filteredDuas = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return DUAS_LIST.filter(
+      (d) =>
+        d.title.toLowerCase().includes(q) ||
+        d.arabic.toLowerCase().includes(q) ||
+        d.categoryLabel.toLowerCase().includes(q)
+    ).slice(0, 4);
+  }, [query]);
+
+  const filteredAdhkar = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return ADHKAR_LIST.filter(
+      (a) => a.text.toLowerCase().includes(q) || (a.virtue && a.virtue.toLowerCase().includes(q))
+    ).slice(0, 4);
+  }, [query]);
+
+  const filteredHadiths = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return NAWAWI_HADITHS.filter(
+      (h) =>
+        h.title.toLowerCase().includes(q) ||
+        h.arabicText.toLowerCase().includes(q) ||
+        h.explanation.toLowerCase().includes(q)
+    ).slice(0, 4);
+  }, [query]);
+
+  const filteredRuqyah = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    return RUQYAH_ITEMS.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.arabicText.toLowerCase().includes(q) ||
+        r.virtue.toLowerCase().includes(q)
+    ).slice(0, 4);
+  }, [query]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-stone-900/60 backdrop-blur-xs">
+      <div className="w-full max-w-2xl bg-[#FAF9F6] border border-stone-300/80 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Search Input Bar */}
+        <div className="flex items-center px-4 py-3.5 border-b border-stone-200 bg-white">
+          <Search className="w-5 h-5 text-amber-700 ml-3 shrink-0" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="ابحث عن سورة، اسم من أسماء الله، دعاء، أو ذكر..."
+            className="w-full bg-transparent text-base text-stone-900 placeholder:text-stone-400 focus:outline-hidden"
+            autoFocus
+          />
+          {query ? (
+            <button
+              onClick={() => setQuery('')}
+              className="p-1 text-stone-400 hover:text-stone-700 ml-2 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          ) : null}
+          <button
+            onClick={onClose}
+            className="text-xs px-2.5 py-1 text-stone-500 hover:text-stone-800 bg-stone-100 rounded-md mr-2 cursor-pointer"
+          >
+            إغلاق
+          </button>
+        </div>
+
+        {/* Results Area */}
+        <div className="max-h-[60vh] overflow-y-auto p-4 space-y-5 text-right">
+          
+          {/* Surahs Section */}
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-stone-500 mb-2 px-1">
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                <span>سور القرآن الكريم</span>
+              </span>
+              <span className="text-[11px] text-stone-400">({filteredSurahs.length})</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {filteredSurahs.map((surah) => (
+                <button
+                  key={surah.number}
+                  onClick={() => {
+                    onSelectSurah(surah.number);
+                    onNavigateTab('quran');
+                    onClose();
+                  }}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 hover:border-amber-300 transition-all text-right cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-md bg-stone-100 text-stone-600 font-mono text-xs flex items-center justify-center group-hover:bg-amber-100 group-hover:text-amber-900 transition-colors">
+                      {surah.number}
+                    </span>
+                    <div>
+                      <div className="font-amiri text-base font-bold text-stone-900 group-hover:text-amber-900">
+                        سورة {surah.name}
+                      </div>
+                      <div className="text-[11px] text-stone-500">
+                        {surah.revelationArabic} · {surah.numberOfAyahs} آية · ص {surah.startPage}
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-amber-700 rotate-180 transition-transform group-hover:-translate-x-1" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Asma Al-Husna Section */}
+          {filteredAsma.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                <span>أسماء الله الحسنى</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredAsma.map((item) => (
+                  <button
+                    key={item.number}
+                    onClick={() => {
+                      onNavigateTab('asma');
+                      onClose();
+                    }}
+                    className="p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all text-right cursor-pointer group flex items-start gap-2.5"
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-amber-100/70 text-amber-900 font-bold text-xs flex items-center justify-center shrink-0">
+                      {item.number}
+                    </span>
+                    <div>
+                      <div className="font-amiri text-base font-bold text-stone-900 group-hover:text-amber-900">
+                        {item.name}
+                      </div>
+                      <div className="text-xs text-stone-600 line-clamp-1">
+                        {item.meaning}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Duas Section */}
+          {filteredDuas.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
+                <Flame className="w-3.5 h-3.5 text-amber-700" />
+                <span>الأدعية المأثورة للمتوفين</span>
+              </div>
+              <div className="space-y-2">
+                {filteredDuas.map((dua) => (
+                  <button
+                    key={dua.id}
+                    onClick={() => {
+                      onNavigateTab('duas');
+                      onClose();
+                    }}
+                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                  >
+                    <div className="text-sm font-semibold text-stone-900 group-hover:text-amber-900 mb-1">
+                      {dua.title}
+                    </div>
+                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                      {dua.arabic}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Adhkar Section */}
+          {filteredAdhkar.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
+                <CircleDot className="w-3.5 h-3.5 text-amber-700" />
+                <span>الأذكار والتسبيح</span>
+              </div>
+              <div className="space-y-2">
+                {filteredAdhkar.map((dhikr) => (
+                  <button
+                    key={dhikr.id}
+                    onClick={() => {
+                      onNavigateTab('adhkar');
+                      onClose();
+                    }}
+                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                  >
+                    <div className="text-xs text-stone-700 line-clamp-2 font-amiri leading-relaxed">
+                      {dhikr.text}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hadiths Section */}
+          {filteredHadiths.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
+                <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                <span>الأربعون النووية والسنة</span>
+              </div>
+              <div className="space-y-2">
+                {filteredHadiths.map((h) => (
+                  <button
+                    key={h.id}
+                    onClick={() => {
+                      onNavigateTab('hadith');
+                      onClose();
+                    }}
+                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                  >
+                    <div className="text-sm font-semibold text-stone-900 group-hover:text-amber-900 mb-0.5">
+                      الحديث {h.id}: {h.title}
+                    </div>
+                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                      {h.arabicText}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ruqyah Section */}
+          {filteredRuqyah.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>الرقية الشرعية وأدعية الشفاء</span>
+              </div>
+              <div className="space-y-2">
+                {filteredRuqyah.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      onNavigateTab('ruqyah');
+                      onClose();
+                    }}
+                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                  >
+                    <div className="text-sm font-semibold text-stone-900 group-hover:text-emerald-900 mb-0.5">
+                      {r.title}
+                    </div>
+                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                      {r.arabicText}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {query && filteredSurahs.length === 0 && filteredAsma.length === 0 && filteredDuas.length === 0 && filteredHadiths.length === 0 && filteredRuqyah.length === 0 && (
+            <div className="py-8 text-center text-stone-500 text-sm">
+              لم نعثر على نتائج مطابقة لـ "{query}". جرب البحث باسم سورة أو اسم من أسماء الله الحسنى أو ذكر آخر.
+            </div>
+          )}
+
+        </div>
+
+      </div>
+    </div>
+  );
+};
