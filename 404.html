@@ -24,12 +24,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/Sadaqah.Jariyah/assets/index--kVWXUmQ.js"></script>
-    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/rolldown-runtime-CbXtAM7H.js">
-    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/vendor-icons-DpE7s-16.js">
-    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/vendor-react-CuhIJesl.js">
-    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/dedicationService-DSPpzHJL.js">
-    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/vendor-export-BZI95pUo.js">
+    <script type="module" crossorigin src="/Sadaqah.Jariyah/assets/index-BqixB7nN.js"></script>
+    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/rolldown-runtime-hePW80VL.js">
+    <link rel="modulepreload" crossorigin href="/Sadaqah.Jariyah/assets/dedicationService-W-vRk9Nl.js">
     <link rel="stylesheet" crossorigin href="/Sadaqah.Jariyah/assets/index-ClmZXpHo.css">
   <link rel="manifest" href="/Sadaqah.Jariyah/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/Sadaqah.Jariyah/registerSW.js"></script></head>
   <body class="bg-[#F8F7F4] dark:bg-[#12141A] text-stone-900 dark:text-stone-100 antialiased selection:bg-amber-100 selection:text-stone-900">
@@ -37,8 +34,42 @@
       <div id="initial-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Cairo', system-ui, sans-serif; text-align: center; padding: 24px; background-color: #12141A; color: #F8F7F4;">
         <div style="width: 52px; height: 52px; border: 3px solid rgba(217, 119, 6, 0.2); border-top-color: #D97706; border-radius: 50%; animation: spin 0.9s linear infinite; margin-bottom: 18px;"></div>
         <h2 style="font-size: 20px; font-weight: 700; color: #F8F7F4; margin: 0 0 6px 0;">صدقة جارية</h2>
-        <p style="font-size: 13px; color: #94A3B8; margin: 0;">جاري تحميل المنصة المباركة...</p>
+        <p style="font-size: 13px; color: #94A3B8; margin: 0 0 16px 0;">جاري تحميل المنصة المباركة...</p>
+        
+        <!-- Emergency Recovery Button if connection is slow or cache is stuck -->
+        <div id="loader-timeout-hint" style="display: none; max-width: 320px; margin-top: 12px; padding: 14px; border-radius: 16px; background-color: rgba(30, 41, 59, 0.7); border: 1px solid rgba(217, 119, 6, 0.3);">
+          <p style="font-size: 12px; color: #CBD5E1; margin: 0 0 10px 0; line-height: 1.5;">استغرق التحميل وقتاً أطول من المعتاد؟ اضغط هنا للتحديث ومسح التخزين القديم فوراً:</p>
+          <button onclick="if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){regs.forEach(function(r){r.unregister();});});}localStorage.clear();sessionStorage.clear();window.location.reload(true);" style="background: linear-gradient(135deg, #D97706, #B45309); color: white; border: none; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; font-family: 'Cairo', sans-serif;">
+            تحديث ومسح الذاكرة المؤقتة ↻
+          </button>
+        </div>
+
+        <div id="loader-error" style="display: none; max-width: 320px; margin-top: 16px; padding: 12px; border-radius: 12px; background-color: rgba(185, 28, 28, 0.2); border: 1px solid rgba(239, 68, 68, 0.4);">
+          <p style="font-size: 12px; color: #FCA5A5; margin: 0 0 6px 0;">تعذر إكمال التحميل تلقائياً:</p>
+          <p id="loader-error-msg" style="font-size: 11px; color: #94A3B8; margin: 0 0 8px 0; word-break: break-all;"></p>
+          <button onclick="window.location.reload(true);" style="background: #EF4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;">
+            إعادة المحاولة
+          </button>
+        </div>
       </div>
+      <script>
+        setTimeout(function() {
+          var hint = document.getElementById('loader-timeout-hint');
+          if (hint && document.getElementById('initial-loader')) {
+            hint.style.display = 'block';
+          }
+        }, 3500);
+        window.addEventListener('error', function(e) {
+          var errDiv = document.getElementById('loader-error');
+          if (errDiv && document.getElementById('initial-loader')) {
+            errDiv.style.display = 'block';
+            var errMsg = document.getElementById('loader-error-msg');
+            if (errMsg && e && e.message) {
+              errMsg.textContent = e.message;
+            }
+          }
+        });
+      </script>
       <style>@keyframes spin{0%{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
     </div>
   </body>
