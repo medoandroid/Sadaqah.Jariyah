@@ -89,31 +89,39 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-stone-900/60 backdrop-blur-xs">
-      <div className="w-full max-w-2xl bg-[#FAF9F6] border border-stone-300/80 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-stone-950/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl bg-[#FAF9F6] dark:bg-[#1A1D24] border border-stone-300/80 dark:border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-stone-200 bg-white">
-          <Search className="w-5 h-5 text-amber-700 ml-3 shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-[#14161B]">
+          <Search className="w-5 h-5 text-amber-600 dark:text-amber-400 ml-3 shrink-0" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+            }}
             placeholder="ابحث عن سورة، اسم من أسماء الله، دعاء، أو ذكر..."
-            className="w-full bg-transparent text-base text-stone-900 placeholder:text-stone-400 focus:outline-hidden"
+            className="w-full bg-transparent text-base text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-hidden"
             autoFocus
           />
           {query ? (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-stone-400 hover:text-stone-700 ml-2 cursor-pointer"
+              className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 ml-2 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           ) : null}
           <button
             onClick={onClose}
-            className="text-xs px-2.5 py-1 text-stone-500 hover:text-stone-800 bg-stone-100 rounded-md mr-2 cursor-pointer"
+            className="text-xs px-2.5 py-1 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800 rounded-md mr-2 cursor-pointer transition-colors"
           >
             إغلاق
           </button>
@@ -124,12 +132,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           
           {/* Surahs Section */}
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-stone-500 mb-2 px-1">
+            <div className="flex items-center justify-between text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
               <span className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>سور القرآن الكريم</span>
               </span>
-              <span className="text-[11px] text-stone-400">({filteredSurahs.length})</span>
+              <span className="text-[11px] text-stone-400 dark:text-stone-500">({filteredSurahs.length})</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {filteredSurahs.map((surah) => (
@@ -140,22 +148,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     onNavigateTab('quran');
                     onClose();
                   }}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 hover:border-amber-300 transition-all text-right cursor-pointer group"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-amber-50/70 dark:hover:bg-amber-950/30 border border-stone-200/70 dark:border-stone-800 hover:border-amber-300 dark:hover:border-amber-700/50 transition-all text-right cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-md bg-stone-100 text-stone-600 font-mono text-xs flex items-center justify-center group-hover:bg-amber-100 group-hover:text-amber-900 transition-colors">
+                    <span className="w-7 h-7 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-mono text-xs flex items-center justify-center group-hover:bg-amber-100 dark:group-hover:bg-amber-900/50 group-hover:text-amber-900 dark:group-hover:text-amber-200 transition-colors">
                       {surah.number}
                     </span>
                     <div>
-                      <div className="font-amiri text-base font-bold text-stone-900 group-hover:text-amber-900">
+                      <div className="font-amiri text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300">
                         سورة {surah.name}
                       </div>
-                      <div className="text-[11px] text-stone-500">
+                      <div className="text-[11px] text-stone-500 dark:text-stone-400">
                         {surah.revelationArabic} · {surah.numberOfAyahs} آية · ص {surah.startPage}
                       </div>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-amber-700 rotate-180 transition-transform group-hover:-translate-x-1" />
+                  <ArrowRight className="w-4 h-4 text-stone-400 dark:text-stone-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 rotate-180 transition-transform group-hover:-translate-x-1" />
                 </button>
               ))}
             </div>
@@ -164,8 +172,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {/* Asma Al-Husna Section */}
           {filteredAsma.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>أسماء الله الحسنى</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -176,16 +184,16 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onNavigateTab('asma');
                       onClose();
                     }}
-                    className="p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all text-right cursor-pointer group flex items-start gap-2.5"
+                    className="p-3 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-amber-50/70 dark:hover:bg-amber-950/30 border border-stone-200/70 dark:border-stone-800 transition-all text-right cursor-pointer group flex items-start gap-2.5"
                   >
-                    <span className="w-8 h-8 rounded-lg bg-amber-100/70 text-amber-900 font-bold text-xs flex items-center justify-center shrink-0">
+                    <span className="w-8 h-8 rounded-lg bg-amber-100/70 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center justify-center shrink-0">
                       {item.number}
                     </span>
                     <div>
-                      <div className="font-amiri text-base font-bold text-stone-900 group-hover:text-amber-900">
+                      <div className="font-amiri text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300">
                         {item.name}
                       </div>
-                      <div className="text-xs text-stone-600 line-clamp-1">
+                      <div className="text-xs text-stone-600 dark:text-stone-400 line-clamp-1">
                         {item.meaning}
                       </div>
                     </div>
@@ -198,8 +206,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {/* Duas Section */}
           {filteredDuas.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
-                <Flame className="w-3.5 h-3.5 text-amber-700" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
+                <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>الأدعية المأثورة للمتوفين</span>
               </div>
               <div className="space-y-2">
@@ -210,12 +218,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onNavigateTab('duas');
                       onClose();
                     }}
-                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                    className="w-full text-right p-3 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-amber-50/70 dark:hover:bg-amber-950/30 border border-stone-200/70 dark:border-stone-800 transition-all cursor-pointer block group"
                   >
-                    <div className="text-sm font-semibold text-stone-900 group-hover:text-amber-900 mb-1">
+                    <div className="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 mb-1">
                       {dua.title}
                     </div>
-                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                    <div className="text-xs text-stone-600 dark:text-stone-400 line-clamp-2 font-amiri leading-relaxed">
                       {dua.arabic}
                     </div>
                   </button>
@@ -227,8 +235,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {/* Adhkar Section */}
           {filteredAdhkar.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
-                <CircleDot className="w-3.5 h-3.5 text-amber-700" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
+                <CircleDot className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>الأذكار والتسبيح</span>
               </div>
               <div className="space-y-2">
@@ -239,9 +247,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onNavigateTab('adhkar');
                       onClose();
                     }}
-                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                    className="w-full text-right p-3 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-amber-50/70 dark:hover:bg-amber-950/30 border border-stone-200/70 dark:border-stone-800 transition-all cursor-pointer block group"
                   >
-                    <div className="text-xs text-stone-700 line-clamp-2 font-amiri leading-relaxed">
+                    <div className="text-xs text-stone-700 dark:text-stone-300 line-clamp-2 font-amiri leading-relaxed">
                       {dhikr.text}
                     </div>
                   </button>
@@ -253,8 +261,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {/* Hadiths Section */}
           {filteredHadiths.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
-                <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
+                <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>الأربعون النووية والسنة</span>
               </div>
               <div className="space-y-2">
@@ -265,12 +273,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onNavigateTab('hadith');
                       onClose();
                     }}
-                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-amber-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                    className="w-full text-right p-3 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-amber-50/70 dark:hover:bg-amber-950/30 border border-stone-200/70 dark:border-stone-800 transition-all cursor-pointer block group"
                   >
-                    <div className="text-sm font-semibold text-stone-900 group-hover:text-amber-900 mb-0.5">
+                    <div className="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 mb-0.5">
                       الحديث {h.id}: {h.title}
                     </div>
-                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                    <div className="text-xs text-stone-600 dark:text-stone-400 line-clamp-2 font-amiri leading-relaxed">
                       {h.arabicText}
                     </div>
                   </button>
@@ -282,8 +290,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {/* Ruqyah Section */}
           {filteredRuqyah.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 mb-2 px-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400 mb-2 px-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>الرقية الشرعية وأدعية الشفاء</span>
               </div>
               <div className="space-y-2">
@@ -294,12 +302,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       onNavigateTab('ruqyah');
                       onClose();
                     }}
-                    className="w-full text-right p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-stone-200/70 transition-all cursor-pointer block group"
+                    className="w-full text-right p-3 rounded-xl bg-white dark:bg-stone-900/90 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 border border-stone-200/70 dark:border-stone-800 transition-all cursor-pointer block group"
                   >
-                    <div className="text-sm font-semibold text-stone-900 group-hover:text-emerald-900 mb-0.5">
+                    <div className="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-300 mb-0.5">
                       {r.title}
                     </div>
-                    <div className="text-xs text-stone-600 line-clamp-2 font-amiri leading-relaxed">
+                    <div className="text-xs text-stone-600 dark:text-stone-400 line-clamp-2 font-amiri leading-relaxed">
                       {r.arabicText}
                     </div>
                   </button>
@@ -309,7 +317,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           )}
 
           {query && filteredSurahs.length === 0 && filteredAsma.length === 0 && filteredDuas.length === 0 && filteredHadiths.length === 0 && filteredRuqyah.length === 0 && (
-            <div className="py-8 text-center text-stone-500 text-sm">
+            <div className="py-8 text-center text-stone-500 dark:text-stone-400 text-sm">
               لم نعثر على نتائج مطابقة لـ "{query}". جرب البحث باسم سورة أو اسم من أسماء الله الحسنى أو ذكر آخر.
             </div>
           )}

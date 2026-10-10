@@ -105,6 +105,31 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
 
+  // Global Keyboard Shortcuts (Ctrl+K for search, Esc to close modals)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K to toggle universal search
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+        return;
+      }
+
+      // Escape to close open modal
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        setIsDedicationOpen(false);
+        setIsProfileOpen(false);
+        setIsOfflineModalOpen(false);
+        setIsPrayerTimesOpen(false);
+        setIsBackupOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleSelectSurah = (surahNumber: number) => {
     setSelectedSurahNumber(surahNumber);
     setActiveTab('quran');
@@ -166,6 +191,7 @@ function AppContent() {
             onOpenProfile={() => setIsProfileOpen(true)}
             onOpenPrayerTimes={() => setIsPrayerTimesOpen(true)}
             onOpenBackup={() => setIsBackupOpen(true)}
+            onOpenSearch={() => setIsSearchOpen(true)}
           />
         )}
 

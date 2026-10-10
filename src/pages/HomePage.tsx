@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   BookOpen,
   Headphones,
@@ -19,7 +19,12 @@ import {
   Trophy,
   RotateCcw,
   Copy,
-  Check
+  Check,
+  Search,
+  Moon,
+  Sun,
+  CheckCircle2,
+  Bookmark
 } from 'lucide-react';
 import { HONORED_PERSONS, GENERAL_DEDICATION_DUA } from '../data/persons';
 import { Star8Rosette, ArabesqueDivider, BismillahHeader } from '../components/IslamicDecoration';
@@ -27,7 +32,9 @@ import { getDedicationStats, recordDedication } from '../services/dedicationServ
 import { useAudio } from '../context/AudioContext';
 import { storageService } from '../services/storageService';
 import { userProfileService, UserProfile, UNCLE_NAMES, TargetUncleId } from '../services/userProfileService';
-import { playTasbeehBeadSound } from '../utils/soundEffects';
+import { playTasbeehBeadSound, playPeacefulChime } from '../utils/soundEffects';
+import { calculatePrayerTimes, POPULAR_CITIES, PrayerTimesResult } from '../utils/prayerTimes';
+import { dailyWirdService } from '../services/dailyWirdService';
 
 const DAILY_TADABBUR_LIST = [
   {
@@ -72,6 +79,7 @@ interface HomePageProps {
   onOpenProfile?: () => void;
   onOpenPrayerTimes?: () => void;
   onOpenBackup?: () => void;
+  onOpenSearch?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -82,6 +90,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOpenProfile,
   onOpenPrayerTimes,
   onOpenBackup,
+  onOpenSearch,
 }) => {
   const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
 
@@ -95,6 +104,120 @@ export const HomePage: React.FC<HomePageProps> = ({
   const realTasbeehCount = storageService.getNumber('tasbeeh_total', 0);
   const totalTasbeehDisplay = Math.max(stats.totalTasbeehs, realTasbeehCount);
   const { playSurah } = useAudio();
+
+  // Real-time Clock & Prayer Countdown
+  const [nowDate, setNowDate] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowDate(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const prayerResult: PrayerTimesResult = useMemo(() => {
+    const selectedCityId = storageService.getString('prayer_selected_city', 'makkah');
+    const customCoords = storageService.get<{ lat: number; lng: number } | null>('prayer_custom_coords', null);
+
+    if (customCoords) {
+      return calculatePrayerTimes(nowDate, customCoords.lat, customCoords.lng, -nowDate.getTimezoneOffset() / 60);
+    }
+    const city = POPULAR_CITIES.find((c) => c.id === selectedCityId) || POPULAR_CITIES[0];
+    return calculatePrayerTimes(nowDate, city.latitude, city.longitude, city.timezone);
+  }, [nowDate]);
+
+  // Daily Wird Tracker Checklist
+  const todayKey = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }, [nowDate]);
+
+  const [dailyTasks, setDailyTasks] = useState(() => {
+    return storageService.get<Record<string, boolean>>(`daily_wird_checklist_${todayKey}`, {
+      quran: false,
+      adhkar: false,
+      tasbeeh: false,
+      dua: false,
+    });
+  });
+
+  const [wirdData, setWirdData] = useState(() => dailyWirdService.getWirdData());
+
+  const toggleTask = (key: 'quran' | 'adhkar' | 'tasbeeh' | 'dua') => {
+    playTasbeehBeadSound();
+    const updated = { ...dailyTasks, [key]: !dailyTasks[key] };
+    setDailyTasks(updated);
+    storageService.set(`daily_wird_checklist_${todayKey}`, updated);
+
+    const allDone = Object.values(updated).every(Boolean);
+    if (allDone && !Object.values(dailyTasks).every(Boolean)) {
+      playPeacefulChime();
+      const res = dailyWirdService.addProgress(1);
+      setWirdData(res.data);
+      showToast('🎉 ما شاء الله! اكتمل وردك اليومي المبارك بالكامل، كتب الله أجرك ونور بصيرتك');
+    } else {
+      showToast(updated[key] ? 'تم إنجاز العمل المبارك بنجاح ✨' : 'تم إلغاء التحديد');
+    }
+  };
+
+  const completedTasksCount = Object.values(dailyTasks).filter(Boolean).length;
+  const tasksPercent = Math.round((completedTasksCount / 4) * 100);
+
+  // Context-Aware Spiritual Recommendations
+  const spiritualRecommendation = useMemo(() => {
+    const day = nowDate.getDay(); // 0 is Sunday, 5 is Friday, 4 is Thursday
+    const hour = nowDate.getHours();
+
+    if (day === 5 || (day === 4 && hour >= 18)) {
+      return {
+        type: 'friday',
+        title: 'يوم الجمعة المبارك',
+        desc: 'نورٌ ما بين الجمعتين؛ سنّة قراءة سورة الكهف والاستكثار من الصلاة على النبي ﷺ.',
+        actionText: 'قراءة سورة الكهف (سورة ١٨)',
+        icon: Sparkles,
+        onClick: () => {
+          onSelectSurah(18);
+          setActiveTab('quran');
+        },
+      };
+    }
+
+    if (hour >= 21 || hour < 4) {
+      return {
+        type: 'night',
+        title: 'سنّة الليل وقبل النوم',
+        desc: 'سورة الملك هي المانعة المنجية من عذاب القبر، احرص على تلاوتها قبل نومك.',
+        actionText: 'قراءة سورة الملك (سورة ٦٧)',
+        icon: Moon,
+        onClick: () => {
+          onSelectSurah(67);
+          setActiveTab('quran');
+        },
+      };
+    }
+
+    if (hour >= 4 && hour < 12) {
+      return {
+        type: 'morning',
+        title: 'بركة الصباح الباكر',
+        desc: 'استفتح يومك بأذكار الصباح لتكون في حفظ الله ومعيته حتى تمسي.',
+        actionText: 'فتح أذكار الصباح',
+        icon: Sun,
+        onClick: () => {
+          setActiveTab('adhkar');
+        },
+      };
+    }
+
+    return {
+      type: 'evening',
+      title: 'حصن المساء واستجابة الدعاء',
+      desc: 'قراءة أذكار المساء تحصين للنفس واستجلاب للسكينة وطمأنينة القلب.',
+      actionText: 'فتح أذكار المساء',
+      icon: Moon,
+      onClick: () => {
+        setActiveTab('adhkar');
+      },
+    };
+  }, [nowDate, onSelectSurah, setActiveTab]);
 
   const [currentTadabburIndex, setCurrentTadabburIndex] = useState<number>(0);
   const [copiedTadabbur, setCopiedTadabbur] = useState<boolean>(false);
@@ -293,24 +416,78 @@ export const HomePage: React.FC<HomePageProps> = ({
           <Star8Rosette className="w-[640px] h-[640px] text-amber-950 dark:text-amber-200" />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
-          <BismillahHeader className="mb-6" />
+          {/* Top Live Prayer Status & Universal Search Trigger Pill */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs">
+            {prayerResult && (
+              <button
+                onClick={onOpenPrayerTimes}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-900 dark:text-amber-300 font-medium hover:bg-amber-500/15 transition-all cursor-pointer shadow-xs group"
+                title="اضغط لعرض مواقيت الصلوات اليومية وبوصلة القبلة"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>
+                  الصلاة القادمة: <strong>{prayerResult.nextPrayer.arabicName}</strong> (متبقي {prayerResult.nextPrayer.remainingFormatted})
+                </span>
+                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت ↗</span>
+              </button>
+            )}
+
+            {onOpenSearch && (
+              <button
+                onClick={onOpenSearch}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 dark:bg-stone-850 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-all cursor-pointer shadow-xs"
+              >
+                <Search className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>بحث سريع</span>
+                <kbd className="hidden sm:inline px-1.5 py-0.5 text-[10px] font-mono bg-stone-100 dark:bg-stone-800 rounded-sm text-stone-500">⌘K</kbd>
+              </button>
+            )}
+          </div>
+
+          <BismillahHeader className="mb-2" />
 
           {/* Main Title */}
-          <div className="inline-block relative mb-4">
+          <div className="inline-block relative mb-2">
             <h1 className="font-amiri text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-900 dark:text-stone-100 tracking-tight leading-[1.25]">
               صَدَقَةٌ جَارِيَة
             </h1>
             <div className="h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto mt-2" />
           </div>
 
-          <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-6">
             منصة إسلامية قرآنية جامعة، مهداة خالصاً لوجه الله تعالى من <span className="font-bold text-amber-900 dark:text-amber-400">محمد أيمن</span> عن أرواح عمامه الغاليين المغفور لهم بإذن الله:
           </p>
 
+          {/* Context-Aware Time & Day Spiritual Recommendation Banner */}
+          {spiritualRecommendation && (
+            <div className="max-w-2xl mx-auto p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-amber-500/10 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex items-center justify-between gap-3 text-right">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0">
+                  <spiritualRecommendation.icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-amber-900 dark:text-amber-300">
+                    {spiritualRecommendation.title}
+                  </div>
+                  <div className="text-[11px] text-stone-600 dark:text-stone-300 leading-snug">
+                    {spiritualRecommendation.desc}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={spiritualRecommendation.onClick}
+                className="px-3 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold shrink-0 transition-colors cursor-pointer shadow-xs"
+              >
+                {spiritualRecommendation.actionText}
+              </button>
+            </div>
+          )}
+
           {/* The Four Honored Names Card Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-10 text-right">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-8 text-right">
             {HONORED_PERSONS.map((person, index) => (
               <div
                 key={person.id}
@@ -362,6 +539,126 @@ export const HomePage: React.FC<HomePageProps> = ({
               <Sparkles className="w-5 h-5 text-amber-200" />
               <span>إهداء ثواب عمل صالح</span>
             </button>
+          </div>
+
+          {/* Interactive Daily Wird Card (ورد اليوم المبارك) */}
+          <div className="max-w-3xl mx-auto p-5 sm:p-6 rounded-3xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/90 dark:border-stone-800 shadow-sm text-right space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
+                      ورد اليوم المبارك ومسار البركة
+                    </h3>
+                    {wirdData.streakDays > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
+                        <Flame className="w-3 h-3 text-amber-600 fill-amber-600" />
+                        <span>سلسلة {wirdData.streakDays} يوم</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    أعمال يسيرة يومية تعمر أوقاتك بنور الذكر وإهداء الأجر للأرواح الغالية
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-left shrink-0">
+                <span className="text-[11px] text-stone-400 block font-mono">الإنجاز اليومي</span>
+                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400">
+                  {completedTasksCount} من ٤ ({tasksPercent}%)
+                </span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-stone-100 dark:bg-stone-800 h-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-600 to-emerald-500 rounded-full transition-all duration-500"
+                style={{ width: `${tasksPercent}%` }}
+              />
+            </div>
+
+            {/* Checklist Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                {
+                  key: 'quran' as const,
+                  title: 'تلاوة جزء أو صفحة من القرآن',
+                  sub: 'تلاوة خاشعة من المصحف الشريف',
+                  actionText: 'فتح المصحف',
+                  onAction: () => setActiveTab('mushaf'),
+                },
+                {
+                  key: 'adhkar' as const,
+                  title: 'قراءة الأذكار اليومية (صباح / مساء)',
+                  sub: 'حصن المسلم والتحصينات النبوية',
+                  actionText: 'فتح الأذكار',
+                  onAction: () => setActiveTab('adhkar'),
+                },
+                {
+                  key: 'tasbeeh' as const,
+                  title: '١٠٠ تسبيحة واستغفار بالسبحة',
+                  sub: 'ذكر خفيف على اللسان ثقيل في الميزان',
+                  actionText: 'فتح السبحة',
+                  onAction: () => setActiveTab('tasbeeh'),
+                },
+                {
+                  key: 'dua' as const,
+                  title: 'دعاء وإهداء ثواب للأرواح الكريمة',
+                  sub: 'إدخال السرور على المغفور لهم بإذن الله',
+                  actionText: 'إهداء الثواب',
+                  onAction: () => onOpenDedication(),
+                },
+              ].map((item) => {
+                const isDone = dailyTasks[item.key];
+                return (
+                  <div
+                    key={item.key}
+                    onClick={() => toggleTask(item.key)}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 text-right select-none ${
+                      isDone
+                        ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border-emerald-500/40 text-emerald-950 dark:text-emerald-200'
+                        : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200 dark:border-stone-750 hover:border-amber-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isDone
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'border-2 border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'
+                        }`}
+                      >
+                        {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </div>
+                      <div>
+                        <div className={`text-xs font-bold leading-tight ${isDone ? 'line-through opacity-85' : 'text-stone-900 dark:text-stone-100'}`}>
+                          {item.title}
+                        </div>
+                        <div className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">
+                          {item.sub}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        item.onAction();
+                      }}
+                      className="px-2 py-1 rounded-lg bg-stone-200/60 dark:bg-stone-700/60 hover:bg-amber-600 hover:text-white text-stone-700 dark:text-stone-300 text-[10px] font-bold shrink-0 transition-colors"
+                    >
+                      {item.actionText} ↗
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
         </div>
@@ -605,9 +902,11 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Quick Click Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
             {[
               'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+              'سُبْحَانَ اللَّهِ الْعَظِيمِ',
+              'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
               'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
               'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
               'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ'
@@ -615,9 +914,9 @@ export const HomePage: React.FC<HomePageProps> = ({
               <button
                 key={idx}
                 onClick={() => handleQuickDhikr(phrase)}
-                className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/70 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-stone-200 dark:border-stone-750 hover:border-emerald-500/40 text-stone-900 dark:text-stone-100 transition-all active:scale-95 cursor-pointer text-center group"
+                className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/70 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-stone-200 dark:border-stone-750 hover:border-emerald-500/40 text-stone-900 dark:text-stone-100 transition-all active:scale-95 cursor-pointer text-center group"
               >
-                <span className="font-amiri text-sm sm:text-base font-bold group-hover:text-emerald-800 dark:group-hover:text-emerald-300 block leading-tight">
+                <span className="font-amiri text-sm font-bold group-hover:text-emerald-800 dark:group-hover:text-emerald-300 block leading-tight">
                   {phrase}
                 </span>
                 <span className="text-[10px] text-stone-400 mt-1 block">
@@ -625,6 +924,19 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </span>
               </button>
             ))}
+          </div>
+
+          <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+            <span className="text-stone-500 dark:text-stone-400">
+              تريد سبحة تفاعلية كاملة مع أهداف وأصوات واهتزاز؟
+            </span>
+            <button
+              onClick={() => setActiveTab('tasbeeh')}
+              className="font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <span>فتح السبحة الإلكترونية المطورة</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </section>

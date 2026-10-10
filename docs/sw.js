@@ -90,7 +90,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "2d9d56faa26a9fa051fe19055ea0dab1"
   }, {
     "url": "index.html",
-    "revision": "fd319f0aed1c4faac98a6460c0c113b6"
+    "revision": "79c17fa1d57f27319f89ee7b398bfe22"
   }, {
     "url": "icon.svg",
     "revision": "284a485e7db5229b984547a4bfbf77c8"
@@ -119,16 +119,16 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/minimize-2-DTpMu9of.js",
     "revision": null
   }, {
-    "url": "assets/jspdf.es.min-BcmlD0uy.js",
+    "url": "assets/jspdf.es.min-CikDlhCF.js",
     "revision": null
   }, {
-    "url": "assets/index.es-nnnJ4k1l.js",
+    "url": "assets/index.es-hbLSLVBb.js",
     "revision": null
   }, {
-    "url": "assets/index-DLLaDX6V.js",
+    "url": "assets/index-CqOiEclf.js",
     "revision": null
   }, {
-    "url": "assets/index-ClmZXpHo.css",
+    "url": "assets/index-69Id6VYM.css",
     "revision": null
   }, {
     "url": "assets/html2canvas-pro.esm-C3QBfBe-.js",
@@ -149,49 +149,49 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/bookmark-TZiefl6S.js",
     "revision": null
   }, {
-    "url": "assets/TasbeehPage-CQdDQe_J.js",
+    "url": "assets/TasbeehPage-o0bcvTVG.js",
     "revision": null
   }, {
-    "url": "assets/RuqyahPage-Cun2c7tG.js",
+    "url": "assets/RuqyahPage-COGD69He.js",
     "revision": null
   }, {
-    "url": "assets/RecitationsPage-Bd-B_TBZ.js",
+    "url": "assets/RecitationsPage-C0kMF3nS.js",
     "revision": null
   }, {
-    "url": "assets/QuranPage-B-JC2mvU.js",
+    "url": "assets/QuranPage-CG4Lu8mJ.js",
     "revision": null
   }, {
-    "url": "assets/PersonsPage-TgRmii0i.js",
+    "url": "assets/PersonsPage-Dq01eMuk.js",
     "revision": null
   }, {
-    "url": "assets/PersonalDuaPage-BeU9uFSe.js",
+    "url": "assets/PersonalDuaPage-D8Mci_xz.js",
     "revision": null
   }, {
-    "url": "assets/PaperMushafPage-iYkEeCrV.js",
+    "url": "assets/PaperMushafPage-BGJzxyHT.js",
     "revision": null
   }, {
-    "url": "assets/KhatmahPage-C_MdsrHe.js",
+    "url": "assets/KhatmahPage-rJDn-AJQ.js",
     "revision": null
   }, {
-    "url": "assets/HadithPage-DoMEbi6f.js",
+    "url": "assets/HadithPage-D7AORXAY.js",
     "revision": null
   }, {
-    "url": "assets/DuasPage-B9urASSx.js",
+    "url": "assets/DuasPage-CVav1B9Q.js",
     "revision": null
   }, {
-    "url": "assets/DedicationsPage-BjyerBxK.js",
+    "url": "assets/DedicationsPage-L-z9UgYn.js",
     "revision": null
   }, {
-    "url": "assets/CustomSelect-CSdYN58L.js",
+    "url": "assets/CustomSelect-D1Aeszwd.js",
     "revision": null
   }, {
-    "url": "assets/AyahShareModal-C5jehtMl.js",
+    "url": "assets/AyahShareModal-DlK71uK3.js",
     "revision": null
   }, {
-    "url": "assets/AsmaAlHusnaPage-2ko2EmdM.js",
+    "url": "assets/AsmaAlHusnaPage-DVbdxa0n.js",
     "revision": null
   }, {
-    "url": "assets/AdhkarPage-B-bF-Q0f.js",
+    "url": "assets/AdhkarPage-CGfiITvk.js",
     "revision": null
   }, {
     "url": "apple-touch-icon.png",
