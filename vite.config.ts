@@ -4,7 +4,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-const base = '/Sadaqah.Jariyah/';
+const base = process.env.VITE_BASE || (process.env.GITHUB_ACTIONS ? '/Sadaqah.Jariyah/' : '/');
 
 export default defineConfig(() => {
   return {
