@@ -93,39 +93,39 @@ export const TadabburStationCard: React.FC<TadabburStationCardProps> = ({
   };
 
   const categories = [
-    { key: 'all', label: 'كل المواضيع' },
-    { key: 'peace', label: 'السكينة والطمأنينة 🕊️' },
-    { key: 'relief', label: 'تفريج الكروب 🌿' },
-    { key: 'hope', label: 'الأمل والرضا 🌅' },
-    { key: 'parents', label: 'بر الأهل والوفاء 🤍' },
-    { key: 'gratitude', label: 'الشكر والزيادة ✨' },
-    { key: 'forgiveness', label: 'المغفرة والرحمة 🌧️' },
+    { key: 'all', label: 'كل الموضوعات' },
+    { key: 'peace', label: 'السكينة والطمأنينة' },
+    { key: 'relief', label: 'تفريج الكروب' },
+    { key: 'hope', label: 'الأمل والرضا' },
+    { key: 'parents', label: 'بر الوالدين والوفاء' },
+    { key: 'gratitude', label: 'الشكر والزيادة' },
+    { key: 'forgiveness', label: 'المغفرة والرحمة' },
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-amber-50/40 to-amber-100/30 dark:from-stone-900 dark:via-stone-900/95 dark:to-amber-950/25 border border-amber-600/30 dark:border-amber-500/20 shadow-xl p-5 sm:p-8 space-y-6 text-right">
+    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-sm p-5 sm:p-7 space-y-6 text-right">
       
       {/* Top Header Strip */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-amber-200/60 dark:border-stone-800 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-150 dark:border-stone-800 pb-4">
         
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 text-xs font-bold border border-amber-500/25">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-900 dark:text-amber-300 text-xs font-semibold border border-amber-500/20">
               <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>{isRandomMode ? 'ومضة تدبر عشوائية 🎲' : 'آية ومحطة تدبر اليوم 🌟'}</span>
+              <span>{isRandomMode ? 'ومضة تدبر مختارة' : 'آية ومحطة تدبر اليوم'}</span>
             </span>
 
-            <span className="text-xs font-bold text-stone-600 dark:text-stone-300">
+            <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
               سورة {currentTadabbur.surahName} (الآية {currentTadabbur.ayahNumber})
             </span>
 
-            <span className="text-[11px] px-2 py-0.5 rounded-md bg-stone-200/70 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium">
-              {currentTadabbur.categoryIcon} {currentTadabbur.categoryLabel}
+            <span className="text-[11px] px-2.5 py-0.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 font-medium">
+              {currentTadabbur.categoryLabel}
             </span>
           </div>
 
           <p className="text-xs text-stone-500 dark:text-stone-400">
-            تأملات قرآنية خاشعة، تطبيق عملي في يومك، ودعاء يمس القلب
+            تأملات قرآنية وتطبيق عملي في يومك مع دعاء خالص
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export const TadabburStationCard: React.FC<TadabburStationCardProps> = ({
           {isRandomMode && (
             <button
               onClick={handleResetToDaily}
-              className="px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-semibold transition cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-medium transition cursor-pointer"
               title="العودة لآية اليوم المخصصة"
             >
               <span>آية اليوم</span>
@@ -143,11 +143,11 @@ export const TadabburStationCard: React.FC<TadabburStationCardProps> = ({
 
           <button
             onClick={handleNextRandom}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95"
-            title="اختيار آية أخرى عشوائياً من بين أكثر من ٣٠ آية مختارة"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 dark:bg-stone-800 dark:hover:bg-stone-700 text-white text-xs font-medium transition cursor-pointer active:scale-95 shadow-2xs"
+            title="اختيار آية أخرى عشوائياً من بين أكثر من ٤٠ آية مختارة"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-amber-200" />
-            <span>آية وتدبر آخر 🎲</span>
+            <RotateCcw className="w-3.5 h-3.5 text-amber-300" />
+            <span>آية وتدبر آخر</span>
           </button>
         </div>
       </div>
@@ -161,10 +161,10 @@ export const TadabburStationCard: React.FC<TadabburStationCardProps> = ({
             <button
               key={c.key}
               onClick={() => handleCategoryFilter(c.key)}
-              className={`px-2.5 py-1 rounded-xl shrink-0 transition-all cursor-pointer font-medium text-[11px] ${
+              className={`px-3 py-1 rounded-xl shrink-0 transition-all cursor-pointer font-medium text-[11px] ${
                 isSelected
-                  ? 'bg-amber-600 text-white font-bold shadow-xs'
-                  : 'bg-white/70 dark:bg-stone-800/70 text-stone-600 dark:text-stone-400 hover:bg-amber-100 dark:hover:bg-stone-750 border border-stone-200/60 dark:border-stone-700'
+                  ? 'bg-amber-800 text-white font-bold shadow-2xs'
+                  : 'bg-stone-50 dark:bg-stone-800/80 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-750 border border-stone-200/80 dark:border-stone-700'
               }`}
             >
               {c.label}

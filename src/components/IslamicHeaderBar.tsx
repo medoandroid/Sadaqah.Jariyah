@@ -135,16 +135,16 @@ export const IslamicHeaderBar: React.FC<{
             <span>ختمة القرآن (٣٠ جزءاً)</span>
           </button>
 
-          {/* Egyptian Companion Trigger */}
+          {/* Spiritual Reminders Trigger */}
           {onOpenEgyptianCompanion && (
             <button
               onClick={onOpenEgyptianCompanion}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 hover:text-amber-100 transition-colors cursor-pointer text-[11px] font-bold"
-              title="رفيقك الطيب (بالمصري): فضفضة وتشجيع على القرآن ونصائح من القلب"
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-stone-850 hover:bg-stone-800 border border-stone-750 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer text-[11px] font-medium"
+              title="خواطر وتذكير بالخير: تذكير بالورد والقرآن ونصح طيب"
             >
-              <span>🇪🇬</span>
-              <span className="hidden sm:inline">رفيقك بالمصري</span>
-              <span className="sm:hidden">فضفضة</span>
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">خواطر وتذكير بالخير</span>
+              <span className="sm:hidden">خواطر وتذكير</span>
             </button>
           )}
 

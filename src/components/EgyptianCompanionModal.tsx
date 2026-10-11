@@ -5,20 +5,15 @@ import {
   Heart,
   RotateCcw,
   BookOpen,
-  Volume2,
   Copy,
   Check,
-  Flame,
-  MessageCircle,
-  Share2,
-  ArrowLeft,
-  Coffee
+  ArrowLeft
 } from 'lucide-react';
 import {
-  EgyptianMoodKey,
-  EGYPTIAN_MOODS,
-  EgyptianCompanionEntry,
-  getEgyptianEntryByMood,
+  CompanionMoodKey,
+  COMPANION_MOODS,
+  CompanionEntry,
+  getCompanionEntryByMood,
 } from '../data/egyptianCompanionData';
 import { playPeacefulChime, playTasbeehBeadSound } from '../utils/soundEffects';
 
@@ -33,23 +28,23 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
   onClose,
   onNavigateTab,
 }) => {
-  const [selectedMood, setSelectedMood] = useState<EgyptianMoodKey>('lazy_quran');
-  const [currentEntry, setCurrentEntry] = useState<EgyptianCompanionEntry>(() =>
-    getEgyptianEntryByMood('lazy_quran')
+  const [selectedMood, setSelectedMood] = useState<CompanionMoodKey>('lazy_quran');
+  const [currentEntry, setCurrentEntry] = useState<CompanionEntry>(() =>
+    getCompanionEntryByMood('lazy_quran')
   );
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSelectMood = (mood: EgyptianMoodKey) => {
+  const handleSelectMood = (mood: CompanionMoodKey) => {
     playTasbeehBeadSound();
     setSelectedMood(mood);
-    setCurrentEntry(getEgyptianEntryByMood(mood));
+    setCurrentEntry(getCompanionEntryByMood(mood));
   };
 
   const handleNextNudge = () => {
     playTasbeehBeadSound();
-    const next = getEgyptianEntryByMood(selectedMood, currentEntry.id);
+    const next = getCompanionEntryByMood(selectedMood, currentEntry.id);
     setCurrentEntry(next);
   };
 
@@ -75,7 +70,7 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
   };
 
   const handleCopy = () => {
-    const textToCopy = `رسالة من القلب ليك يا غالي 🌿:\n\n"${currentEntry.egyptianText}"\n\n- من تطبيق منصة الصدقة الجارية`;
+    const textToCopy = `خاطر وتذكرة بالخير 🌿:\n\n"${currentEntry.text}"\n\n- منصة صدقة جارية`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -87,26 +82,23 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white dark:bg-stone-900 border border-amber-500/30 dark:border-amber-600/30 shadow-2xl p-5 sm:p-7 space-y-5 text-right select-none"
+        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xl p-6 sm:p-8 space-y-6 text-right select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-stone-200/80 dark:border-stone-800 pb-3.5">
+        <div className="flex items-start justify-between border-b border-stone-100 dark:border-stone-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-center shadow-xs text-xl">
-              🇪🇬
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center shadow-xs">
+              <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100">
-                  رفيقك الطيب (بالمصري)
+                  خاطر طيب وتذكير بالخير
                 </h3>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30">
-                  فضفضة وذكر ع الرايق
-                </span>
               </div>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                تشجيع على قراءة القرآن، نصايح من القلب، وتذكير حلو بأسلوب مصري حنين
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                تذكير هادئ بالقرآن والورد، ونصح خالص يلامس القلب
               </p>
             </div>
           </div>
@@ -114,6 +106,7 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+            aria-label="إغلاق"
           >
             <X className="w-5 h-5" />
           </button>
@@ -121,20 +114,20 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
 
         {/* Mood Selector Buttons */}
         <div className="space-y-2">
-          <span className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
-            حاسس بإيه دلوقتي؟ أو عايز إيه يا غالي؟
+          <span className="text-xs font-semibold text-stone-600 dark:text-stone-400 block">
+            ما الذي تبحث عنه الآن؟
           </span>
           <div className="flex flex-wrap gap-2">
-            {EGYPTIAN_MOODS.map((m) => {
+            {COMPANION_MOODS.map((m) => {
               const isSelected = selectedMood === m.key;
               return (
                 <button
                   key={m.key}
                   onClick={() => handleSelectMood(m.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
                     isSelected
-                      ? 'bg-amber-600 text-white border-amber-600 shadow-md font-bold'
-                      : 'bg-stone-50 dark:bg-stone-800/80 border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400'
+                      ? 'bg-amber-800 dark:bg-amber-700 text-white shadow-xs font-bold'
+                      : 'bg-stone-50 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400/60'
                   }`}
                 >
                   <span>{m.label}</span>
@@ -144,22 +137,22 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
           </div>
         </div>
 
-        {/* Current Egyptian Advice Card */}
-        <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-amber-700/10 dark:from-amber-950/30 dark:via-stone-850 dark:to-stone-900 border border-amber-500/30 dark:border-amber-500/20 shadow-md space-y-4">
+        {/* Current Advice Card */}
+        <div className="relative overflow-hidden p-6 rounded-3xl bg-stone-50/70 dark:bg-stone-850/60 border border-stone-200/90 dark:border-stone-800 shadow-xs space-y-4">
           
           {/* Badge & Shuffle */}
-          <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-bold border border-amber-500/30">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+          <div className="flex items-center justify-between gap-2 border-b border-stone-200/60 dark:border-stone-800 pb-3">
+            <span className="inline-flex items-center gap-1.5 text-amber-800 dark:text-amber-300 text-xs font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
               <span>{currentEntry.badge}</span>
             </span>
 
             <button
               onClick={handleNextNudge}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/80 dark:bg-stone-800 hover:bg-amber-100 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-medium transition cursor-pointer active:scale-95 shadow-2xs"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
-              <span>نصيحة تانية 🔄</span>
+              <RotateCcw className="w-3.5 h-3.5 text-stone-500" />
+              <span>خاطر آخر</span>
             </button>
           </div>
 
@@ -168,10 +161,10 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
             {currentEntry.title}
           </h4>
 
-          {/* Egyptian Message */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-stone-950/80 border border-amber-500/20 shadow-inner">
+          {/* Message */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-stone-900/80 border border-stone-200/70 dark:border-stone-800">
             <p className="font-sans text-sm sm:text-base text-stone-800 dark:text-stone-200 leading-relaxed font-normal">
-              "{currentEntry.egyptianText}"
+              "{currentEntry.text}"
             </p>
           </div>
 
@@ -179,7 +172,7 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
             <button
               onClick={handleAction}
-              className="flex-1 py-3 px-4 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-amiri text-base sm:text-lg font-bold shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+              className="flex-1 py-3 px-5 rounded-2xl bg-amber-800 hover:bg-amber-900 text-white font-amiri text-base sm:text-lg font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
             >
               <BookOpen className="w-4 h-4 text-amber-200" />
               <span>{currentEntry.actionText}</span>
@@ -188,20 +181,20 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
 
             <button
               onClick={handleCopy}
-              className="py-3 px-4 rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
-              title="نسخ الرسالة ومشاركتها مع حبايبك"
+              className="py-3 px-4 rounded-2xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-2xs"
+              title="نسخ الخاطر"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'تم النسخ بنجاح' : 'نسخ ومشاركة 📲'}</span>
+              <span>{copied ? 'تم النسخ' : 'نسخ النص'}</span>
             </button>
           </div>
         </div>
 
         {/* Footer Reminder */}
-        <div className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400">
+        <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-850/60 border border-stone-200/80 dark:border-stone-800 flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400">
           <Heart className="w-4 h-4 text-amber-600 shrink-0" />
           <span>
-            كل حرف بتقرأه وتسبحه في المنصة هنا بيوصل ثوابه وأجره مباشرة لأرواح عمامك الغاليين (رمضان، والشهاوي، والشافعي، وأحمد) رحمة ونوراً في قبورهم.
+            كل حرف تقرأه وكل عمل صالح تؤديه هنا يصل ثوابه وأثره إلى أرواح عمامنا الكرام (رمضان، والشهاوي، والشافعي، وأحمد) رحمةً ونوراً بإذن الله.
           </span>
         </div>
 
@@ -209,3 +202,4 @@ export const EgyptianCompanionModal: React.FC<EgyptianCompanionModalProps> = ({
     </div>
   );
 };
+

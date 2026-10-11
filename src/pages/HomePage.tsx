@@ -375,11 +375,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     },
     {
       id: 'companion',
-      title: 'رفيقك الطيب (بالمصري)',
-      subtitle: 'فضفضة وتشجيع على القرآن وزقة للورد اليومي بأسلوب مصري حنين وخفيف ع القلب مع نصائح إيمانية.',
-      icon: MessageCircle,
-      category: 'فضفضة وتشجيع',
-      actionText: 'تحدث مع رفيقك 🇪🇬',
+      title: 'خواطر وتذكير بالخير',
+      subtitle: 'تذكير هادئ بالقرآن والورد، وكلمات طيبة تشرح الصدر وتعينك على طاعة الله ومواصلة الخير.',
+      icon: Sparkles,
+      category: 'خواطر وتذكرة',
+      actionText: 'عرض الخواطر والتذكير',
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {
@@ -426,12 +426,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             {onOpenEgyptianCompanion && (
               <button
                 onClick={onOpenEgyptianCompanion}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-950 dark:text-amber-200 font-bold transition-all cursor-pointer shadow-xs active:scale-95"
-                title="رفيقك الطيب (بالمصري): فضفضة، زقة للمصحف، ونصائح من القلب"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-stone-100 dark:bg-stone-850 hover:bg-amber-500/10 dark:hover:bg-amber-950/30 border border-stone-200 dark:border-stone-750 hover:border-amber-500/30 text-stone-800 dark:text-stone-200 font-medium transition-all cursor-pointer shadow-xs active:scale-95"
+                title="خواطر وتذكير بالخير: كلمات تشرح الصدر وتشجعك على تلاوة القرآن"
               >
-                <span>🇪🇬</span>
-                <span>رفيقك بالمصري (فضفضة وذكر)</span>
-                <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>خواطر وتذكير بالخير</span>
               </button>
             )}
 
@@ -799,24 +798,21 @@ export const HomePage: React.FC<HomePageProps> = ({
         />
       </section>
 
-      {/* Egyptian Companion Interactive Corner (رفيقك الطيب بالمصري) */}
+      {/* Spiritual Reflections & Gentle Reminders Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCFBF8] via-amber-50/50 to-amber-100/30 dark:from-stone-900 dark:via-stone-900/90 dark:to-amber-950/20 border border-amber-500/30 dark:border-amber-600/30 shadow-md p-5 sm:p-7 space-y-4 text-right">
+        <div className="relative overflow-hidden rounded-3xl bg-stone-50/70 dark:bg-stone-900/60 border border-stone-200/90 dark:border-stone-800 shadow-sm p-5 sm:p-7 space-y-4 text-right">
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-amber-500/20 dark:border-stone-800 pb-3">
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl">🇪🇬</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-200/60 dark:border-stone-800 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-amiri text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
-                    رفيقك الطيب (بالمصري) 🌿
-                  </h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30">
-                    فضفضة وذكر
-                  </span>
-                </div>
+                <h3 className="font-amiri text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
+                  خواطر وتذكير بالخير
+                </h3>
                 <p className="text-xs text-stone-500 dark:text-stone-400">
-                  اختر حالتك دلوقتي وهتلاقي تشجيع للمصحف ونصح من القلب لقلبك
+                  تذكير هادئ بالقرآن والورد، وكلمات طيبة تشرح الصدر
                 </p>
               </div>
             </div>
@@ -824,18 +820,18 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
               <button
                 onClick={handleNextEgyptianEntry}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-2xs"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
-                <span>نصيحة تانية 🔄</span>
+                <RotateCcw className="w-3.5 h-3.5 text-stone-500" />
+                <span>خاطر آخر</span>
               </button>
 
               {onOpenEgyptianCompanion && (
                 <button
                   onClick={onOpenEgyptianCompanion}
-                  className="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition cursor-pointer shadow-xs active:scale-95"
                 >
-                  فتح الرفيق كاملاً ↗
+                  عرض الخواطر كاملة ↗
                 </button>
               )}
             </div>
@@ -849,10 +845,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <button
                   key={m.key}
                   onClick={() => handleSelectEgyptianMood(m.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shrink-0 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shrink-0 ${
                     isSelected
-                      ? 'bg-amber-600 text-white shadow-xs font-bold'
-                      : 'bg-white/80 dark:bg-stone-800 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400'
+                      ? 'bg-amber-800 text-white shadow-xs font-bold'
+                      : 'bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400/60'
                   }`}
                 >
                   <span>{m.label}</span>
@@ -861,22 +857,22 @@ export const HomePage: React.FC<HomePageProps> = ({
             })}
           </div>
 
-          {/* Active Egyptian Advice Snippet */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-950/70 border border-amber-500/20 shadow-xs space-y-2.5">
+          {/* Active Advice Snippet */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-2xs space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                ✨ {egyptianEntry.title}
+              <span className="text-xs font-bold text-amber-800 dark:text-amber-400">
+                {egyptianEntry.title}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium">
                 {egyptianEntry.badge}
               </span>
             </div>
 
             <p className="font-sans text-sm sm:text-base text-stone-800 dark:text-stone-200 leading-relaxed">
-              "{egyptianEntry.egyptianText}"
+              "{egyptianEntry.text}"
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 dark:border-stone-850">
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 dark:border-stone-800">
               <button
                 onClick={() => {
                   playPeacefulChime();
@@ -897,22 +893,22 @@ export const HomePage: React.FC<HomePageProps> = ({
                     setActiveTab(egyptianEntry.actionType);
                   }
                 }}
-                className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                className="px-4 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95"
               >
                 <BookOpen className="w-3.5 h-3.5 text-amber-200" />
-                <span>{egyptianEntry.actionText} ↗</span>
+                <span>{egyptianEntry.actionText}</span>
               </button>
 
               <button
                 onClick={() => {
-                  const text = `رسالة من القلب ليك يا غالي 🌿:\n\n"${egyptianEntry.egyptianText}"\n\n- صدقة جارية`;
+                  const text = `تذكير بالخير 🌿:\n\n"${egyptianEntry.text}"\n\n- صدقة جارية`;
                   navigator.clipboard.writeText(text);
-                  showToast('تم نسخ النصيحة لمشاركتها');
+                  showToast('تم نسخ النص لمشاركته');
                 }}
-                className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 text-xs font-medium transition cursor-pointer flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-medium transition cursor-pointer flex items-center gap-1"
               >
                 <Copy className="w-3 h-3" />
-                <span>نسخ النصيحة</span>
+                <span>نسخ النص</span>
               </button>
             </div>
           </div>

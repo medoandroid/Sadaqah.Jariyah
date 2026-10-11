@@ -283,9 +283,9 @@ export const PrayerTimesModal: React.FC<PrayerTimesModalProps> = ({ isOpen, onCl
             </div>
           </div>
 
-          {/* Quick Popular Egyptian Cities Pills */}
+          {/* Quick Popular Cities Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1 border-t border-stone-200/50 dark:border-stone-800/80">
-            <span className="text-[10px] text-stone-400 shrink-0">مدن مصر الحبيبة:</span>
+            <span className="text-[10px] text-stone-400 shrink-0">المدن الشائعة:</span>
             {[
               { id: 'cairo', name: 'القاهرة' },
               { id: 'alexandria', name: 'الإسكندرية' },
