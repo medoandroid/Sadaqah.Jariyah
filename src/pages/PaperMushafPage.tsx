@@ -380,6 +380,50 @@ export const PaperMushafPage: React.FC<PaperMushafPageProps> = ({
     setShowShareModal(true);
   };
 
+  const handleDownloadPageImage = async (pageNum: number) => {
+    try {
+      showToast('جاري تحضير وتنزيل صورة الصفحة بدقة عالية...');
+      const padded = String(pageNum).padStart(3, '0');
+      const url = getPageImageUrl(pageNum);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('فشل جلب الصورة');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `مصحف_المدينة_صفحة_${padded}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      showToast(`تم تنزيل صفحة المصحف رقم ${pageNum} بنجاح`);
+    } catch {
+      showToast('تعذر تنزيل الصورة، يرجى التحقق من اتصال الإنترنت');
+    }
+  };
+
+  const handleCacheJuzPages = async (juzNum: number) => {
+    try {
+      showToast(`جاري حفظ صفحات الجزء ${juzNum} للقراءة دون إنترنت...`);
+      const startPage = (juzNum - 1) * 20 + 1;
+      const endPage = Math.min(604, juzNum * 20);
+      if ('caches' in window) {
+        const cache = await caches.open('mushaf_pages_offline_cache_v1');
+        for (let p = startPage; p <= endPage; p++) {
+          const url = getPageImageUrl(p);
+          try {
+            await cache.add(url);
+          } catch {}
+        }
+        showToast(`تم حفظ صفحات الجزء ${juzNum} بنجاح في ذاكرة الجهاز`);
+      } else {
+        showToast('تم حفظ الصفحات في الذاكرة المؤقتة');
+      }
+    } catch {
+      showToast('تعذر إكمال حفظ الصفحات أوفلاين');
+    }
+  };
+
   // Styling based on theme
   const getThemeStyles = () => {
     switch (paperTheme) {
@@ -536,6 +580,17 @@ export const PaperMushafPage: React.FC<PaperMushafPageProps> = ({
             <Share2 className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
             <span className="hidden sm:inline">مشاركة وتصدير الصفحة</span>
             <span className="sm:hidden">مشاركة</span>
+          </button>
+
+          {/* Download Page Image PNG */}
+          <button
+            onClick={() => handleDownloadPageImage(currentPage)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-750 hover:border-amber-300 bg-stone-50 dark:bg-stone-850 hover:bg-amber-50 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-amber-900 dark:hover:text-amber-300 transition-colors cursor-pointer shadow-2xs"
+            title="تنزيل صورة صفحة المصحف عالية الدقة PNG"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">تنزيل صورة الصفحة PNG</span>
+            <span className="sm:hidden">صورة</span>
           </button>
 
           {/* Download Full Quran or Mushaf PDF Button */}

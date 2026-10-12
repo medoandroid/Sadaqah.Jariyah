@@ -43,6 +43,11 @@ import { LiveTVModal } from '../components/LiveTVModal';
 import { AyahTimingExplorerModal } from '../components/AyahTimingExplorerModal';
 import { mp3QuranService } from '../services/mp3QuranService';
 import { MP3QRecentRead } from '../types/mp3quran';
+import { customPlaylistsService } from '../services/customPlaylistsService';
+import { audioDownloadService } from '../services/audioDownloadService';
+import { AudioDownloadManagerModal } from '../components/AudioDownloadManagerModal';
+import { AddToPlaylistModal } from '../components/AddToPlaylistModal';
+import { Download, ListPlus, History } from 'lucide-react';
 
 export type MediaHubTab =
   | 'surahs'
@@ -60,6 +65,8 @@ export const RecitationsPage: React.FC = () => {
     playSurah,
     togglePlay,
     setReciter,
+    lastListeningSession,
+    resumeLastSession,
   } = useAudio();
 
   // Active Hub Tab
@@ -67,6 +74,10 @@ export const RecitationsPage: React.FC = () => {
   const [showReciterModal, setShowReciterModal] = useState(false);
   const [showLiveTVModal, setShowLiveTVModal] = useState(false);
   const [showTimingModal, setShowTimingModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadModalSurah, setDownloadModalSurah] = useState<number | undefined>(undefined);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [playlistModalSurah, setPlaylistModalSurah] = useState<number | undefined>(undefined);
 
   const [selectedRiwayah, setSelectedRiwayah] = useState<string>('all');
   const [reciterSearch, setReciterSearch] = useState<string>('');
@@ -74,8 +85,18 @@ export const RecitationsPage: React.FC = () => {
     EXPANDED_RECITERS.find((r) => r.id === currentReciter?.id) || EXPANDED_RECITERS[0]
   );
   const [surahSearch, setSurahSearch] = useState('');
+  const [surahFilterType, setSurahFilterType] = useState<'all' | 'favorites' | 'meccan' | 'medinan'>('all');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [showReciterGrid, setShowReciterGrid] = useState<boolean>(false);
+  const [playlistUpdateTick, setPlaylistUpdateTick] = useState<number>(0);
+
+  // Subscribe to playlist updates to keep favorites in sync
+  useEffect(() => {
+    const unsub = customPlaylistsService.subscribe(() => {
+      setPlaylistUpdateTick((t) => t + 1);
+    });
+    return () => unsub();
+  }, []);
 
   // Recent reads from MP3Quran API
   const [recentReads, setRecentReads] = useState<MP3QRecentRead[]>([]);
@@ -116,17 +137,26 @@ export const RecitationsPage: React.FC = () => {
     });
   }, [selectedRiwayah, reciterSearch]);
 
-  // Filter Surahs
+  // Filter Surahs by search and type
   const filteredSurahs = useMemo(() => {
-    if (!surahSearch.trim()) return ALL_SURAHS;
+    let list = ALL_SURAHS;
+    if (surahFilterType === 'favorites') {
+      list = list.filter((s) => customPlaylistsService.isFavoriteSurah(s.number));
+    } else if (surahFilterType === 'meccan') {
+      list = list.filter((s) => s.revelationType === 'Meccan');
+    } else if (surahFilterType === 'medinan') {
+      list = list.filter((s) => s.revelationType === 'Medinan');
+    }
+
+    if (!surahSearch.trim()) return list;
     const q = surahSearch.trim().toLowerCase();
-    return ALL_SURAHS.filter(
+    return list.filter(
       (s) =>
         s.name.includes(q) ||
         s.englishName.toLowerCase().includes(q) ||
         String(s.number) === q
     );
-  }, [surahSearch]);
+  }, [surahSearch, surahFilterType, playlistUpdateTick]);
 
   const handleSelectReciter = (r: (typeof EXPANDED_RECITERS)[0]) => {
     setSelectedReciter(r);
@@ -231,6 +261,39 @@ export const RecitationsPage: React.FC = () => {
       {activeMediaTab === 'surahs' && (
         <div className="space-y-8 animate-in fade-in duration-200">
           
+          {/* SMART LISTENING RESUMPTION BANNER */}
+          {lastListeningSession && (
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/80 via-stone-900 to-amber-950/70 border border-amber-500/50 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                      إكمال الاستماع من آخر موضع
+                    </span>
+                  </div>
+                  <h3 className="font-amiri text-lg sm:text-xl font-bold text-white mt-0.5">
+                    سورة {lastListeningSession.surahName} · بصوت {lastListeningSession.reciterName}
+                  </h3>
+                  <p className="text-xs text-stone-400 font-mono">
+                    آخر موضع: {Math.floor(lastListeningSession.currentTime / 60)}:{String(Math.floor(lastListeningSession.currentTime % 60)).padStart(2, '0')} دقيقة
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={resumeLastSession}
+                className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 shrink-0"
+              >
+                <Play className="w-4 h-4 fill-stone-950" />
+                <span>متابعة الاستماع الآن</span>
+              </button>
+            </div>
+          )}
+
           {/* Centralized Dropdown Selectors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto w-full">
             <RiwayahDropdownSelector
@@ -416,31 +479,82 @@ export const RecitationsPage: React.FC = () => {
 
           {/* Surahs Audio Directory */}
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xs">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xs">
               <div className="flex items-center gap-2 text-xs font-semibold text-stone-800 dark:text-stone-200">
                 <ListMusic className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                 <span>سور القرآن الكريم كاملة بصوت {selectedReciter.name} ({selectedReciter.riwayah})</span>
               </div>
 
-              <div className="w-full sm:w-64">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                  <input
-                    type="text"
-                    value={surahSearch}
-                    onChange={(e) => setSurahSearch(e.target.value)}
-                    placeholder="ابحث في السور..."
-                    className="w-full pr-9 pl-3 py-1.5 text-xs bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-750 rounded-xl focus:outline-hidden focus:border-amber-700 text-stone-900 dark:text-stone-100 placeholder:text-stone-400"
-                  />
-                  {surahSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setSurahSearch('')}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-0.5 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+              {/* Filter Pills and Search */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-850 p-1 rounded-xl border border-stone-200 dark:border-stone-800 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setSurahFilterType('all')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                      surahFilterType === 'all'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                    }`}
+                  >
+                    كل السور (١١٤)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurahFilterType('favorites')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                      surahFilterType === 'favorites'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
+                    <span>المفضلة</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurahFilterType('meccan')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                      surahFilterType === 'meccan'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                    }`}
+                  >
+                    مكية
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurahFilterType('medinan')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                      surahFilterType === 'medinan'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                    }`}
+                  >
+                    مدنية
+                  </button>
+                </div>
+
+                <div className="w-full sm:w-56">
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={surahSearch}
+                      onChange={(e) => setSurahSearch(e.target.value)}
+                      placeholder="ابحث في السور..."
+                      className="w-full pr-9 pl-3 py-1.5 text-xs bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-750 rounded-xl focus:outline-hidden focus:border-amber-700 text-stone-900 dark:text-stone-100 placeholder:text-stone-400"
+                    />
+                    {surahSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setSurahSearch('')}
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-0.5 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -449,18 +563,22 @@ export const RecitationsPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredSurahs.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-stone-500 dark:text-stone-400 text-sm bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800">
-                  لم نجد أي سورة مطابقة لبحثك «{surahSearch}».
+                  {surahFilterType === 'favorites'
+                    ? 'لم تقم بإضافة سور إلى المفضلة بعد. انقر على أيقونة القلب على أي سورة لإضافتها.'
+                    : `لم نجد أي سورة مطابقة لبحثك «${surahSearch}».`}
                 </div>
               ) : (
                 filteredSurahs.map((surah) => {
                   const isThisSurahActive =
                     currentSurah?.number === surah.number && currentReciter.id === selectedReciter.id;
                   const isPlayingThis = isThisSurahActive && isPlaying;
+                  const isFav = customPlaylistsService.isFavoriteSurah(surah.number);
+                  const isDownloaded = audioDownloadService.isSurahDownloaded(surah.number, selectedReciter.id);
 
                   return (
                     <div
                       key={surah.number}
-                      className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                         isThisSurahActive
                           ? 'border-amber-700 dark:border-amber-500 bg-amber-50/80 dark:bg-amber-950/30 shadow-xs ring-1 ring-amber-400'
                           : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'
@@ -471,8 +589,15 @@ export const RecitationsPage: React.FC = () => {
                           {surah.number}
                         </span>
                         <div className="min-w-0">
-                          <div className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100 truncate">
-                            سورة {surah.name}
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100 truncate">
+                              سورة {surah.name}
+                            </span>
+                            {isDownloaded && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
+                                محفوظة أوفلاين
+                              </span>
+                            )}
                           </div>
                           <div className="text-[11px] text-stone-500 dark:text-stone-400">
                             {surah.revelationArabic} · {surah.numberOfAyahs} آية · ص {surah.startPage}
@@ -480,7 +605,8 @@ export const RecitationsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Play button */}
                         <button
                           type="button"
                           onClick={() => {
@@ -490,7 +616,7 @@ export const RecitationsPage: React.FC = () => {
                               handlePlaySurah(surah.number);
                             }
                           }}
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                             isPlayingThis
                               ? 'bg-amber-800 text-white shadow-xs'
                               : 'bg-stone-100 dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 hover:text-amber-900 dark:hover:text-amber-200'
@@ -500,22 +626,57 @@ export const RecitationsPage: React.FC = () => {
                           {isPlayingThis ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                         </button>
 
+                        {/* Favorite button */}
                         <button
                           type="button"
-                          onClick={() => handleDedicateListening(surah.name)}
-                          className="p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-stone-800 transition-colors cursor-pointer"
-                          title="إهداء ثواب الاستماع"
+                          onClick={() => {
+                            const nowFav = customPlaylistsService.toggleFavoriteSurah(surah.number);
+                            showToast(nowFav ? `تمت إضافة سورة ${surah.name} إلى المفضلة ❤️` : `تمت إزالة سورة ${surah.name} من المفضلة`);
+                          }}
+                          className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer ${
+                            isFav
+                              ? 'text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-stone-800'
+                              : 'text-stone-400 hover:text-rose-500 hover:bg-stone-100 dark:hover:bg-stone-800'
+                          }`}
+                          title={isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
                         >
-                          <Heart className="w-4 h-4" />
+                          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
                         </button>
 
+                        {/* Add to Playlist button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPlaylistModalSurah(surah.number);
+                            setShowPlaylistModal(true);
+                          }}
+                          className="p-1.5 sm:p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                          title="إضافة إلى قائمة تلاوات"
+                        >
+                          <ListPlus className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Download MP3 button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDownloadModalSurah(surah.number);
+                            setShowDownloadModal(true);
+                          }}
+                          className="p-1.5 sm:p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                          title="تنزيل ملف السورة MP3 للاستماع دون إنترنت"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Share */}
                         <button
                           type="button"
                           onClick={() => handleShareAudio(surah.number, surah.name)}
-                          className="p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                          className="p-1.5 sm:p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer hidden sm:block"
                           title="مشاركة رابط التلاوة"
                         >
-                          <Share2 className="w-4 h-4" />
+                          <Share2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -648,6 +809,21 @@ export const RecitationsPage: React.FC = () => {
         isOpen={showTimingModal}
         onClose={() => setShowTimingModal(false)}
       />
+
+      <AudioDownloadManagerModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        defaultSurahNumber={downloadModalSurah}
+      />
+
+      {playlistModalSurah && (
+        <AddToPlaylistModal
+          isOpen={showPlaylistModal}
+          onClose={() => setShowPlaylistModal(false)}
+          surahNumber={playlistModalSurah}
+          onSuccess={(title) => showToast(`تمت إضافة السورة إلى قائمة «${title}» بنجاح`)}
+        />
+      )}
 
     </div>
   );

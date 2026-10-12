@@ -17,11 +17,17 @@ import {
   ListMusic,
   Check,
   Sliders,
-  ChevronDown
+  ChevronDown,
+  Download,
+  ListPlus,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { EXPANDED_RECITERS } from '../data/reciters';
 import { ReciterSelectModal } from './ReciterSelectModal';
+import { AudioDownloadManagerModal } from './AudioDownloadManagerModal';
+import { AddToPlaylistModal } from './AddToPlaylistModal';
 
 export const AudioPlayerBar: React.FC = () => {
   const {
@@ -42,6 +48,8 @@ export const AudioPlayerBar: React.FC = () => {
     isLooping,
     sleepTimerMinutes,
     playlistTitle,
+    radioConnectionState,
+    radioRetryCount,
     togglePlay,
     seekTo,
     setVolumeLevel,
@@ -59,6 +67,8 @@ export const AudioPlayerBar: React.FC = () => {
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showSleepMenu, setShowSleepMenu] = useState(false);
   const [showMobileExtraMenu, setShowMobileExtraMenu] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const speedMenuRef = useRef<HTMLDivElement>(null);
@@ -87,7 +97,7 @@ export const AudioPlayerBar: React.FC = () => {
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
-      setToastMessage(null), 2600;
+      setToastMessage(null);
     }, 2600);
   };
 
@@ -137,7 +147,7 @@ export const AudioPlayerBar: React.FC = () => {
         role="region"
         aria-label="المشغل القرآني العائم"
       >
-        <div className="relative rounded-3xl backdrop-blur-2xl bg-[#0D1016]/92 border border-amber-500/40 shadow-[0_20px_60px_-15px_rgba(217,119,6,0.22),0_8px_30px_rgba(0,0,0,0.85)] ring-1 ring-white/10 p-3 sm:p-4 flex flex-col gap-2 transition-all overflow-visible">
+        <div className="relative rounded-3xl backdrop-blur-2xl bg-[#0D1016]/94 border border-amber-500/40 shadow-[0_20px_60px_-15px_rgba(217,119,6,0.22),0_8px_30px_rgba(0,0,0,0.85)] ring-1 ring-white/10 p-3 sm:p-4 flex flex-col gap-2 transition-all overflow-visible">
           
           {/* Top Liquid Glass Specular Reflection Line */}
           <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none rounded-t-3xl" />
@@ -153,16 +163,21 @@ export const AudioPlayerBar: React.FC = () => {
             </div>
           )}
 
-          {/* Error Message Alert */}
+          {/* Error & Automatic Reconnection Message Alert */}
           {audioError && (
             <div className="text-[11px] text-amber-300 bg-amber-950/80 px-3 py-1 rounded-xl border border-amber-500/30 flex items-center justify-between">
-              <span>{audioError}</span>
+              <div className="flex items-center gap-1.5">
+                {radioConnectionState === 'reconnecting' && (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400 shrink-0" />
+                )}
+                <span>{audioError}</span>
+              </div>
               <button
                 type="button"
                 onClick={togglePlay}
-                className="underline font-bold text-amber-200 hover:text-white cursor-pointer"
+                className="underline font-bold text-amber-200 hover:text-white cursor-pointer ml-2 shrink-0"
               >
-                إعادة المحاولة
+                إعادة المحاولة الآن
               </button>
             </div>
           )}
@@ -171,11 +186,28 @@ export const AudioPlayerBar: React.FC = () => {
           {audioMode === 'radio' ? (
             <div className="flex items-center justify-between px-3 py-1.5 bg-stone-900/80 rounded-2xl border border-amber-500/20 text-xs">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-400 font-bold text-[11px]">بث مباشر 24/7</span>
-                <span className="text-stone-400 text-[11px] hidden sm:inline">· صوت نقي عبر شبكة إذاعات MP3Quran</span>
+                {radioConnectionState === 'connecting' || radioConnectionState === 'reconnecting' ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                    <span className="text-amber-300 font-bold text-[11px]">
+                      {radioConnectionState === 'reconnecting'
+                        ? `محاولة إعادة الاتصال التلقائي (${radioRetryCount}/٣)...`
+                        : 'جاري الاتصال بالبث المباشر...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-emerald-400 font-bold text-[11px]">بث مباشر 24/7 · صوت نقي</span>
+                    <span className="text-stone-400 text-[11px] hidden sm:inline">
+                      عبر شبكة إذاعات MP3Quran
+                    </span>
+                  </>
+                )}
               </div>
-              <span className="text-[11px] text-amber-300 font-mono font-bold tracking-wider">LIVE RADIO</span>
+              <span className="text-[11px] text-amber-300 font-mono font-bold tracking-wider">
+                LIVE RADIO
+              </span>
             </div>
           ) : (
             <div className="space-y-1 px-1">
@@ -308,7 +340,7 @@ export const AudioPlayerBar: React.FC = () => {
               <button
                 type="button"
                 onClick={togglePlay}
-                disabled={isLoading}
+                disabled={isLoading && radioConnectionState !== 'reconnecting'}
                 className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 text-stone-950 flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold shrink-0 disabled:opacity-50 ring-2 ring-amber-400/50"
                 title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
                 aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
@@ -353,10 +385,32 @@ export const AudioPlayerBar: React.FC = () => {
               )}
             </div>
 
-            {/* ZONE 3: Secondary Actions & Volume (Never overflows or collides) */}
+            {/* ZONE 3: Secondary Actions (Add to Playlist, Download, Speed, Timer, Volume, Close) */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               
-              {/* Mobile Extra Menu Pill (bundles speed, timer, repeat on small screens without clutter) */}
+              {/* Add Current Surah to Playlist (Desktop) */}
+              {audioMode === 'surah' && currentSurah && (
+                <button
+                  type="button"
+                  onClick={() => setShowPlaylistModal(true)}
+                  className="hidden md:flex p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-stone-800 transition-colors cursor-pointer"
+                  title="إضافة السورة الحالية إلى قائمة تشغيل"
+                >
+                  <ListPlus className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Download Manager Modal Trigger (Desktop) */}
+              <button
+                type="button"
+                onClick={() => setShowDownloadModal(true)}
+                className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-stone-800 transition-colors cursor-pointer"
+                title="مدير التنزيلات والاستماع دون إنترنت"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+
+              {/* Mobile Extra Menu Pill */}
               <div className="relative sm:hidden" ref={mobileExtraRef}>
                 <button
                   type="button"
@@ -372,10 +426,42 @@ export const AudioPlayerBar: React.FC = () => {
                 </button>
 
                 {showMobileExtraMenu && (
-                  <div className="absolute bottom-full left-0 mb-3 w-48 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-2 z-50 text-right backdrop-blur-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute bottom-full left-0 mb-3 w-52 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-2 z-50 text-right backdrop-blur-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
                     <div className="text-[10px] font-bold text-stone-400 px-1 border-b border-stone-800 pb-1">
-                      خيارات التلاوة
+                      خيارات المشغل والتلاوة
                     </div>
+
+                    {/* Mobile Download Manager */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMobileExtraMenu(false);
+                        setShowDownloadModal(true);
+                      }}
+                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs hover:bg-stone-800 text-stone-300"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Download className="w-3.5 h-3.5 text-amber-400" />
+                        <span>مدير التنزيلات أوفلاين</span>
+                      </span>
+                    </button>
+
+                    {/* Mobile Add to Playlist */}
+                    {audioMode === 'surah' && currentSurah && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMobileExtraMenu(false);
+                          setShowPlaylistModal(true);
+                        }}
+                        className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs hover:bg-stone-800 text-stone-300"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <ListPlus className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>إضافة السورة لقائمة</span>
+                        </span>
+                      </button>
+                    )}
 
                     {/* Mobile Repeat Toggle */}
                     <button
@@ -384,7 +470,7 @@ export const AudioPlayerBar: React.FC = () => {
                         toggleLoop();
                         triggerToast(!isLooping ? 'تم تفعيل تكرار السورة' : 'تم إلغاء التكرار');
                       }}
-                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs hover:bg-stone-800"
+                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs hover:bg-stone-800 text-stone-300"
                     >
                       <span className="flex items-center gap-1.5">
                         <Repeat className="w-3.5 h-3.5 text-amber-400" />
@@ -598,13 +684,30 @@ export const AudioPlayerBar: React.FC = () => {
         </div>
       </div>
 
-      {/* DEDICATED RECITER SELECTOR MODAL / SHEET */}
+      {/* DEDICATED RECITER SELECTOR MODAL */}
       <ReciterSelectModal
         isOpen={showReciterModal}
         onClose={() => setShowReciterModal(false)}
         currentReciter={currentReciter}
         onSelectReciter={handleSelectNewReciter}
       />
+
+      {/* AUDIO DOWNLOAD MANAGER MODAL */}
+      <AudioDownloadManagerModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        defaultSurahNumber={currentSurah?.number}
+      />
+
+      {/* ADD TO PLAYLIST MODAL */}
+      {currentSurah && (
+        <AddToPlaylistModal
+          isOpen={showPlaylistModal}
+          onClose={() => setShowPlaylistModal(false)}
+          surahNumber={currentSurah.number}
+          onSuccess={(plTitle) => triggerToast(`تمت إضافة سورة ${currentSurah.name} إلى «${plTitle}»`)}
+        />
+      )}
     </>
   );
 };

@@ -3,14 +3,26 @@ import { Reciter, SurahMeta } from '../types';
 import { RECITERS, EXPANDED_RECITERS, getSurahAudioUrl, getSurahFallbackAudioUrl } from '../data/reciters';
 import { ALL_SURAHS } from '../data/quranMeta';
 import { MP3QRadio } from '../types/mp3quran';
+import { audioDownloadService } from '../services/audioDownloadService';
 
 export type AudioMode = 'surah' | 'radio' | 'tafsir' | 'custom';
+export type RadioConnectionState = 'idle' | 'connecting' | 'reconnecting' | 'connected' | 'error';
 
 export interface AudioTafsirItem {
   title: string;
   surahNumber: number;
   surahName: string;
   url: string;
+}
+
+export interface LastListeningSession {
+  surahNumber: number;
+  surahName: string;
+  reciterId: string;
+  reciterName: string;
+  currentTime: number;
+  duration: number;
+  savedAt: number;
 }
 
 interface AudioContextType {
@@ -33,7 +45,10 @@ interface AudioContextType {
   activeAyahNumber: number | null;
   playlistQueue: number[] | null;
   playlistTitle: string | null;
-  playSurah: (surahNumber: number, reciter?: Reciter) => void;
+  radioConnectionState: RadioConnectionState;
+  radioRetryCount: number;
+  lastListeningSession: LastListeningSession | null;
+  playSurah: (surahNumber: number, reciter?: Reciter, startTime?: number) => void;
   playPlaylist: (surahNumbers: number[], title?: string, reciter?: Reciter) => void;
   playRadio: (radio: MP3QRadio) => void;
   playTafsir: (tafsir: AudioTafsirItem) => void;
@@ -48,6 +63,7 @@ interface AudioContextType {
   setActiveAyahNumber: (num: number | null) => void;
   playNextSurah: () => void;
   playPreviousSurah: () => void;
+  resumeLastSession: () => void;
   closePlayer: () => void;
 }
 
@@ -85,14 +101,33 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeAyahNumber, setActiveAyahNumber] = useState<number | null>(null);
   const [playlistQueue, setPlaylistQueue] = useState<number[] | null>(null);
   const [playlistTitle, setPlaylistTitle] = useState<string | null>(null);
+  const [radioConnectionState, setRadioConnectionState] = useState<RadioConnectionState>('idle');
+  const [radioRetryCount, setRadioRetryCount] = useState<number>(0);
+
+  // Load last listening session from localStorage
+  const [lastListeningSession, setLastListeningSession] = useState<LastListeningSession | null>(() => {
+    try {
+      const raw = localStorage.getItem('sadaqah_last_listening_session_v1');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return null;
+  });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sleepTimerTimeoutRef = useRef<any>(null);
   const currentSurahRef = useRef<SurahMeta | null>(null);
   const currentReciterRef = useRef<Reciter>(currentReciter);
+  const currentRadioRef = useRef<MP3QRadio | null>(null);
+  const audioModeRef = useRef<AudioMode>(audioMode);
   const playlistQueueRef = useRef<number[] | null>(null);
   const playlistTitleRef = useRef<string | null>(null);
   const hasTriedFallbackRef = useRef<boolean>(false);
+
+  // Radio reconnect refs
+  const radioRetryCountRef = useRef<number>(0);
+  const radioRetryTimeoutRef = useRef<any>(null);
+  const radioWatchdogTimeoutRef = useRef<any>(null);
+  const lastTimeSaveRef = useRef<number>(0);
 
   // Keep refs in sync for event callbacks
   useEffect(() => {
@@ -104,12 +139,92 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [currentReciter]);
 
   useEffect(() => {
+    currentRadioRef.current = currentRadio;
+  }, [currentRadio]);
+
+  useEffect(() => {
+    audioModeRef.current = audioMode;
+  }, [audioMode]);
+
+  useEffect(() => {
     playlistQueueRef.current = playlistQueue;
   }, [playlistQueue]);
 
   useEffect(() => {
     playlistTitleRef.current = playlistTitle;
   }, [playlistTitle]);
+
+  // Clean radio timers helper
+  const clearRadioTimers = () => {
+    if (radioRetryTimeoutRef.current) {
+      clearTimeout(radioRetryTimeoutRef.current);
+      radioRetryTimeoutRef.current = null;
+    }
+    if (radioWatchdogTimeoutRef.current) {
+      clearTimeout(radioWatchdogTimeoutRef.current);
+      radioWatchdogTimeoutRef.current = null;
+    }
+  };
+
+  // Perform smart radio reconnect attempt
+  const attemptRadioReconnect = (radio: MP3QRadio) => {
+    if (!audioRef.current) return;
+    clearRadioTimers();
+
+    const maxRetries = 3;
+    if (radioRetryCountRef.current < maxRetries) {
+      radioRetryCountRef.current += 1;
+      setRadioRetryCount(radioRetryCountRef.current);
+      setRadioConnectionState('reconnecting');
+      setIsLoading(true);
+      setAudioError(`جاري محاولة الاتصال بالبث تلقائياً (محاولة ${radioRetryCountRef.current} من ${maxRetries})...`);
+
+      const delays = [700, 1600, 2800];
+      const delay = delays[radioRetryCountRef.current - 1] || 1500;
+
+      radioRetryTimeoutRef.current = setTimeout(() => {
+        if (!audioRef.current || audioModeRef.current !== 'radio' || currentRadioRef.current?.id !== radio.id) {
+          return;
+        }
+
+        const audio = audioRef.current;
+        try {
+          audio.pause();
+          audio.removeAttribute('src');
+          audio.load();
+
+          // Add subtle timestamp query to prevent cached stale icecast socket
+          const connector = radio.url.includes('?') ? '&' : '?';
+          const freshUrl = `${radio.url}${connector}t=${Date.now()}`;
+          audio.src = freshUrl;
+          audio.load();
+
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              clearRadioTimers();
+              radioRetryCountRef.current = 0;
+              setRadioRetryCount(0);
+              setRadioConnectionState('connected');
+              setIsLoading(false);
+              setIsPlaying(true);
+              setAudioError(null);
+            }).catch((err) => {
+              if (err.name === 'AbortError') return;
+              attemptRadioReconnect(radio);
+            });
+          }
+        } catch {
+          attemptRadioReconnect(radio);
+        }
+      }, delay);
+    } else {
+      setRadioConnectionState('error');
+      setIsLoading(false);
+      setIsPlaying(false);
+      setAudioError('تعذر الاتصال بالبث الإذاعي حالياً، يمكنك المحاولة مرة أخرى أو اختيار إذاعة أخرى');
+    }
+  };
 
   // Initialize Audio element once
   useEffect(() => {
@@ -118,13 +233,40 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     audio.preload = 'metadata';
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      const cur = audio.currentTime;
+      setCurrentTime(cur);
+
+      // Periodically persist last listening session for Surah mode (every 4 seconds)
+      const now = Date.now();
+      if (
+        audioModeRef.current === 'surah' &&
+        currentSurahRef.current &&
+        now - lastTimeSaveRef.current > 4000 &&
+        cur > 2
+      ) {
+        lastTimeSaveRef.current = now;
+        const session: LastListeningSession = {
+          surahNumber: currentSurahRef.current.number,
+          surahName: currentSurahRef.current.name,
+          reciterId: currentReciterRef.current.id,
+          reciterName: currentReciterRef.current.name,
+          currentTime: Math.floor(cur),
+          duration: Math.floor(audio.duration || 0),
+          savedAt: now,
+        };
+        setLastListeningSession(session);
+        try {
+          localStorage.setItem('sadaqah_last_listening_session_v1', JSON.stringify(session));
+        } catch {}
+      }
     };
 
     const handleLoadedMetadata = () => {
       setDuration(audio.duration || 0);
       setIsLoading(false);
-      setAudioError(null);
+      if (audioModeRef.current !== 'radio') {
+        setAudioError(null);
+      }
     };
 
     const handleWaiting = () => {
@@ -132,9 +274,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     const handlePlaying = () => {
+      clearRadioTimers();
       setIsLoading(false);
       setIsPlaying(true);
       setAudioError(null);
+      if (audioModeRef.current === 'radio') {
+        setRadioConnectionState('connected');
+        radioRetryCountRef.current = 0;
+        setRadioRetryCount(0);
+      }
     };
 
     const handlePause = () => {
@@ -160,6 +308,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
+      // Handle radio error automatically with smart progressive retry
+      if (audioModeRef.current === 'radio' && currentRadioRef.current) {
+        attemptRadioReconnect(currentRadioRef.current);
+        return;
+      }
+
       // Attempt fallback URL if not already tried for this surah
       if (!hasTriedFallbackRef.current && currentSurahRef.current) {
         hasTriedFallbackRef.current = true;
@@ -180,6 +334,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setAudioError('تعذر تشغيل الصوت من المصدر الحالي');
     };
 
+    // Auto resume radio when coming back online
+    const handleOnline = () => {
+      if (audioModeRef.current === 'radio' && currentRadioRef.current) {
+        attemptRadioReconnect(currentRadioRef.current);
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('waiting', handleWaiting);
@@ -189,6 +351,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     audio.addEventListener('error', handleError);
 
     return () => {
+      clearRadioTimers();
+      window.removeEventListener('online', handleOnline);
       audio.pause();
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -203,12 +367,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  const playSurah = (surahNumber: number, reciter?: Reciter) => {
+  const playSurah = async (surahNumber: number, reciter?: Reciter, startTime?: number) => {
+    clearRadioTimers();
     const surah = ALL_SURAHS.find(s => s.number === surahNumber);
     if (!surah) return;
 
     const chosenReciter = reciter || currentReciterRef.current;
     setAudioMode('surah');
+    audioModeRef.current = 'surah';
     setCurrentRadio(null);
     setCurrentTafsir(null);
     setCurrentSurah(surah);
@@ -219,14 +385,27 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsLoading(true);
     setAudioError(null);
     hasTriedFallbackRef.current = false;
+    setRadioConnectionState('idle');
 
-    const audioUrl = getSurahAudioUrl(chosenReciter, surah.number);
+    // Check if downloaded offline copy is available
+    let audioUrl = getSurahAudioUrl(chosenReciter, surah.number);
+    try {
+      const offlineBlobUrl = await audioDownloadService.getOfflineAudioUrl(surah.number, chosenReciter.id);
+      if (offlineBlobUrl) {
+        audioUrl = offlineBlobUrl;
+      }
+    } catch {}
+
     if (audioRef.current) {
       audioRef.current.src = audioUrl;
       audioRef.current.volume = isMuted ? 0 : volume;
       audioRef.current.playbackRate = playbackSpeed;
       audioRef.current.loop = isLooping;
       audioRef.current.load();
+
+      if (startTime && startTime > 0) {
+        audioRef.current.currentTime = startTime;
+      }
 
       // Configure native OS / lock screen media controls
       if (typeof navigator !== 'undefined' && 'mediaSession' in navigator && window.MediaMetadata) {
@@ -254,10 +433,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setIsLoading(false);
           setAudioError(null);
         }).catch(err => {
-          // If aborted because of new load request, do NOT override with fallback!
-          if (err.name === 'AbortError') {
-            return;
-          }
+          if (err.name === 'AbortError') return;
           if (err.name === 'NotAllowedError') {
             setIsPlaying(false);
             setIsLoading(false);
@@ -273,21 +449,32 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const playRadio = (radio: MP3QRadio) => {
+    clearRadioTimers();
     setAudioMode('radio');
+    audioModeRef.current = 'radio';
     setCurrentRadio(radio);
+    currentRadioRef.current = radio;
     setCurrentTafsir(null);
     setCurrentSurah(null);
     setIsPlayerVisible(true);
     setIsLoading(true);
     setAudioError(null);
     hasTriedFallbackRef.current = false;
+    setRadioConnectionState('connecting');
+    radioRetryCountRef.current = 0;
+    setRadioRetryCount(0);
 
     if (audioRef.current) {
-      audioRef.current.src = radio.url;
-      audioRef.current.volume = isMuted ? 0 : volume;
-      audioRef.current.playbackRate = 1;
-      audioRef.current.loop = false;
-      audioRef.current.load();
+      const audio = audioRef.current;
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+
+      audio.src = radio.url;
+      audio.volume = isMuted ? 0 : volume;
+      audio.playbackRate = 1;
+      audio.loop = false;
+      audio.load();
 
       if (typeof navigator !== 'undefined' && 'mediaSession' in navigator && window.MediaMetadata) {
         try {
@@ -305,16 +492,27 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } catch {}
       }
 
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-        setIsLoading(false);
-        setAudioError(null);
-      }).catch(err => {
-        if (err.name === 'AbortError') return;
-        setIsPlaying(false);
-        setIsLoading(false);
-        setAudioError('تعذر الاتصال بالبث الإذاعي، حاول مرة أخرى');
-      });
+      // Start watchdog: if stalled for more than 7.5 seconds without playing, reconnect
+      radioWatchdogTimeoutRef.current = setTimeout(() => {
+        if (audioModeRef.current === 'radio' && currentRadioRef.current?.id === radio.id && !audio.paused && audio.readyState < 2) {
+          attemptRadioReconnect(radio);
+        }
+      }, 7500);
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          clearRadioTimers();
+          setIsPlaying(true);
+          setIsLoading(false);
+          setAudioError(null);
+          setRadioConnectionState('connected');
+        }).catch(err => {
+          if (err.name === 'AbortError') return;
+          console.warn('Initial radio play rejected, attempting smart reconnect:', err);
+          attemptRadioReconnect(radio);
+        });
+      }
     }
   };
 
@@ -543,12 +741,20 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     playSurah(prevNum, currentReciterRef.current);
   };
 
+  const resumeLastSession = () => {
+    if (!lastListeningSession) return;
+    const targetReciter = EXPANDED_RECITERS.find((r) => r.id === lastListeningSession.reciterId) || currentReciterRef.current;
+    playSurah(lastListeningSession.surahNumber, targetReciter, lastListeningSession.currentTime);
+  };
+
   const closePlayer = () => {
+    clearRadioTimers();
     if (audioRef.current) {
       audioRef.current.pause();
     }
     setIsPlaying(false);
     setIsPlayerVisible(false);
+    setRadioConnectionState('idle');
   };
 
   return (
@@ -573,6 +779,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         activeAyahNumber,
         playlistQueue,
         playlistTitle,
+        radioConnectionState,
+        radioRetryCount,
+        lastListeningSession,
         playSurah,
         playPlaylist,
         playRadio,
@@ -588,6 +797,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setActiveAyahNumber,
         playNextSurah,
         playPreviousSurah,
+        resumeLastSession,
         closePlayer,
       }}
     >
