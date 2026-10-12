@@ -14,18 +14,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
-import { playTasbeehBeadSound } from '../utils/soundEffects';
-
-const QUICK_DHIKRS = [
-  'سُبْحَانَ اللَّهِ',
-  'الْحَمْدُ لِلَّهِ',
-  'اللَّهُ أَكْبَرُ',
-  'لَا إِلَهَ إِلَّا اللَّهُ',
-  'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
-  'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
-  'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
-  'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
-];
+import { tasbeehSyncService, TasbeehSharedState } from '../services/tasbeehSyncService';
 
 export type WidgetScale = 'compact' | 'medium' | 'large';
 
@@ -40,19 +29,27 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
   onClose,
   onOpenInfoModal,
 }) => {
-  const [dhikrIndex, setDhikrIndex] = useState<number>(0);
-  const [count, setCount] = useState<number>(() => {
-    return storageService.getNumber('floating_sebha_count', 0);
-  });
-  const [target, setTarget] = useState<number>(33);
+  // Directly subscribe to the unified tasbeehSyncService state
+  const [syncState, setSyncState] = useState<TasbeehSharedState>(() => tasbeehSyncService.getState());
+
   const [isMini, setIsMini] = useState<boolean>(() => {
     return storageService.get<boolean>('floating_sebha_mini', false);
   });
   const [widgetScale, setWidgetScale] = useState<WidgetScale>(() => {
     return (storageService.getString('floating_sebha_scale', 'medium') as WidgetScale) || 'medium';
   });
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    return storageService.get<boolean>('tasbeeh_sound', true);
+  });
   const [isPressing, setIsPressing] = useState<boolean>(false);
+
+  // Subscribe to real-time tasbeehSyncService updates (two-way live binding)
+  useEffect(() => {
+    const unsubscribe = tasbeehSyncService.subscribe((latestState) => {
+      setSyncState(latestState);
+    });
+    return unsubscribe;
+  }, []);
 
   // Dragging state
   const [position, setPosition] = useState<{ x: number; y: number }>(() => {
@@ -76,10 +73,6 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
   const hasMovedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    storageService.setNumber('floating_sebha_count', count);
-  }, [count]);
-
-  useEffect(() => {
     storageService.set('floating_sebha_mini', isMini);
   }, [isMini]);
 
@@ -87,50 +80,43 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
     storageService.setString('floating_sebha_scale', widgetScale);
   }, [widgetScale]);
 
+  useEffect(() => {
+    storageService.set('tasbeeh_sound', soundEnabled);
+  }, [soundEnabled]);
+
   if (!isOpen) return null;
 
-  const currentDhikr = QUICK_DHIKRS[dhikrIndex] || QUICK_DHIKRS[0];
+  const currentDhikrObj = syncState.dhikrList[syncState.currentDhikrIndex] || syncState.dhikrList[0];
+  const currentDhikrText = currentDhikrObj?.text || 'سُبْحَانَ اللَّهِ';
+  const count = syncState.count;
+  const target = syncState.target;
 
   const handleIncrement = () => {
     if (hasMovedRef.current) return;
 
-    if (soundEnabled) {
-      playTasbeehBeadSound();
-    }
-    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(20);
-    }
-
-    const next = count + 1;
-    setCount(next);
-
-    // Sync with global lifetime total
-    const currentLifetime = storageService.getNumber('tasbeeh_total', 0);
-    storageService.setNumber('tasbeeh_total', currentLifetime + 1);
-
-    // Sync with today total
-    const currentToday = storageService.getNumber('tasbeeh_today', 0);
-    storageService.setNumber('tasbeeh_today', currentToday + 1);
-
     setIsPressing(true);
     setTimeout(() => setIsPressing(false), 90);
+
+    // Increment shared service - immediately updates TasbeehPage and storage
+    tasbeehSyncService.increment({
+      sound: soundEnabled,
+      vibrate: true,
+    });
   };
 
   const handleReset = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCount(0);
+    tasbeehSyncService.resetCurrentCount();
   };
 
   const handleNextDhikr = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setDhikrIndex((prev) => (prev + 1) % QUICK_DHIKRS.length);
-    setCount(0);
+    tasbeehSyncService.nextDhikr();
   };
 
   const handlePrevDhikr = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setDhikrIndex((prev) => (prev - 1 + QUICK_DHIKRS.length) % QUICK_DHIKRS.length);
-    setCount(0);
+    tasbeehSyncService.prevDhikr();
   };
 
   const cycleScale = (e: React.MouseEvent) => {
@@ -222,7 +208,7 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
       dir="rtl"
     >
       {isMini ? (
-        /* MINI COMPACT PILL MODE */
+        /* MINI COMPACT PILL MODE - DIRECT LIVE TWO-WAY INCREMENT */
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -231,13 +217,13 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
           className={`flex items-center gap-2 px-3 py-2 rounded-full bg-stone-900/95 dark:bg-black/95 border border-amber-500/50 text-amber-200 shadow-2xl backdrop-blur-md cursor-grab active:cursor-grabbing transition-transform ${
             isPressing ? 'scale-95' : 'scale-100 hover:scale-102'
           }`}
-          title="اسحب في أي اتجاه للتحريك · انقر في أي مكان للتسبيح"
+          title="اسحب في أي اتجاه للتحريك · انقر في أي مكان للتسبيح المباشر"
         >
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white font-mono font-bold text-xs shadow-md shrink-0">
             {count}
           </div>
           <span className="text-xs font-amiri font-bold truncate max-w-[80px] text-amber-100">
-            {currentDhikr}
+            {currentDhikrText}
           </span>
           <div className="flex items-center gap-0.5 mr-1" onClick={(e) => e.stopPropagation()}>
             <button
@@ -271,12 +257,13 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
             <div className="flex items-center gap-1.5 text-[11px] text-amber-400 font-bold">
               <Move className="w-3 h-3 text-amber-500" />
               <span>سبحة عائمة</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="متزامنة حياً مع السبحة الأساسية" />
             </div>
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               {/* Size switch toggle */}
               <button
                 onClick={cycleScale}
-                className="px-1.5 py-0.5 rounded text-[10px] font-sans font-bold bg-stone-800 hover:bg-stone-700 text-amber-300 transition"
+                className="px-1.5 py-0.5 rounded text-[10px] font-sans font-bold bg-stone-800 hover:bg-stone-700 text-amber-300 transition cursor-pointer"
                 title={`تغيير الحجم (الحالي: ${widgetScale})`}
               >
                 {widgetScale === 'compact' ? 'صغير' : widgetScale === 'medium' ? 'وسط' : 'كبير'}
@@ -284,7 +271,7 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
               {onOpenInfoModal && (
                 <button
                   onClick={onOpenInfoModal}
-                  className="p-1 text-stone-400 hover:text-amber-300 transition"
+                  className="p-1 text-stone-400 hover:text-amber-300 transition cursor-pointer"
                   title="معلومات العرض فوق التطبيقات"
                 >
                   <Info className="w-3.5 h-3.5" />
@@ -292,14 +279,14 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
               )}
               <button
                 onClick={() => setIsMini(true)}
-                className="p-1 text-stone-400 hover:text-amber-300 transition"
+                className="p-1 text-stone-400 hover:text-amber-300 transition cursor-pointer"
                 title="تصغير إلى كبسولة"
               >
                 <Minimize2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={onClose}
-                className="p-1 text-stone-400 hover:text-red-400 transition"
+                className="p-1 text-stone-400 hover:text-red-400 transition cursor-pointer"
                 title="إغلاق"
               >
                 <X className="w-3.5 h-3.5" />
@@ -307,28 +294,28 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
             </div>
           </div>
 
-          {/* Dhikr Selector Bar */}
+          {/* Dhikr Selector Bar (Direct live sync with main TasbeehPage) */}
           <div className="px-2.5 py-1.5 bg-stone-950/40 flex items-center justify-between text-xs border-b border-stone-800/60">
             <button
               onClick={handlePrevDhikr}
-              className="p-1 text-stone-400 hover:text-amber-300 transition"
+              className="p-1 text-stone-400 hover:text-amber-300 transition cursor-pointer"
               title="الذكر السابق"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
             <span className={`font-amiri font-bold ${scaleStyles.titleFont} truncate max-w-[125px] text-amber-200 text-center`}>
-              {currentDhikr}
+              {currentDhikrText}
             </span>
             <button
               onClick={handleNextDhikr}
-              className="p-1 text-stone-400 hover:text-amber-300 transition"
+              className="p-1 text-stone-400 hover:text-amber-300 transition cursor-pointer"
               title="الذكر التالي"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* Central 3D Interactive Tapper */}
+          {/* Central 3D Interactive Tapper (Directly increments main counter) */}
           <div className="p-3.5 flex flex-col items-center justify-center space-y-2.5 text-center">
             <button
               type="button"
@@ -379,8 +366,8 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
             <div className="w-full flex items-center justify-between pt-1 border-t border-stone-800/60 text-[11px] text-stone-400">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-1 hover:text-amber-300 transition"
-                title="تصفير العداد"
+                className="flex items-center gap-1 hover:text-amber-300 transition cursor-pointer"
+                title="تصفير عداد الذكر الحالي"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>تصفير</span>
@@ -388,7 +375,7 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
 
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`p-1 rounded-md transition ${soundEnabled ? 'text-amber-400' : 'text-stone-500'}`}
+                className={`p-1 rounded-md transition cursor-pointer ${soundEnabled ? 'text-amber-400' : 'text-stone-500'}`}
                 title={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
               >
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}

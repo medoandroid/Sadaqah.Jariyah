@@ -34,64 +34,7 @@ import { NotificationSettingsModal } from '../components/NotificationSettingsMod
 import { FloatingSebhaInfoModal } from '../components/FloatingSebhaInfoModal';
 import { sanitizeBoundedText } from '../utils/security';
 import { playTasbeehBeadSound } from '../utils/soundEffects';
-
-interface DhikrMeta {
-  text: string;
-  target: number;
-  virtue?: string;
-  reference?: string;
-}
-
-const DEFAULT_DHIKRS: DhikrMeta[] = [
-  {
-    text: 'سُبْحَانَ اللَّهِ',
-    target: 33,
-    virtue: 'تغرس للمسبح نخلة في الجنة وتكفر الخطايا وإن كانت مثل زبد البحر',
-    reference: 'صحيح مسلم والترمذي',
-  },
-  {
-    text: 'الْحَمْدُ لِلَّهِ',
-    target: 33,
-    virtue: 'تملأ الميزان بالخير والبركة، وهي أحب الكلام إلى الله عز وجل',
-    reference: 'صحيح مسلم',
-  },
-  {
-    text: 'اللَّهُ أَكْبَرُ',
-    target: 34,
-    virtue: 'تملأ ما بين السماء والأرض عظمة وإيماناً وخيراً وبركة',
-    reference: 'صحيح مسلم',
-  },
-  {
-    text: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
-    target: 100,
-    virtue: 'أفضل ما قال النبي صلى الله عليه وسلم والنبيون من قبله، وتعدل عتق عشر رقاب',
-    reference: 'متفق عليه',
-  },
-  {
-    text: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
-    target: 100,
-    virtue: 'تفتح أبواب الرزق والفرج وتطهر القلوب، من لزم الاستغفار جعل الله له من كل هم فرجاً',
-    reference: 'أبو داود وأحمد',
-  },
-  {
-    text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ',
-    target: 100,
-    virtue: 'من صلى عليّ صلاة صلى الله عليه بها عشراً وحطت عنه عشر خطيئات ورفعت له عشر درجات',
-    reference: 'صحيح النسائي وأحمد',
-  },
-  {
-    text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ الْعَلِيِّ الْعَظِيمِ',
-    target: 100,
-    virtue: 'كنز من كنوز الجنة ودواء لتسعة وتسعين داء أيسرها الهم',
-    reference: 'متفق عليه',
-  },
-  {
-    text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ',
-    target: 100,
-    virtue: 'كلمتان خفيفتان على اللسان، ثقيلتان في الميزان، حبيبتان إلى الرحمن',
-    reference: 'صحيح البخاري ومسلم',
-  },
-];
+import { tasbeehSyncService, TasbeehSharedState, DEFAULT_DHIKRS, DhikrMeta } from '../services/tasbeehSyncService';
 
 export type SebhaTheme = 'amber' | 'emerald' | 'sandalwood' | 'pearl' | 'royal_gold' | 'night';
 export type SebhaMode = 'beads' | 'ring';
@@ -101,63 +44,17 @@ interface TasbeehPageProps {
 }
 
 export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) => {
-  // Custom Dhikr list
-  const [dhikrList, setDhikrList] = useState<DhikrMeta[]>(() => {
-    return storageService.get<DhikrMeta[]>('custom_dhikr_list', DEFAULT_DHIKRS);
-  });
+  // Directly subscribe to the unified tasbeehSyncService state
+  const [syncState, setSyncState] = useState<TasbeehSharedState>(() => tasbeehSyncService.getState());
 
-  // Selected Dhikr Index
-  const [currentDhikrIndex, setCurrentDhikrIndex] = useState<number>(() => {
-    return storageService.getNumber('tasbeeh_dhikr_idx', 0);
-  });
-
-  // Individual progress map per Dhikr
-  const [dhikrCountsMap, setDhikrCountsMap] = useState<Record<number, number>>(() => {
-    return storageService.get<Record<number, number>>('tasbeeh_dhikr_counts_map', {});
-  });
-
-  // Current session round count for active dhikr
-  const [count, setCount] = useState<number>(() => {
-    const savedMap = storageService.get<Record<number, number>>('tasbeeh_dhikr_counts_map', {});
-    const initialIdx = storageService.getNumber('tasbeeh_dhikr_idx', 0);
-    if (savedMap[initialIdx] !== undefined) {
-      return savedMap[initialIdx];
-    }
-    return storageService.getNumber('tasbeeh_count', 0);
-  });
-
-  // User's INDIVIDUAL Lifetime Total: strictly START AT 0
-  const [totalLifetimeCount, setTotalLifetimeCount] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem('sadaqah_tasbeeh_total');
-      if (raw === null || raw === undefined) return 0;
-      const parsed = parseInt(raw, 10);
-      if (parsed === 1580 || parsed === 1420 || isNaN(parsed)) {
-        localStorage.setItem('sadaqah_tasbeeh_total', '0');
-        return 0;
-      }
-      return parsed;
-    } catch (e) {
-      return 0;
-    }
-  });
-
-  // Today's Count with Date Reset Check
-  const [todayCount, setTodayCount] = useState<number>(() => {
-    const todayDate = new Date().toISOString().slice(0, 10);
-    const savedDate = storageService.getString('tasbeeh_today_date', '');
-    if (savedDate !== todayDate) {
-      storageService.setString('tasbeeh_today_date', todayDate);
-      storageService.setNumber('tasbeeh_today', 0);
-      return 0;
-    }
-    return storageService.getNumber('tasbeeh_today', 0);
-  });
-
-  // Target count (33, 100, 1000, or 0 for unlimited)
-  const [target, setTarget] = useState<number>(() => {
-    return storageService.getNumber('tasbeeh_target', 33);
-  });
+  const count = syncState.count;
+  const currentDhikrIndex = syncState.currentDhikrIndex;
+  const target = syncState.target;
+  const dhikrCountsMap = syncState.dhikrCountsMap;
+  const totalLifetimeCount = syncState.totalLifetimeCount;
+  const todayCount = syncState.todayCount;
+  const dhikrList = syncState.dhikrList;
+  const rotationAngle = syncState.rotationAngle;
 
   // Theme & Mode settings
   const [sebhaTheme, setSebhaTheme] = useState<SebhaTheme>(() => {
@@ -193,7 +90,6 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isPressing, setIsPressing] = useState<boolean>(false);
-  const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [justCompletedTarget, setJustCompletedTarget] = useState<boolean>(false);
 
@@ -206,6 +102,14 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
   // User Profile & Dedication Target State
   const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
   const [showDedicateChoice, setShowDedicateChoice] = useState<boolean>(false);
+
+  // Subscribe to real-time sync service (instant two-way binding)
+  useEffect(() => {
+    const unsub = tasbeehSyncService.subscribe((latest) => {
+      setSyncState(latest);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const unsub = userProfileService.subscribe((p) => {
@@ -220,31 +124,19 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
     });
   }, []);
 
-  // Persist state across browser reloads
+  // Persist visual/local preferences
   useEffect(() => {
-    storageService.setNumber('tasbeeh_count', count);
-    storageService.setNumber('tasbeeh_total', totalLifetimeCount);
-    storageService.setNumber('tasbeeh_today', todayCount);
-    storageService.setNumber('tasbeeh_dhikr_idx', currentDhikrIndex);
-    storageService.setNumber('tasbeeh_target', target);
     storageService.setString('tasbeeh_theme', sebhaTheme);
     storageService.setString('tasbeeh_mode', sebhaMode);
     storageService.set('tasbeeh_sound', soundEnabled);
     storageService.set('tasbeeh_vibrate', vibrateEnabled);
     storageService.set('tasbeeh_fullscreen', fullScreenTap);
-    storageService.set('tasbeeh_dhikr_counts_map', dhikrCountsMap);
   }, [
-    count,
-    totalLifetimeCount,
-    todayCount,
-    currentDhikrIndex,
-    target,
     sebhaTheme,
     sebhaMode,
     soundEnabled,
     vibrateEnabled,
     fullScreenTap,
-    dhikrCountsMap,
   ]);
 
   const showToast = (msg: string) => {
@@ -266,77 +158,35 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
   });
 
   const handleIncrement = () => {
-    if (soundEnabled) {
-      playTasbeehBeadSound();
-    }
-
-    if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate(22);
-      } catch (e) {}
-    }
-
-    const nextCount = count + 1;
-    const nextTotal = totalLifetimeCount + 1;
-    const nextToday = todayCount + 1;
-
-    setCount(nextCount);
-    setTotalLifetimeCount(nextTotal);
-    setTodayCount(nextToday);
-
-    // Save individual Dhikr count
-    setDhikrCountsMap((prev) => ({
-      ...prev,
-      [currentDhikrIndex]: nextCount,
-    }));
-
-    // Rotate 3D rosary beads clockwise smoothly
-    setRotationAngle((prev) => (prev + (360 / 33)) % 360);
-
     setIsPressing(true);
     setTimeout(() => setIsPressing(false), 90);
 
-    // Target completion detection & gentle vibration
-    if (target > 0 && nextCount % target === 0) {
+    const result = tasbeehSyncService.increment({
+      sound: soundEnabled,
+      vibrate: vibrateEnabled,
+    });
+
+    // Target completion detection & gentle feedback
+    if (result.justCompletedTarget) {
       setJustCompletedTarget(true);
       setTimeout(() => setJustCompletedTarget(false), 2400);
-
-      if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          navigator.vibrate([40, 60, 40]);
-        } catch (e) {}
-      }
       showToast(`ما شاء الله! اكتمل الهدف (${target} تسبيحة) بحمد الله وتوفيقه ✨`);
     }
   };
 
   const handleResetCurrentRound = () => {
-    setCount(0);
-    setDhikrCountsMap((prev) => ({
-      ...prev,
-      [currentDhikrIndex]: 0,
-    }));
-    setRotationAngle(0);
+    tasbeehSyncService.resetCurrentCount();
     showToast('تمت إعادة ضبط عداد الجلسة الحالية');
   };
 
   const handleResetTotalLifetime = () => {
-    setTotalLifetimeCount(0);
-    localStorage.setItem('sadaqah_tasbeeh_total', '0');
-    storageService.setNumber('tasbeeh_total', 0);
+    tasbeehSyncService.resetLifetimeTotal();
     setShowResetConfirm(false);
     showToast('تم تصفير المجموع الإجمالي بنجاح');
   };
 
   const handleSwitchDhikr = (idx: number) => {
-    setCurrentDhikrIndex(idx);
-    const item = dhikrList[idx];
-    if (item) {
-      setTarget(item.target);
-    }
-    // Restore or initialize this dhikr's individual count
-    const restoredCount = dhikrCountsMap[idx] || 0;
-    setCount(restoredCount);
+    tasbeehSyncService.switchDhikr(idx);
   };
 
   const handleDedicateCount = (targetChoice?: 'all' | 'closest' | 'owner') => {
@@ -380,11 +230,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
     } else {
       showToast(`تم إهداء ثواب ${count} تسبيحة لأرواحهم الطاهرة، تقبل الله منكم`);
     }
-    setCount(0);
-    setDhikrCountsMap((prev) => ({
-      ...prev,
-      [currentDhikrIndex]: 0,
-    }));
+    tasbeehSyncService.resetCurrentCount();
   };
 
   const handleAddCustomDhikr = (e: React.FormEvent) => {
@@ -399,18 +245,8 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
       reference: 'ذكر مأثور',
     };
 
-    const updated = [...dhikrList, newDhikr];
-    setDhikrList(updated);
-    storageService.set('custom_dhikr_list', updated);
+    tasbeehSyncService.addCustomDhikr(newDhikr);
 
-    const newIdx = updated.length - 1;
-    setCurrentDhikrIndex(newIdx);
-    setTarget(newDhikr.target);
-    setCount(0);
-    setDhikrCountsMap((prev) => ({
-      ...prev,
-      [newIdx]: 0,
-    }));
     setShowAddModal(false);
     setCustomText('');
     setCustomVirtue('');
@@ -421,7 +257,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
     e.preventDefault();
     const parsed = parseInt(customTargetInput, 10);
     if (!isNaN(parsed) && parsed > 0) {
-      setTarget(parsed);
+      tasbeehSyncService.setTarget(parsed);
       setShowCustomTargetModal(false);
       showToast(`تم تحديد الهدف المخصص: ${parsed} تسبيحة`);
     }
@@ -813,7 +649,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setTarget(tVal);
+              tasbeehSyncService.setTarget(tVal);
             }}
             className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               target === tVal
