@@ -22,7 +22,12 @@ import {
 import { ADHKAR_LIST, ADHKAR_CATEGORIES } from '../data/adhkar';
 import { HISN_MUSLIM_DATA, HISN_CATEGORIES, HisnDhikr } from '../data/hisnMuslim';
 import { recordDedication } from '../services/dedicationService';
+import { storageService } from '../services/storageService';
+import { floatingSebhaService } from '../services/floatingSebhaService';
+import { notificationService } from '../services/notificationService';
+import { NotificationSettingsModal } from '../components/NotificationSettingsModal';
 import { Star8Rosette, ArabesqueDivider } from '../components/IslamicDecoration';
+import { Move, Bell } from 'lucide-react';
 
 interface AdhkarPageProps {
   onOpenDedication: () => void;
@@ -34,12 +39,34 @@ export const AdhkarPage: React.FC<AdhkarPageProps> = ({ onOpenDedication }) => {
 
   // Daily Adhkar states
   const [activeCategory, setActiveCategory] = useState<string>('morning');
-  const [dailyCounts, setDailyCounts] = useState<Record<string, number>>({});
+  const [dailyCounts, setDailyCounts] = useState<Record<string, number>>(() => {
+    return storageService.get<Record<string, number>>('adhkar_daily_counts', {});
+  });
 
   // Hisn al-Muslim states
   const [hisnCategory, setHisnCategory] = useState<string>('الكل');
   const [hisnSearch, setHisnSearch] = useState<string>('');
-  const [hisnCounts, setHisnCounts] = useState<Record<string, number>>({});
+  const [hisnCounts, setHisnCounts] = useState<Record<string, number>>(() => {
+    return storageService.get<Record<string, number>>('adhkar_hisn_counts', {});
+  });
+
+  const [isFloatingActive, setIsFloatingActive] = useState<boolean>(() => floatingSebhaService.isOpen());
+  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
+
+  // Sync counts to storage
+  React.useEffect(() => {
+    storageService.set('adhkar_daily_counts', dailyCounts);
+  }, [dailyCounts]);
+
+  React.useEffect(() => {
+    storageService.set('adhkar_hisn_counts', hisnCounts);
+  }, [hisnCounts]);
+
+  React.useEffect(() => {
+    return floatingSebhaService.subscribe((open) => {
+      setIsFloatingActive(open);
+    });
+  }, []);
 
   // Feedback Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -191,6 +218,36 @@ export const AdhkarPage: React.FC<AdhkarPageProps> = ({ onOpenDedication }) => {
           <p className="font-amiri text-base sm:text-lg text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl mx-auto">
             موسوعة جامعة للأذكار اليومية من كتاب <strong className="text-amber-900 dark:text-amber-400">«حصن المسلم من أذكار الكتاب والسنة»</strong> وأوراد الصباح والمساء والصلوات مع عدادات تفاعلية ميسرة.
           </p>
+
+          {/* Quick Action Integration Pills (Floating Sebha, Notifications) */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                const next = floatingSebhaService.toggle();
+                setIsFloatingActive(next);
+                showToast(next ? 'تم تفعيل السبحة العائمة' : 'تم إغلاق السبحة العائمة');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer shadow-xs ${
+                isFloatingActive
+                  ? 'bg-amber-600 text-white border-amber-700 shadow-md'
+                  : 'bg-white dark:bg-stone-900 border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-50'
+              }`}
+            >
+              <Move className="w-3.5 h-3.5" />
+              <span>السبحة العائمة</span>
+              <span className={`w-2 h-2 rounded-full ${isFloatingActive ? 'bg-emerald-300 animate-pulse' : 'bg-stone-400'}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowNotificationModal(true)}
+              className="px-3.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-500" />
+              <span>تنبيهات الأذكار المجدولة</span>
+            </button>
+          </div>
 
           {/* Section Switcher Tabs */}
           <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-stone-100/80 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mt-2">
@@ -562,6 +619,12 @@ export const AdhkarPage: React.FC<AdhkarPageProps> = ({ onOpenDedication }) => {
       )}
 
       <ArabesqueDivider />
+
+      {/* Notification Settings Modal */}
+      <NotificationSettingsModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
 
     </div>
   );

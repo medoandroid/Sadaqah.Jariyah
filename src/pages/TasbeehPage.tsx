@@ -15,14 +15,25 @@ import {
   Minimize2,
   Award,
   Trash2,
-  CheckCircle2
+  CheckCircle2,
+  Bell,
+  Move,
+  BookOpen,
+  Target,
+  Edit3,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { recordDedication } from '../services/dedicationService';
 import { Star8Rosette } from '../components/IslamicDecoration';
 import { storageService } from '../services/storageService';
-import { CustomSelect } from '../components/CustomSelect';
 import { userProfileService, UserProfile } from '../services/userProfileService';
+import { projectOwnerService } from '../services/projectOwnerService';
+import { floatingSebhaService } from '../services/floatingSebhaService';
+import { NotificationSettingsModal } from '../components/NotificationSettingsModal';
+import { FloatingSebhaInfoModal } from '../components/FloatingSebhaInfoModal';
 import { sanitizeBoundedText } from '../utils/security';
+import { playTasbeehBeadSound } from '../utils/soundEffects';
 
 interface DhikrMeta {
   text: string;
@@ -85,7 +96,11 @@ const DEFAULT_DHIKRS: DhikrMeta[] = [
 export type SebhaTheme = 'amber' | 'emerald' | 'sandalwood' | 'pearl' | 'royal_gold' | 'night';
 export type SebhaMode = 'beads' | 'ring';
 
-export const TasbeehPage: React.FC = () => {
+interface TasbeehPageProps {
+  onNavigateToAdhkar?: () => void;
+}
+
+export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) => {
   // Custom Dhikr list
   const [dhikrList, setDhikrList] = useState<DhikrMeta[]>(() => {
     return storageService.get<DhikrMeta[]>('custom_dhikr_list', DEFAULT_DHIKRS);
@@ -96,18 +111,27 @@ export const TasbeehPage: React.FC = () => {
     return storageService.getNumber('tasbeeh_dhikr_idx', 0);
   });
 
-  // Current session round count
+  // Individual progress map per Dhikr
+  const [dhikrCountsMap, setDhikrCountsMap] = useState<Record<number, number>>(() => {
+    return storageService.get<Record<number, number>>('tasbeeh_dhikr_counts_map', {});
+  });
+
+  // Current session round count for active dhikr
   const [count, setCount] = useState<number>(() => {
+    const savedMap = storageService.get<Record<number, number>>('tasbeeh_dhikr_counts_map', {});
+    const initialIdx = storageService.getNumber('tasbeeh_dhikr_idx', 0);
+    if (savedMap[initialIdx] !== undefined) {
+      return savedMap[initialIdx];
+    }
     return storageService.getNumber('tasbeeh_count', 0);
   });
 
-  // User's INDIVIDUAL Lifetime Total: MUST strictly START AT 0 for each user on first visit!
+  // User's INDIVIDUAL Lifetime Total: strictly START AT 0
   const [totalLifetimeCount, setTotalLifetimeCount] = useState<number>(() => {
     try {
       const raw = localStorage.getItem('sadaqah_tasbeeh_total');
       if (raw === null || raw === undefined) return 0;
       const parsed = parseInt(raw, 10);
-      // Clean up any historical fake numbers like 1580
       if (parsed === 1580 || parsed === 1420 || isNaN(parsed)) {
         localStorage.setItem('sadaqah_tasbeeh_total', '0');
         return 0;
@@ -156,9 +180,20 @@ export const TasbeehPage: React.FC = () => {
     return storageService.get<boolean>('tasbeeh_fullscreen', false);
   });
 
+  // Floating Sebha State
+  const [isFloatingActive, setIsFloatingActive] = useState<boolean>(() => {
+    return floatingSebhaService.isOpen();
+  });
+
+  // Modals
+  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
+  const [showFloatingInfoModal, setShowFloatingInfoModal] = useState<boolean>(false);
+  const [showCustomTargetModal, setShowCustomTargetModal] = useState<boolean>(false);
+  const [customTargetInput, setCustomTargetInput] = useState<string>('33');
+
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isPressing, setIsPressing] = useState<boolean>(false);
-  const [beadSlideOffset, setBeadSlideOffset] = useState<number>(0);
+  const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [justCompletedTarget, setJustCompletedTarget] = useState<boolean>(false);
 
@@ -179,6 +214,12 @@ export const TasbeehPage: React.FC = () => {
     return unsub;
   }, []);
 
+  useEffect(() => {
+    return floatingSebhaService.subscribe((open) => {
+      setIsFloatingActive(open);
+    });
+  }, []);
+
   // Persist state across browser reloads
   useEffect(() => {
     storageService.setNumber('tasbeeh_count', count);
@@ -191,7 +232,7 @@ export const TasbeehPage: React.FC = () => {
     storageService.set('tasbeeh_sound', soundEnabled);
     storageService.set('tasbeeh_vibrate', vibrateEnabled);
     storageService.set('tasbeeh_fullscreen', fullScreenTap);
-    storageService.setString('tasbeeh_initialized', 'true');
+    storageService.set('tasbeeh_dhikr_counts_map', dhikrCountsMap);
   }, [
     count,
     totalLifetimeCount,
@@ -203,6 +244,7 @@ export const TasbeehPage: React.FC = () => {
     soundEnabled,
     vibrateEnabled,
     fullScreenTap,
+    dhikrCountsMap,
   ]);
 
   const showToast = (msg: string) => {
@@ -223,85 +265,81 @@ export const TasbeehPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  // Realistic Acoustic Wooden Bead / Gem Click Synthesis via Web Audio API
-  const playBeadClickSound = () => {
-    if (!soundEnabled) return;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'triangle';
-      const baseFreq =
-        sebhaTheme === 'sandalwood'
-          ? 380
-          : sebhaTheme === 'pearl'
-          ? 720
-          : sebhaTheme === 'emerald'
-          ? 520
-          : sebhaTheme === 'royal_gold'
-          ? 640
-          : 460;
-
-      osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.05);
-
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.06);
-    } catch (e) {}
-  };
-
   const handleIncrement = () => {
-    const nextCount = count + 1;
-    setCount(nextCount);
-    setTotalLifetimeCount((prev) => prev + 1);
-    setTodayCount((prev) => prev + 1);
-
-    setIsPressing(true);
-    setBeadSlideOffset((prev) => (prev + 1) % 33);
-    setTimeout(() => setIsPressing(false), 110);
-
-    // Haptic feedback
-    if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(22);
+    if (soundEnabled) {
+      playTasbeehBeadSound();
     }
 
-    playBeadClickSound();
+    if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(22);
+      } catch (e) {}
+    }
 
-    // Reached target celebration
-    if (target > 0 && nextCount === target) {
-      if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([40, 60, 80]);
-      }
+    const nextCount = count + 1;
+    const nextTotal = totalLifetimeCount + 1;
+    const nextToday = todayCount + 1;
+
+    setCount(nextCount);
+    setTotalLifetimeCount(nextTotal);
+    setTodayCount(nextToday);
+
+    // Save individual Dhikr count
+    setDhikrCountsMap((prev) => ({
+      ...prev,
+      [currentDhikrIndex]: nextCount,
+    }));
+
+    // Rotate 3D rosary beads clockwise smoothly
+    setRotationAngle((prev) => (prev + (360 / 33)) % 360);
+
+    setIsPressing(true);
+    setTimeout(() => setIsPressing(false), 90);
+
+    // Target completion detection & gentle vibration
+    if (target > 0 && nextCount % target === 0) {
       setJustCompletedTarget(true);
-      setTimeout(() => setJustCompletedTarget(false), 2200);
-      showToast(`أتممت الهدف المبارك (${target}) تسبيحة، تقبل الله منك ورزقك الثواب المضاعف!`);
+      setTimeout(() => setJustCompletedTarget(false), 2400);
+
+      if (vibrateEnabled && typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([40, 60, 40]);
+        } catch (e) {}
+      }
+      showToast(`ما شاء الله! اكتمل الهدف (${target} تسبيحة) بحمد الله وتوفيقه ✨`);
     }
   };
 
   const handleResetCurrentRound = () => {
     setCount(0);
-    showToast('تمت إعادة ضبط عداد الجلسة الحالية إلى الصفر');
+    setDhikrCountsMap((prev) => ({
+      ...prev,
+      [currentDhikrIndex]: 0,
+    }));
+    setRotationAngle(0);
+    showToast('تمت إعادة ضبط عداد الجلسة الحالية');
   };
 
   const handleResetTotalLifetime = () => {
     setTotalLifetimeCount(0);
-    setTodayCount(0);
-    setCount(0);
+    localStorage.setItem('sadaqah_tasbeeh_total', '0');
+    storageService.setNumber('tasbeeh_total', 0);
     setShowResetConfirm(false);
     showToast('تم تصفير المجموع الإجمالي بنجاح');
   };
 
-  const handleDedicateCount = (targetChoice?: 'all' | 'closest') => {
+  const handleSwitchDhikr = (idx: number) => {
+    setCurrentDhikrIndex(idx);
+    const item = dhikrList[idx];
+    if (item) {
+      setTarget(item.target);
+    }
+    // Restore or initialize this dhikr's individual count
+    const restoredCount = dhikrCountsMap[idx] || 0;
+    setCount(restoredCount);
+  };
+
+  const handleDedicateCount = (targetChoice?: 'all' | 'closest' | 'owner') => {
     if (count <= 0) {
       showToast('قم بالتسبيح أولاً لإهداء ثوابه');
       return;
@@ -314,10 +352,15 @@ export const TasbeehPage: React.FC = () => {
 
     const currentDhikr = dhikrList[currentDhikrIndex] || DEFAULT_DHIKRS[0];
     const isClosest = targetChoice === 'closest';
-    const targetPersonId = isClosest ? 'custom_closest' : 'all';
+    const isOwner = targetChoice === 'owner';
+    const targetPersonId = isClosest ? 'custom_closest' : isOwner ? 'project_owner' : 'all';
+    
     const recipientName = isClosest
       ? `${profile.closestRelative} (${userProfileService.getHonorific(profile)})`
+      : isOwner
+      ? projectOwnerService.getOwnerProfile().name
       : undefined;
+
     const donor = profile.userName || 'مسبح كريم';
 
     recordDedication(
@@ -330,12 +373,18 @@ export const TasbeehPage: React.FC = () => {
     );
 
     setShowDedicateChoice(false);
-    if (isClosest) {
+    if (isOwner) {
+      showToast(`تم إهداء ثواب ${count} تسبيحة لصاحب المنصة، تقبل الله منك!`);
+    } else if (isClosest) {
       showToast(`تم إهداء ثواب ${count} تسبيحة إلى ${profile.closestRelative}، تقبل الله منك!`);
     } else {
       showToast(`تم إهداء ثواب ${count} تسبيحة لأرواحهم الطاهرة، تقبل الله منكم`);
     }
     setCount(0);
+    setDhikrCountsMap((prev) => ({
+      ...prev,
+      [currentDhikrIndex]: 0,
+    }));
   };
 
   const handleAddCustomDhikr = (e: React.FormEvent) => {
@@ -354,76 +403,109 @@ export const TasbeehPage: React.FC = () => {
     setDhikrList(updated);
     storageService.set('custom_dhikr_list', updated);
 
-    setCurrentDhikrIndex(updated.length - 1);
+    const newIdx = updated.length - 1;
+    setCurrentDhikrIndex(newIdx);
     setTarget(newDhikr.target);
     setCount(0);
+    setDhikrCountsMap((prev) => ({
+      ...prev,
+      [newIdx]: 0,
+    }));
     setShowAddModal(false);
     setCustomText('');
     setCustomVirtue('');
     showToast('تمت إضافة الذكر الجديد بنجاح');
   };
 
-  const currentDhikr = dhikrList[currentDhikrIndex] || DEFAULT_DHIKRS[0];
-  const progressPercent = target > 0 ? Math.min(100, (count / target) * 100) : 100;
-  const currentBeadInRound = target > 0 ? count % target : count % 33;
+  const handleSetCustomTarget = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseInt(customTargetInput, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      setTarget(parsed);
+      setShowCustomTargetModal(false);
+      showToast(`تم تحديد الهدف المخصص: ${parsed} تسبيحة`);
+    }
+  };
 
-  // Theme Palette Configurations
+  const currentDhikr = dhikrList[currentDhikrIndex] || DEFAULT_DHIKRS[0];
+  const progressPercent = target > 0 ? Math.min(100, ((count % target) / target) * 100) : 100;
+  const currentBeadInRound = target > 0 ? count % 33 : count % 33;
+
+  // 3D Theme Palette Configurations with Realistic Bead Lighting Shaders
   const getThemeConfig = () => {
     switch (sebhaTheme) {
       case 'emerald':
         return {
-          beadActive: 'from-emerald-400 via-emerald-600 to-emerald-800 shadow-emerald-500/40 text-emerald-100',
-          beadNormal: 'from-emerald-700 via-emerald-800 to-emerald-950 text-emerald-200',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #34d399 0%, #059669 45%, #064e3b 100%)',
+            boxShadow: '0 4px 10px rgba(5, 150, 105, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
+          },
+          beadActiveGlow: '0 0 16px rgba(52, 211, 153, 0.9), inset 0 2px 5px #fff',
           ringAccent: '#10B981',
-          bgHighlight: 'bg-emerald-50/80 border-emerald-200',
+          bgHighlight: 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/50',
           badgeText: 'text-emerald-900 bg-emerald-100',
-          buttonGlow: 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/30',
+          buttonGlow: 'from-emerald-600 via-emerald-700 to-emerald-900 text-white shadow-emerald-700/40',
         };
       case 'royal_gold':
         return {
-          beadActive: 'from-amber-300 via-amber-500 to-amber-700 shadow-amber-500/50 text-amber-950',
-          beadNormal: 'from-amber-600 via-amber-700 to-amber-900 text-amber-100',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #fef08a 0%, #f59e0b 45%, #78350f 100%)',
+            boxShadow: '0 4px 12px rgba(217, 119, 6, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.7), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
+          },
+          beadActiveGlow: '0 0 18px rgba(251, 191, 36, 0.95), inset 0 2px 5px #fff',
           ringAccent: '#D97706',
-          bgHighlight: 'bg-amber-50/90 border-amber-300',
+          bgHighlight: 'bg-amber-50/90 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/50',
           badgeText: 'text-amber-950 bg-amber-200',
-          buttonGlow: 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-amber-600/40',
+          buttonGlow: 'from-amber-500 via-amber-600 to-amber-800 text-white shadow-amber-600/40',
         };
       case 'sandalwood':
         return {
-          beadActive: 'from-amber-600 via-stone-700 to-stone-900 shadow-stone-600/40 text-amber-200',
-          beadNormal: 'from-stone-600 via-stone-800 to-stone-950 text-stone-300',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #a8a29e 0%, #57534e 45%, #292524 100%)',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.8)',
+          },
+          beadActiveGlow: '0 0 14px rgba(214, 211, 209, 0.7), inset 0 2px 4px #fff',
           ringAccent: '#78350F',
-          bgHighlight: 'bg-stone-100 border-stone-300',
+          bgHighlight: 'bg-stone-100 dark:bg-stone-900/60 border-stone-300 dark:border-stone-800',
           badgeText: 'text-stone-900 bg-stone-200',
-          buttonGlow: 'bg-stone-800 hover:bg-stone-900 text-amber-200 shadow-stone-800/30',
+          buttonGlow: 'from-stone-700 via-stone-800 to-stone-950 text-amber-200 shadow-stone-800/40',
         };
       case 'pearl':
         return {
-          beadActive: 'from-white via-slate-100 to-amber-200 shadow-amber-300/50 text-stone-900',
-          beadNormal: 'from-slate-200 via-slate-300 to-slate-400 text-stone-700',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f5f9 40%, #cbd5e1 75%, #94a3b8 100%)',
+            boxShadow: '0 4px 12px rgba(148, 163, 184, 0.45), inset 0 2px 5px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(0, 0, 0, 0.3)',
+          },
+          beadActiveGlow: '0 0 16px rgba(255, 255, 255, 0.95), inset 0 2px 5px #fff',
           ringAccent: '#B45309',
-          bgHighlight: 'bg-slate-50 border-slate-200',
+          bgHighlight: 'bg-slate-50 dark:bg-stone-900/60 border-slate-200 dark:border-stone-800',
           badgeText: 'text-slate-900 bg-slate-200',
-          buttonGlow: 'bg-slate-800 hover:bg-slate-900 text-white shadow-slate-700/30',
+          buttonGlow: 'from-slate-700 via-slate-800 to-slate-950 text-white shadow-slate-700/40',
         };
       case 'night':
         return {
-          beadActive: 'from-amber-400 via-amber-600 to-amber-700 shadow-amber-400/30 text-stone-900',
-          beadNormal: 'from-stone-800 via-stone-900 to-black text-amber-300',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #f59e0b 0%, #292524 40%, #0c0a09 100%)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(245, 158, 11, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.9)',
+          },
+          beadActiveGlow: '0 0 16px rgba(245, 158, 11, 0.8), inset 0 2px 4px #fbbf24',
           ringAccent: '#F59E0B',
           bgHighlight: 'bg-stone-900 border-stone-800 text-stone-100',
           badgeText: 'text-amber-300 bg-stone-800',
-          buttonGlow: 'bg-amber-600 hover:bg-amber-700 text-stone-950 font-bold shadow-amber-500/20',
+          buttonGlow: 'from-amber-600 via-stone-800 to-black text-amber-200 font-bold shadow-amber-500/30',
         };
       case 'amber':
       default:
         return {
-          beadActive: 'from-amber-400 via-amber-600 to-amber-800 shadow-amber-500/50 text-amber-100',
-          beadNormal: 'from-amber-700 via-amber-800 to-amber-950 text-amber-200',
+          beadStyle: {
+            background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #d97706 45%, #78350f 100%)',
+            boxShadow: '0 4px 12px rgba(217, 119, 6, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.7), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
+          },
+          beadActiveGlow: '0 0 18px rgba(245, 158, 11, 0.95), inset 0 2px 5px #fff',
           ringAccent: '#F59E0B',
-          bgHighlight: 'bg-amber-50/80 border-amber-200',
+          bgHighlight: 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/50',
           badgeText: 'text-amber-900 bg-amber-100',
-          buttonGlow: 'bg-amber-700 hover:bg-amber-800 text-white shadow-amber-700/30',
+          buttonGlow: 'from-amber-600 via-amber-700 to-amber-900 text-white shadow-amber-700/40',
         };
     }
   };
@@ -452,17 +534,71 @@ export const TasbeehPage: React.FC = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/70 dark:bg-stone-800 text-amber-900 dark:text-amber-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-amber-800 dark:text-amber-400" />
-          <span>السبحة الإلكترونية التفاعلية المطورة</span>
+          <span>السبحة الإلكترونية التفاعلية ثلاثية الأبعاد (3D)</span>
         </div>
         <h1 className="font-amiri text-3xl sm:text-5xl font-bold text-stone-900 dark:text-stone-100">
           السبحة والأذكار المباركة
         </h1>
         <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 max-w-lg mx-auto">
-          سبّح واذكر الله واهدِ ثواب كل تسبيحة لأرواح المغفور لهم بإذن الله صدقةً جارية ونوراً في قبورهم.
+          سبّح واذكر الله بدقة واهدِ ثواب كل تسبيحة لأرواح المغفور لهم بإذن الله صدقةً جارية ونوراً في قبورهم.
         </p>
       </div>
 
-      {/* Stats Counters Bar (Total starts at 0 for each user) */}
+      {/* Quick Action Integration Pills (Floating Sebha, Notifications, Hisn Muslim) */}
+      <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+        {/* Floating Sebha Trigger */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const isOpen = floatingSebhaService.toggle();
+            setIsFloatingActive(isOpen);
+            showToast(isOpen ? 'تم تفعيل السبحة العائمة! ستظهر معك في جميع صفحات المنصة' : 'تم إغلاق السبحة العائمة');
+          }}
+          className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer shadow-xs ${
+            isFloatingActive
+              ? 'bg-amber-600 text-white border-amber-700 shadow-md'
+              : 'bg-white dark:bg-stone-900 border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-50'
+          }`}
+          title="تشغيل سبحة عائمة حرة تطفو فوق جميع الصفحات"
+        >
+          <Move className="w-3.5 h-3.5" />
+          <span>السبحة العائمة</span>
+          <span className={`w-2 h-2 rounded-full ${isFloatingActive ? 'bg-emerald-300 animate-pulse' : 'bg-stone-400'}`} />
+        </button>
+
+        {/* Notifications Modal Trigger */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowNotificationModal(true);
+          }}
+          className="px-3.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs"
+          title="جدولة تنبيهات دورية للأذكار والصلاة على النبي ﷺ"
+        >
+          <Bell className="w-3.5 h-3.5 text-amber-500" />
+          <span>تنبيهات الأذكار المجدولة</span>
+        </button>
+
+        {/* Adhkar Page Navigation */}
+        {onNavigateToAdhkar && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigateToAdhkar();
+            }}
+            className="px-3.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs"
+            title="الانتقال إلى أذكار الصباح والمساء وحصن المسلم"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+            <span>حصن المسلم والأذكار</span>
+          </button>
+        )}
+      </div>
+
+      {/* Stats Counters Bar (Total strictly starts at 0 for each user) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-lg mx-auto">
         <div className="p-3 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xs">
           <div className="text-[11px] text-stone-500 dark:text-stone-400">الجلسة الحالية</div>
@@ -513,7 +649,7 @@ export const TasbeehPage: React.FC = () => {
             }`}
           >
             <CircleDot className="w-3.5 h-3.5" />
-            <span>سبحة الخرز</span>
+            <span>سبحة الخرز 3D</span>
           </button>
           <button
             type="button"
@@ -642,9 +778,7 @@ export const TasbeehPage: React.FC = () => {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setCurrentDhikrIndex(idx);
-                setTarget(item.target);
-                setCount(0);
+                handleSwitchDhikr(idx);
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 currentDhikrIndex === idx
@@ -670,9 +804,9 @@ export const TasbeehPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Target Presets Bar */}
-      <div className="flex items-center justify-center gap-2">
-        <span className="text-xs text-stone-400">الهدف:</span>
+      {/* Target Presets & Custom Target Input Bar */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <span className="text-xs text-stone-400 font-medium">الهدف:</span>
         {[33, 100, 1000, 0].map((tVal) => (
           <button
             key={tVal}
@@ -690,69 +824,119 @@ export const TasbeehPage: React.FC = () => {
             {tVal === 0 ? 'مفتوح' : `${tVal}`}
           </button>
         ))}
+
+        {/* Custom Target Modal Trigger */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setCustomTargetInput(target > 0 ? String(target) : '33');
+            setShowCustomTargetModal(true);
+          }}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+            ![33, 100, 1000, 0].includes(target)
+              ? 'bg-amber-800 text-white shadow-xs'
+              : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200'
+          }`}
+          title="تحديد هدف حر مخصص"
+        >
+          <Target className="w-3.5 h-3.5" />
+          <span>{![33, 100, 1000, 0].includes(target) ? `مخصص (${target})` : 'هدف مخصص'}</span>
+        </button>
       </div>
 
-      {/* MAIN INTERACTIVE SEBHA COUNTER */}
+      {/* MAIN INTERACTIVE 3D SEBHA COUNTER */}
       <div className="py-4 relative flex flex-col items-center justify-center">
         
         {/* Celebration Pulse when target completed */}
         {justCompletedTarget && (
           <div className="absolute -top-4 px-4 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xl animate-bounce flex items-center gap-1.5 z-20">
             <CheckCircle2 className="w-4 h-4" />
-            <span>ما شاء الله! اكتمل الهدف</span>
+            <span>ما شاء الله! اكتمل الهدف المبارك</span>
           </div>
         )}
 
-        {/* MODE 1: Beads Mode (Interactive 33-Bead Ring) */}
+        {/* MODE 1: 3D Spherical Beads Loop with Dynamic Physics Rotation */}
         {sebhaMode === 'beads' ? (
-          <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto flex items-center justify-center">
+          <div className="relative w-72 h-72 sm:w-84 sm:h-84 mx-auto flex items-center justify-center perspective-[1000px]">
             
-            {/* Circular Beads Loop */}
-            <div className="absolute inset-0">
+            {/* The 3D Rotating Loop */}
+            <div
+              style={{
+                transform: `rotateZ(${rotationAngle}deg)`,
+                transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                transformOrigin: 'center center',
+              }}
+              className="absolute inset-0 pointer-events-none"
+            >
               {Array.from({ length: 33 }).map((_, i) => {
                 const angle = (i / 33) * 2 * Math.PI - Math.PI / 2;
-                const radius = 110; // px
+                const radius = 125; // px
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
                 const isPassed = i <= currentBeadInRound;
+                const isFocalBead = i === currentBeadInRound;
 
                 return (
                   <div
                     key={i}
                     style={{
-                      transform: `translate(${x}px, ${y}px)`,
-                      left: 'calc(50% - 8px)',
-                      top: 'calc(50% - 8px)',
+                      transform: `translate(${x}px, ${y}px) translate(-50%, -50%)`,
+                      left: '50%',
+                      top: '50%',
+                      ...themeConfig.beadStyle,
+                      boxShadow: isFocalBead ? themeConfig.beadActiveGlow : themeConfig.beadStyle.boxShadow,
                     }}
-                    className={`absolute w-4 h-4 rounded-full transition-all duration-150 bg-gradient-to-br shadow-sm ${
-                      isPassed ? themeConfig.beadActive : themeConfig.beadNormal
-                    } ${i === currentBeadInRound ? 'scale-135 ring-2 ring-amber-400' : 'scale-90'}`}
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-150 ${
+                      isFocalBead ? 'scale-135 ring-2 ring-amber-300 z-10' : 'scale-95'
+                    }`}
                   />
                 );
               })}
+
+              {/* Decorative Golden Imam / Minaret Bead with Tassel */}
+              <div
+                style={{
+                  transform: 'translate(0px, 125px) translate(-50%, -50%)',
+                  left: '50%',
+                  top: '50%',
+                }}
+                className="absolute z-10 flex flex-col items-center"
+              >
+                <div className="w-6 h-6 rounded-md bg-gradient-to-b from-amber-400 via-amber-600 to-amber-900 border border-amber-300 shadow-md flex items-center justify-center">
+                  <Star8Rosette className="w-3.5 h-3.5 text-amber-200" />
+                </div>
+                {/* Flowing Tassel */}
+                <div className="w-2 h-7 bg-gradient-to-b from-amber-600 to-amber-800 rounded-b-md shadow-sm opacity-90" />
+              </div>
             </div>
 
-            {/* Central Main Tapper Button */}
+            {/* Central Main 3D Tapper Button */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleIncrement();
               }}
-              className={`relative z-10 w-44 h-44 sm:w-52 sm:h-52 rounded-full flex flex-col items-center justify-center cursor-pointer transition-transform duration-100 ${
+              className={`relative z-20 w-44 h-44 sm:w-52 sm:h-52 rounded-full flex flex-col items-center justify-center cursor-pointer transition-transform duration-75 bg-gradient-to-br ${
                 themeConfig.buttonGlow
-              } ${isPressing ? 'scale-95 shadow-inner' : 'scale-100 shadow-2xl hover:scale-102'}`}
+              } ${isPressing ? 'scale-92 shadow-inner' : 'scale-100 shadow-2xl hover:scale-102'}`}
+              style={{
+                boxShadow: isPressing
+                  ? 'inset 0 6px 14px rgba(0,0,0,0.7)'
+                  : '0 12px 28px rgba(0,0,0,0.35), inset 0 3px 6px rgba(255,255,255,0.4)',
+              }}
             >
-              <div className="text-[11px] font-sans opacity-85 uppercase tracking-wider mb-1">
-                اضغط للتسبيح
+              <div className="text-[11px] font-sans opacity-90 uppercase tracking-wider mb-1 text-white">
+                اضغط أو اسحب للتسبيح
               </div>
-              <div className="font-mono text-4xl sm:text-5xl font-bold tracking-tight">
+              <div className="font-mono text-4xl sm:text-5xl font-black tracking-tight text-white drop-shadow-md">
                 {count}
               </div>
-              <div className="text-xs opacity-90 mt-1">
-                {target > 0 ? `الهدف: ${target}` : 'تسبيح حر'}
+              <div className="text-xs font-semibold opacity-95 mt-1 text-amber-200">
+                {target > 0 ? `${count} من ${target}` : 'تسبيح حر مفتوح'}
               </div>
-              <Fingerprint className="w-5 h-5 opacity-40 mt-2" />
+              <Fingerprint className="w-5 h-5 opacity-40 mt-2 text-white" />
             </button>
 
           </div>
@@ -761,7 +945,7 @@ export const TasbeehPage: React.FC = () => {
           <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto flex items-center justify-center">
             
             {/* SVG Circular Progress Track */}
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
               <circle
                 cx="50"
                 cy="50"
@@ -792,17 +976,17 @@ export const TasbeehPage: React.FC = () => {
                 e.stopPropagation();
                 handleIncrement();
               }}
-              className={`relative z-10 w-48 h-48 sm:w-56 sm:h-56 rounded-full flex flex-col items-center justify-center cursor-pointer transition-transform duration-100 ${
+              className={`relative z-10 w-48 h-48 sm:w-56 sm:h-56 rounded-full flex flex-col items-center justify-center cursor-pointer transition-transform duration-75 bg-gradient-to-br ${
                 themeConfig.buttonGlow
-              } ${isPressing ? 'scale-95' : 'scale-100 shadow-2xl hover:scale-102'}`}
+              } ${isPressing ? 'scale-92 shadow-inner' : 'scale-100 shadow-2xl hover:scale-102'}`}
             >
-              <div className="text-[11px] font-sans opacity-85 uppercase tracking-wider mb-1">
+              <div className="text-[11px] font-sans opacity-85 uppercase tracking-wider mb-1 text-white">
                 اضغط أو اضغط المسافة
               </div>
-              <div className="font-mono text-5xl sm:text-6xl font-bold tracking-tight">
+              <div className="font-mono text-5xl sm:text-6xl font-bold tracking-tight text-white">
                 {count}
               </div>
-              <div className="text-xs opacity-90 mt-1">
+              <div className="text-xs opacity-90 mt-1 text-amber-200">
                 {target > 0 ? `${count} من ${target}` : 'تسبيح حر مفتوح'}
               </div>
             </button>
@@ -835,9 +1019,9 @@ export const TasbeehPage: React.FC = () => {
             e.stopPropagation();
             handleDedicateCount();
           }}
-          className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-95"
+          className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-95"
         >
-          <Heart className="w-4 h-4 fill-current" />
+          <Heart className="w-4 h-4 fill-current text-rose-300" />
           <span>إهداء ثواب هذا التسبيح</span>
         </button>
       </div>
@@ -849,177 +1033,115 @@ export const TasbeehPage: React.FC = () => {
             e.stopPropagation();
             setShowDedicateChoice(false);
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-white dark:bg-stone-900 rounded-3xl p-6 text-right space-y-4 shadow-2xl border border-stone-200 dark:border-stone-800"
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-6 text-right space-y-4 shadow-2xl"
           >
-            <h3 className="font-amiri text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-amber-700 fill-amber-700/20" />
-              <span>إهداء ثواب التسبيح ({count} تسبيحة)</span>
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400">
-              اختر لمن ترغب في إهداء ثواب تسبيحاتك المباركة:
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
+              <span className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
+                إهداء ثواب {count} تسبيحة
+              </span>
+              <button
+                onClick={() => setShowDedicateChoice(false)}
+                className="text-stone-400 hover:text-stone-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-amiri">
+              اختر لمن تحب أن تهدي ثواب هذا العمل المبارك:
             </p>
 
-            <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                onClick={() => handleDedicateCount('closest')}
-                className="w-full p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-right transition-all flex items-center justify-between cursor-pointer group"
-              >
-                <div>
-                  <div className="text-xs font-bold text-amber-950 dark:text-amber-200 group-hover:text-amber-800">
-                    طرفك الأقرب: {profile.closestRelative}
-                  </div>
-                  <div className="text-[11px] text-amber-800/80 dark:text-amber-400">
-                    {userProfileService.getHonorific(profile)}
-                  </div>
-                </div>
-                <Heart className="w-4 h-4 text-rose-500 fill-rose-500 shrink-0" />
-              </button>
-
+            <div className="space-y-2">
               <button
                 type="button"
                 onClick={() => handleDedicateCount('all')}
-                className="w-full p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-right transition-all flex items-center justify-between cursor-pointer"
+                className="w-full p-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-bold transition-all text-right flex items-center justify-between"
               >
-                <div>
-                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100">
-                    أرواح عمامنا الكرام الأربعة
-                  </div>
-                  <div className="text-[11px] text-stone-500 dark:text-stone-400">
-                    رمضان، الشهاوي، الشافعي، أحمد
-                  </div>
-                </div>
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>جميع الأرواح الكريمة لعائلة الشهاوي</span>
+                <Heart className="w-4 h-4 text-amber-600" />
               </button>
-            </div>
 
-            <div className="pt-2 text-center">
               <button
                 type="button"
-                onClick={() => setShowDedicateChoice(false)}
-                className="text-xs text-stone-500 dark:text-stone-400 hover:underline cursor-pointer"
+                onClick={() => handleDedicateCount('owner')}
+                className="w-full p-3 rounded-2xl border border-amber-600/30 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 text-stone-800 dark:text-stone-200 text-xs font-bold transition-all text-right flex items-center justify-between"
               >
-                إلغاء
+                <span>صاحب المشروع ومُنشئ المنصة</span>
+                <Sparkles className="w-4 h-4 text-amber-500" />
               </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Reset Total Lifetime Confirmation Modal */}
-      {showResetConfirm && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs"
-        >
-          <div className="w-full max-w-sm bg-white dark:bg-stone-900 rounded-3xl p-6 text-right space-y-4 shadow-2xl border border-stone-200 dark:border-stone-800">
-            <h3 className="font-amiri text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" />
-              <span>تصفير المجموع الإجمالي</span>
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              هل ترغب في إعادة ضبط المجموع الإجمالي لجميع تسبيحاتك ({totalLifetimeCount} تسبيحة) إلى الصفر للبدء من جديد؟
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800 cursor-pointer"
-              >
-                إلغاء
-              </button>
-              <button
-                type="button"
-                onClick={handleResetTotalLifetime}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer"
-              >
-                تأكيد التصفير
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Custom Dhikr Modal */}
-      {showAddModal && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs"
-        >
-          <div className="w-full max-w-md bg-white dark:bg-stone-900 rounded-3xl shadow-2xl p-6 text-right space-y-4 border border-stone-200 dark:border-stone-800">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-stone-800">
-              <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-amber-700" />
-                <span>إضافة ذكر مخصص</span>
-              </h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="p-1 text-stone-400 hover:text-stone-700 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddCustomDhikr} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  نص الذكر أو الدعاء المبارك *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ"
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl focus:outline-hidden focus:border-amber-700 text-stone-900 dark:text-stone-100"
-                />
-              </div>
-
-              <div>
-                <CustomSelect<number>
-                  label="الهدف المفضل للتسبيح"
-                  value={customTarget}
-                  onChange={(val) => setCustomTarget(Number(val))}
-                  options={[
-                    { value: 33, label: '٣٣ تسبيحة', badge: 'سنة نبوية' },
-                    { value: 100, label: '١٠٠ تسبيحة', badge: 'ورد مأثور' },
-                    { value: 1000, label: '١٠٠٠ تسبيحة', badge: 'ختمة ذكر' },
-                    { value: 0, label: 'تسبيح حر مفتوح بدون حد', badge: 'مفتوح' },
-                  ]}
-                  size="md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                  فضله أو ملاحظة (اختياري)
-                </label>
-                <input
-                  type="text"
-                  placeholder="مثال: دعوة ذي النون لتفريج الكروب"
-                  value={customVirtue}
-                  onChange={(e) => setCustomVirtue(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl focus:outline-hidden focus:border-amber-700 text-stone-900 dark:text-stone-100"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
+              {profile.closestRelative && (
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+                  onClick={() => handleDedicateCount('closest')}
+                  className="w-full p-3 rounded-2xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-900 dark:text-rose-200 text-xs font-bold transition-all text-right flex items-center justify-between"
+                >
+                  <span>طرفك الأقرب: {profile.closestRelative}</span>
+                  <Heart className="w-4 h-4 text-rose-600" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Target Modal */}
+      {showCustomTargetModal && (
+        <div
+          onClick={() => setShowCustomTargetModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-stone-900 border border-amber-500/30 p-6 text-right space-y-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
+              <span className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-amber-600" />
+                <span>تحديد هدف تسبيح مخصص</span>
+              </span>
+              <button
+                onClick={() => setShowCustomTargetModal(false)}
+                className="text-stone-400 hover:text-stone-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSetCustomTarget} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
+                  أدخل عدد التسبيحات المستهدف:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100000"
+                  required
+                  value={customTargetInput}
+                  onChange={(e) => setCustomTargetInput(e.target.value)}
+                  placeholder="مثال: 70 أو 313 أو 500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-mono text-center text-lg font-bold focus:border-amber-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomTargetModal(false)}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold cursor-pointer shadow-md"
+                  className="flex-1 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold shadow-md"
                 >
-                  حفظ الذكر والبدء
+                  حفظ الهدف
                 </button>
               </div>
             </form>
@@ -1027,6 +1149,144 @@ export const TasbeehPage: React.FC = () => {
         </div>
       )}
 
+      {/* Add Custom Dhikr Modal */}
+      {showAddModal && (
+        <div
+          onClick={() => setShowAddModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-6 text-right space-y-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
+              <span className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
+                إضافة ذكر أو دعاء جديد للسبحة
+              </span>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-stone-400 hover:text-stone-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomDhikr} className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-stone-700 dark:text-stone-300 block">
+                  نص الذكر المبارك:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="مثال: يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ"
+                  className="w-full p-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:border-amber-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-stone-700 dark:text-stone-300 block">
+                  العدد المستهدف بالجلسة:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  value={customTarget}
+                  onChange={(e) => setCustomTarget(Number(e.target.value))}
+                  className="w-full p-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:border-amber-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-stone-700 dark:text-stone-300 block">
+                  الفضل أو المناسبة (اختياري):
+                </label>
+                <input
+                  type="text"
+                  value={customVirtue}
+                  onChange={(e) => setCustomVirtue(e.target.value)}
+                  placeholder="مثال: دعاء الكرب وتفريج الهموم"
+                  className="w-full p-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-xs focus:border-amber-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold shadow-md"
+                >
+                  إضافة الذكر
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Total Lifetime Confirmation Modal */}
+      {showResetConfirm && (
+        <div
+          onClick={() => setShowResetConfirm(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-stone-900 border border-red-500/30 p-6 text-center space-y-4 shadow-2xl"
+          >
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 mx-auto flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <h3 className="font-amiri text-xl font-bold text-stone-900 dark:text-stone-100">
+              تصفير المجموع الإجمالي؟
+            </h3>
+
+            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+              هل أنت متأكد من رغبتك في تصفير عداد المجموع الإجمالي ({totalLifetimeCount} تسبيحة) والبدء من الصفر؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={handleResetTotalLifetime}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md"
+              >
+                نعم، تصفير العداد
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Settings Modal */}
+      <NotificationSettingsModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
+
+      {/* Floating Sebha Info Modal */}
+      <FloatingSebhaInfoModal
+        isOpen={showFloatingInfoModal}
+        onClose={() => setShowFloatingInfoModal(false)}
+        onOpenNotifications={() => setShowNotificationModal(true)}
+      />
     </div>
   );
 };

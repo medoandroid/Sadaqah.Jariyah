@@ -20,6 +20,11 @@ import { OfflineQuranModal } from './components/OfflineQuranModal';
 import { PrayerTimesModal } from './components/PrayerTimesModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { EgyptianCompanionModal } from './components/EgyptianCompanionModal';
+import { FloatingSebhaWidget } from './components/FloatingSebhaWidget';
+import { FloatingSebhaInfoModal } from './components/FloatingSebhaInfoModal';
+import { NotificationSettingsModal } from './components/NotificationSettingsModal';
+import { floatingSebhaService } from './services/floatingSebhaService';
+import { notificationService } from './services/notificationService';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sparkles } from 'lucide-react';
 
@@ -84,6 +89,27 @@ function AppContent() {
   const [isEgyptianCompanionOpen, setIsEgyptianCompanionOpen] = useState<boolean>(false);
   const [dedicationPersonId, setDedicationPersonId] = useState<string>('all');
   const [dedicationType, setDedicationType] = useState<'surah' | 'tasbeeh' | 'dua' | 'khatmah'>('dua');
+  const [isFloatingSebhaOpen, setIsFloatingSebhaOpen] = useState<boolean>(() => floatingSebhaService.isOpen());
+  const [isFloatingInfoOpen, setIsFloatingInfoOpen] = useState<boolean>(false);
+  const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState<boolean>(false);
+
+  // Subscribe to floating sebha service updates
+  useEffect(() => {
+    return floatingSebhaService.subscribe((open) => {
+      setIsFloatingSebhaOpen(open);
+    });
+  }, []);
+
+  // Initialize background notification scheduler if user enabled it
+  useEffect(() => {
+    const settings = notificationService.getSettings();
+    if (settings.enabled && notificationService.getPermissionStatus() === 'granted') {
+      notificationService.startBackgroundScheduler();
+    }
+    return () => {
+      notificationService.stopBackgroundScheduler();
+    };
+  }, []);
 
   // Persist state across reloads, tab closes, and page navigation
   useEffect(() => {
@@ -104,7 +130,9 @@ function AppContent() {
       isOfflineModalOpen ||
       isPrayerTimesOpen ||
       isBackupOpen ||
-      isEgyptianCompanionOpen;
+      isEgyptianCompanionOpen ||
+      isFloatingInfoOpen ||
+      isNotificationsModalOpen;
 
     const handlePopState = (e: PopStateEvent) => {
       if (isAnyModalOpen) {
@@ -115,6 +143,8 @@ function AppContent() {
         setIsPrayerTimesOpen(false);
         setIsBackupOpen(false);
         setIsEgyptianCompanionOpen(false);
+        setIsFloatingInfoOpen(false);
+        setIsNotificationsModalOpen(false);
         return;
       }
 
@@ -133,6 +163,8 @@ function AppContent() {
     isPrayerTimesOpen,
     isBackupOpen,
     isEgyptianCompanionOpen,
+    isFloatingInfoOpen,
+    isNotificationsModalOpen,
   ]);
 
   const navigateToTab = (tabId: string) => {
@@ -168,6 +200,8 @@ function AppContent() {
         setIsPrayerTimesOpen(false);
         setIsBackupOpen(false);
         setIsEgyptianCompanionOpen(false);
+        setIsFloatingInfoOpen(false);
+        setIsNotificationsModalOpen(false);
       }
     };
 
@@ -407,6 +441,29 @@ function AppContent() {
       {/* Floating Offline & Reconnected Toast Banner */}
       <OfflineStatusBanner
         onOpenOfflineManager={() => setIsOfflineModalOpen(true)}
+      />
+
+      {/* Floating Sebha Widget across all platform pages */}
+      <FloatingSebhaWidget
+        isOpen={isFloatingSebhaOpen}
+        onClose={() => floatingSebhaService.setOpen(false)}
+        onOpenInfoModal={() => setIsFloatingInfoOpen(true)}
+      />
+
+      {/* Scheduled Dhikr Notifications Modal */}
+      <NotificationSettingsModal
+        isOpen={isNotificationsModalOpen}
+        onClose={() => setIsNotificationsModalOpen(false)}
+      />
+
+      {/* Floating Sebha & Out-of-app Capabilities Info Modal */}
+      <FloatingSebhaInfoModal
+        isOpen={isFloatingInfoOpen}
+        onClose={() => setIsFloatingInfoOpen(false)}
+        onOpenNotifications={() => {
+          setIsFloatingInfoOpen(false);
+          setIsNotificationsModalOpen(true);
+        }}
       />
 
       {/* Site Footer */}
