@@ -59,23 +59,23 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
       [person.id]: current + 1,
     });
     recordDedication('dua', `دعاء خاص لـ ${person.name}`, person.id, 1);
-    showToast(`تقبل الله دعاءكم للمغفور له بإذن الله: ${person.name}`);
+    showToast(`ربنا يتقبل دعائك للغالي: ${person.name} ويسكنه فسيح جناته`);
   };
 
   const handleCopyDua = (person: Person) => {
-    const text = `دعاء للمغفور له بإذن الله: ${person.name}\n\n«${person.dedicationDua}»\n\n- من منصة صدقة جارية`;
+    const text = `دعاء للمغفور له بإذن الله: ${person.name}\n\n«${person.dedicationDua}»\n\n- صدقة جارية · عائلة الشهاوي`;
     navigator.clipboard.writeText(text);
-    showToast('تم نسخ الدعاء الخاص');
+    showToast('اتنسخ الدعاء علشان تشاركه مع حبايبك');
   };
 
   const handleCopyCondolenceDua = (text: string) => {
     navigator.clipboard.writeText(text);
-    showToast('تم نسخ الدعاء المبارك');
+    showToast('اتنسخ الدعاء علشان تشاركه مع حبايبك');
   };
 
   const handleSayAmeen = (msgId: string) => {
     recordDedication('dua', 'تأمين على دعاء جامع لعمامي الأربعة', 'all', 1, 'زائر كريم');
-    showToast('اللهم آمين يا رب العالمين، تقبل الله منكم وأثابكم');
+    showToast('اللهم آمين يا رب.. ربنا يتقبل منك ويجازيك كل خير');
   };
 
   const formatTimestamp = (ts: number) => {
@@ -104,10 +104,10 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
           <span>في رحاب الرحمة والمغفرة</span>
         </div>
         <h1 className="font-amiri text-3xl sm:text-5xl font-bold text-stone-900 dark:text-stone-100">
-          عن أرواح المغفور لهم بإذن الله
+          عن أرواح حبايبنا الغاليين ربنا يرحمهم
         </h1>
         <p className="font-amiri text-base sm:text-lg text-stone-600 dark:text-stone-300 leading-relaxed">
-          سيرة عطرة ودعاء مستمر لا ينقطع، نرفع أكف الضراعة للمولى عز وجل أن يتغمدهم بواسع رحمته ويسكنهم فسيح جناته.
+          سيرة طيبة وعِشرة عمر ودعاء ما بيتقطعش أبداً.. بنرفع إيدينا بالرجاء لربنا إنه يتغمدهم بواسع رحمته ويجمعنا بيهم سوا في الفردوس الأعلى.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
               : 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
           }`}
         >
-          عرض الأربعة جميعاً
+          عرض حبايبنا الأربعة كلهم
         </button>
 
         {HONORED_PERSONS.map((person) => (
@@ -144,7 +144,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
             className="px-4 py-2 rounded-xl text-xs font-amiri font-bold bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 transition-all cursor-pointer flex items-center gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>صدقة صاحب المشروع</span>
+            <span>صدقة صاحب المنصة</span>
           </button>
         )}
       </div>
@@ -158,10 +158,10 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
             </div>
             <div>
               <h3 className="font-amiri text-lg sm:text-xl font-bold text-amber-200">
-                صدقة جارية لصاحب المشروع ومُنشئ المنصة
+                صدقة جارية لصاحب المنصة
               </h3>
               <p className="text-xs text-stone-300 max-w-xl leading-relaxed">
-                دعاء خالص بالرحمة والمغفرة ونور القبر لصاحب هذا العمل الصالح في حياته وبعد وفاته، سائلاً الله تعالى أن يتقبله خالصاً لوجهه الكريم.
+                دعوة حلوة من القلب بالرحمة والمغفرة ونور القبر لصاحب العمل ده في حياته وبعد وفاته، يا رب يتقبله خالص لوجهه الكريم.
               </p>
             </div>
           </div>
@@ -169,7 +169,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
             onClick={onOpenOwnerSadaqah}
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs shrink-0 flex items-center gap-2 shadow-md cursor-pointer transition-all"
           >
-            <span>زيارة صفحة صاحب المشروع</span>
+            <span>زيارة صفحة صاحب المنصة</span>
             <Sparkles className="w-4 h-4 text-amber-200" />
           </button>
         </div>

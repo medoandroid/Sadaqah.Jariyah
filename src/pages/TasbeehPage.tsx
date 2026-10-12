@@ -224,11 +224,11 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
 
     setShowDedicateChoice(false);
     if (isOwner) {
-      showToast(`تم إهداء ثواب ${count} تسبيحة لصاحب المنصة، تقبل الله منك!`);
+      showToast(`تم إهداء ثواب ${count} تسبيحة لصاحب المنصة، ربنا يتقبل منك ومننا!`);
     } else if (isClosest) {
-      showToast(`تم إهداء ثواب ${count} تسبيحة إلى ${profile.closestRelative}، تقبل الله منك!`);
+      showToast(`تم إهداء ثواب ${count} تسبيحة إلى ${profile.closestRelative}، ربنا يتقبل منك!`);
     } else {
-      showToast(`تم إهداء ثواب ${count} تسبيحة لأرواحهم الطاهرة، تقبل الله منكم`);
+      showToast(`تم إهداء ثواب ${count} تسبيحة لأرواحهم الغالية، ربنا يتقبل منكم!`);
     }
     tasbeehSyncService.resetCurrentCount();
   };
@@ -906,7 +906,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
                 onClick={() => handleDedicateCount('owner')}
                 className="w-full p-3 rounded-2xl border border-amber-600/30 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 text-stone-800 dark:text-stone-200 text-xs font-bold transition-all text-right flex items-center justify-between"
               >
-                <span>صاحب المشروع ومُنشئ المنصة</span>
+                <span>صاحب ومُنشئ المنصة</span>
                 <Sparkles className="w-4 h-4 text-amber-500" />
               </button>
 

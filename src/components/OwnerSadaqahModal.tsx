@@ -48,7 +48,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
   };
 
   const handleReset = () => {
-    if (window.confirm('هل تود استعادة البيانات والأدعية النموذجية لصاحب المشروع؟')) {
+    if (window.confirm('هل تحب ترجع للبيانات والكلام الافتراضي لصاحب المنصة؟')) {
       const reset = projectOwnerService.resetToDefaults();
       setProfile(reset);
     }
@@ -72,10 +72,10 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
             </div>
             <div>
               <h3 className="font-amiri text-lg sm:text-xl font-bold text-amber-300">
-                تخصيص صدقة جارية لصاحب المشروع
+                تخصيص صدقة جارية لصاحب المنصة
               </h3>
               <p className="text-[11px] text-stone-400">
-                حفظ بيانات وأدعية ووصية صاحب المنصة في حياته وبعد وفاته
+                حفظ بيانات وأدعية ورسالة صاحب المنصة من القلب
               </p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           <div className="p-4 rounded-2xl bg-stone-950/80 border border-amber-500/20 flex items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-stone-200">تفعيل صفحة صدقة صاحب المشروع</span>
+                <span className="font-bold text-stone-200">تفعيل صفحة صدقة صاحب المنصة</span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                   profile.isActivated
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -104,7 +104,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-stone-400 leading-relaxed">
-                إظهار صفحة الصدقة الجارية لصاحب المشروع والأدعية المرتبطة به في قائمة المنصة والإهداءات.
+                إظهار صفحة الصدقة الجارية لصاحب المنصة والأدعية الخاصة به في قائمة المنصة والإهداءات.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -122,7 +122,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-stone-300 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-amber-400" />
-              الاسم الكامل لصاحب المشروع / الوقف:
+              الاسم الكامل لصاحب المنصة / العمل:
             </label>
             <input
               type="text"
@@ -138,13 +138,13 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-stone-300 flex items-center gap-1.5">
               <Bookmark className="w-3.5 h-3.5 text-amber-400" />
-              الصفة أو اللقب الكريم:
+              الصفة أو اللقب:
             </label>
             <input
               type="text"
               value={profile.title}
               onChange={(e) => setProfile({ ...profile, title: e.target.value })}
-              placeholder="مثال: مُنشئ المنصة والابن البار"
+              placeholder="مثال: صانع المنصة ومحب الخير لأهله"
               className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 focus:border-amber-500 focus:outline-hidden text-stone-100 placeholder-stone-500"
             />
           </div>
@@ -153,7 +153,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-stone-300 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-amber-400" />
-              نبذة وسيرة عن صاحب العمل والنية الصالحة:
+              كلمة وسيرة عن صاحب العمل والنية الصالحة:
             </label>
             <textarea
               rows={3}
@@ -181,7 +181,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-stone-300 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              وصية ورسالة صاحب المشروع لزوار ومستخدمي المنصة:
+              وصية ورسالة من القلب لزوار المنصة:
             </label>
             <textarea
               rows={3}
@@ -194,7 +194,7 @@ export const OwnerSadaqahModal: React.FC<OwnerSadaqahModalProps> = ({
           {isSavedNotice && (
             <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 flex items-center gap-2 text-xs font-bold">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>تم حفظ وتحديث بيانات صاحب المنصة بنجاح مبارك!</span>
+              <span>تم حفظ وتحديث بيانات صاحب المنصة بنجاح، ربنا يتقبل!</span>
             </div>
           )}
 

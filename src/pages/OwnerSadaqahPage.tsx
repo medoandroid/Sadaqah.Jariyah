@@ -60,7 +60,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
   };
 
   const handleShare = async () => {
-    const shareText = `صدقة جارية - عائلة الشهاوي\nعن صاحب ومُنشئ المنصة المباركة: ${profile.name}\n${profile.dedicationDua}\nنسألكم خالص الدعاء له ولوالديه بالرحمة والمغفرة.`;
+    const shareText = `صدقة جارية - عائلة الشهاوي\nعن صاحب ومُنشئ المنصة: ${profile.name}\n${profile.dedicationDua}\nدعوة حلوة من القلب له ولوالديه بالرحمة والمغفرة.`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -77,7 +77,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
       setCopiedNotification(true);
       setTimeout(() => setCopiedNotification(false), 2500);
     } catch (e) {
-      alert('تم نسخ نص الدعاء للمشاركة!');
+      alert('اتنسخ نص الدعاء علشان تشاركه مع حبايبك!');
     }
   };
 
@@ -114,7 +114,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
               className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-950/50 cursor-pointer transition-all transform hover:-translate-y-0.5"
             >
               <Heart className="w-4 h-4 text-rose-300" />
-              <span>إهداء عمل صالح له</span>
+              <span>أهدي ثواب عمل صالح</span>
             </button>
 
             <button
@@ -128,7 +128,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-stone-300 hover:text-white font-medium text-xs sm:text-sm flex items-center gap-2 cursor-pointer transition-colors"
-              title="تخصيص بيانات وأدعية صاحب المشروع"
+              title="تخصيص بيانات وأدعية صاحب المنصة"
             >
               <Settings className="w-4 h-4 text-amber-400" />
               <span>تخصيص البيانات</span>
@@ -137,7 +137,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
 
           {copiedNotification && (
             <div className="inline-block p-2 px-4 rounded-xl bg-emerald-900/90 text-emerald-200 text-xs font-bold border border-emerald-500/50 animate-bounce">
-              ✓ تم نسخ نص الدعاء والصدقة الجارية للمشاركة بنجاح!
+              ✓ اتنسخ نص الدعاء علشان تشاركه مع حبايبك على طول!
             </div>
           )}
         </div>
@@ -153,7 +153,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
           </div>
 
           <h2 className="font-amiri text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-300">
-            خالص الدعاء بالرحمة والمغفرة ونور القبر
+            دعوة حلوة من القلب بالرحمة والمغفرة ونور القبر
           </h2>
 
           <div className="p-5 sm:p-7 rounded-2xl bg-amber-500/10 dark:bg-stone-950/80 border border-amber-600/20 text-stone-800 dark:text-amber-100 font-amiri text-lg sm:text-2xl leading-loose font-normal select-text">
@@ -171,7 +171,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{hasAmened ? 'آمين وتقبل الله منك' : 'اللهم آمين (دعوة مستجابة)'}</span>
+              <span>{hasAmened ? 'آمين وتقبل الله منك' : 'اللهم آمين (ربنا يتقبل)'}</span>
               <span className="px-2 py-0.5 rounded-full bg-black/20 text-xs">
                 {amenCount}
               </span>
@@ -184,7 +184,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
           <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 text-amber-700 dark:text-amber-400 font-bold text-sm">
               <ShieldCheck className="w-5 h-5 shrink-0" />
-              <span>رسالة ووصية صاحب المشروع لمستخدمي المنصة:</span>
+              <span>رسالة وكلمة من قلبي لكل اللي منورين المنصة:</span>
             </div>
             <p className="text-stone-700 dark:text-stone-300 leading-relaxed font-amiri text-base sm:text-lg">
               {profile.willAndMessage}
@@ -211,17 +211,17 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
         <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-amber-900/15 via-amber-800/10 to-transparent border border-amber-700/30 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-right">
             <h3 className="font-amiri text-lg font-bold text-amber-900 dark:text-amber-300">
-              الأرواح الكريمة لعائلة الشهاوي
+              حبايب قلبي من عائلة الشهاوي
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400">
-              المنصة مهداة كذلك عن أرواح عمامي الأربعة رحمهم الله تعالى: رمضان، الشهاوي، الشافعي، وأحمد.
+              المنصة مهداة كمان عن أرواح عمامي الأربعة ربنا يرحمهم ويجعل قبورهم روضة من رياض الجنة: رمضان، الشهاوي، الشافعي، وأحمد.
             </p>
           </div>
           <button
             onClick={onOpenPersons}
             className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <span>زيارة صفحة أفراد العائلة</span>
+            <span>زيارة صفحة حبايبنا</span>
             <ArrowRight className="w-4 h-4 rtl:rotate-180" />
           </button>
         </div>

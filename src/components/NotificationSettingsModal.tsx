@@ -50,7 +50,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
       const result = await notificationService.requestPermission();
       setPermissionStatus(result);
       if (result !== 'granted') {
-        setTestResult('لم يتم منح إذن الإشعارات في المتصفح. يرجى السماح بالإشعارات من إعدادات المتصفح.');
+        setTestResult('إذن الإشعارات مش مفعل في المتصفح حالياً. يا ريت تفعله من إعدادات المتصفح علشان يوصلك كل تذكير.');
         return;
       }
     }
@@ -82,9 +82,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     const success = await notificationService.sendTestNotification();
     setIsSendingTest(false);
     if (success) {
-      setTestResult('✓ تم إرسال الإشعار التجريبي بنجاح! تفقّد شريط إشعارات جهازك.');
+      setTestResult('✓ الإشعار التجريبي وصل بنجاح! بص في شريط الإشعارات عندك.');
     } else {
-      setTestResult('تعذر إظهار الإشعار. تأكد من تفعيل الإشعارات للمتصفح والنظام.');
+      setTestResult('معرفناش نعرض الإشعار.. اتأكد إنك مفعل إشعارات المتصفح والنظام.');
     }
   };
 
@@ -273,10 +273,10 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
           <div className="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800/80 text-[11px] text-stone-400 space-y-1.5 leading-relaxed">
             <div className="flex items-center gap-1.5 text-amber-400 font-bold">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              <span>ملاحظة حول دعم النظام والإشعارات في الخلفية:</span>
+              <span>معلومة بسيطة بخصوص الإشعارات:</span>
             </div>
             <p>
-              تعتمد الإشعارات على دعم متصفحك وخدمة Service Worker في الـ PWA. في نظام Android ومتصفحات سطح المكتب (Chrome / Edge)، تظهر الإشعارات في شريط التنبيهات وشاشة القفل. على هواتف iPhone (iOS)، يُشترط تثبيت التطبيق على الشاشة الرئيسية وتفعيل خيار الإشعارات في إعدادات النظام.
+              الإشعارات بتعتمد على متصفح جهازك. في أندرويد والكمبيوتر (زي كروم وإيدج)، بتظهر لك في شريط الإشعارات وشاشة القفل علطول. وفي الآيفون، محتاج تضيف التطبيق للشاشة الرئيسية وتفعل الإشعارات من إعدادات الموبايل علشان توصلك أول بأول.
             </p>
           </div>
         </div>

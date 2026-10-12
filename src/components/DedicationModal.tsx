@@ -54,8 +54,8 @@ export const DedicationModal: React.FC<DedicationModalProps> = ({
     {
       id: 'project_owner',
       title: `صاحب المنصة: ${projectOwnerService.getOwnerProfile().name}`,
-      subtitle: 'صدقة جارية له ولوالديه في حياته وبعد مماته',
-      badge: 'صدقة صاحب المشروع',
+      subtitle: 'صدقة جارية ودعوة حلوة من القلب له ولوالديه في حياته وبعد مماته',
+      badge: 'صدقة صاحب المنصة',
       icon: <Sparkles className="w-4 h-4 text-amber-600" />,
     },
     ...(profile.closestRelative
@@ -179,10 +179,10 @@ export const DedicationModal: React.FC<DedicationModalProps> = ({
               <CheckCircle2 className="w-9 h-9" />
             </div>
             <h4 className="font-amiri text-2xl font-bold text-stone-900">
-              تقبل الله طاعتكم وجعلها في ميزان حسناتهم
+              ربنا يتقبل منك ومننا ويجعله في ميزان حسناتهم
             </h4>
             <p className="text-stone-600 text-sm max-w-sm mx-auto font-amiri leading-relaxed">
-              تم تسجيل إهداء الثواب، نسأل الله أن يجعله نوراً وضياءً مؤنساً لأرواحهم الكريمة في قبورهم.
+              اتسجل إهداء الثواب، يا رب يجعله نور وضياء مؤنس لأرواحهم الغالية في قبورهم.
             </p>
           </div>
         ) : (

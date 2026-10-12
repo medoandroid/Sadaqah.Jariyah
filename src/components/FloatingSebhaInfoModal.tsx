@@ -41,10 +41,10 @@ export const FloatingSebhaInfoModal: React.FC<FloatingSebhaInfoModalProps> = ({
             </div>
             <div>
               <h3 className="font-amiri text-lg sm:text-xl font-bold text-amber-300">
-                العرض العائم والتنبيهات خارج التطبيق
+                السبحة العائمة والتنبيهات
               </h3>
               <p className="text-[11px] text-stone-400">
-                توضيح الدعم التقني في أنظمة الجوال ومتصفحات الويب
+                إزاي السبحة العائمة والتنبيهات بتشتغل معاك خطوة بخطوة
               </p>
             </div>
           </div>
@@ -63,31 +63,31 @@ export const FloatingSebhaInfoModal: React.FC<FloatingSebhaInfoModalProps> = ({
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2 text-amber-100">
             <div className="flex items-center gap-2 font-bold text-amber-300">
               <Smartphone className="w-4 h-4 shrink-0" />
-              <span>كيف تعمل السبحة العائمة داخل وخارج المنصة؟</span>
+              <span>إزاي تستفيد من السبحة العائمة والتنبيهات؟</span>
             </div>
             <p className="text-xs text-stone-300 leading-relaxed">
-              وفقاً للمعايير الأمنية لمتصفحات الويب وتطبيقات الويب التقدمية (PWA على Chrome وSafari وAndroid)، لا تمنح المتصفحات صفحات الويب إذن «الرسم فوق التطبيقات الأخرى» (<code className="font-mono text-amber-400">SYSTEM_ALERT_WINDOW</code>) بعد إغلاق التطبيق تماماً لمنع البرمجيات الضارة والتجسس على التطبيقات الأخرى.
+              علشان نظام الأمان والخصوصية في الموبايل والمتصفحات (زي كروم وسفاري)، مفيش أي موقع يقدر يفتح نافذة عائمة فوق تطبيقات تانية برة المتصفح علشان أمان جهازك. بس عملنا لك حلول عملية وسهلة تخلي ذكر الله دايمًا معاك:
             </p>
           </div>
 
           <div className="space-y-3 pt-1">
             <h4 className="font-bold text-stone-200 text-xs flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>الحلول الذكية المتاحة لك الآن في المنصة:</span>
+              <span>الحلول اللي جهزناها لك هنا:</span>
             </h4>
 
             <div className="space-y-2 text-xs">
               <div className="p-3 rounded-xl bg-stone-950/60 border border-stone-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">١</span>
                 <p>
-                  <strong>سبحة عائمة مدمجة حرة:</strong> تتنقل معك وتطفو فوق جميع صفحات ومصاحف وتلاوات وأذكار المنصة بسلاسة مع إمكانية السحب وتغيير الحجم.
+                  <strong>سبحة عائمة حرة وخفيفة:</strong> بتتحرك معاك فوق كل صفحات ومصاحف وأذكار المنصة، تقدر تسحبها في أي مكان، وتكبرها أو تصغرها براحتك، وتسبح وأنت بتقرأ أو بتتصفح.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-stone-950/60 border border-stone-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">٢</span>
                 <p>
-                  <strong>إشعارات النظام المجدولة:</strong> تُرسل لك تنبيهات بالأذكار والصلاة على النبي ﷺ دورياً حتى أثناء إغلاق التطبيق وعلى شاشة القفل.
+                  <strong>إشعارات الأذكار والصلاة على النبي ﷺ:</strong> تقدر تظبط تنبيهات دورية في الوقت اللي تحبه، وتجيلك حتى لو قفلت التطبيق وعلى شاشة القفل.
                 </p>
               </div>
             </div>

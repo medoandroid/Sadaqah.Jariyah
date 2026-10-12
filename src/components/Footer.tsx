@@ -46,13 +46,12 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             <p className="font-amiri text-base text-stone-400 leading-relaxed max-w-md">
-              منصة قرآنية دينية مخصصة كصدقة جارية دائمة عن عائلة الشهاوي وأرواح المغفور لهم بإذن الله،
-              نسأل المولى عز وجل أن يتقبلها ويجعل ثوابها نوراً ورحمة في موازين حسناتهم.
+              المنصة دي معموله بحب وصدقة جارية لوجه الله عن عائلة الشهاوي وأرواح عمامي الأربعة ربنا يرحمهم.. يا رب يتقبل من كل حد يقرأ أو يسبح هنا، ويجعله نور ورحمة في ميزان حسنات الجميع.
             </p>
 
             <div className="pt-2">
               <div className="text-xs uppercase tracking-wider text-amber-400/90 font-medium mb-2">
-                أهدي هذا العمل خالصاً عن أرواح:
+                أهدي هذا العمل خالصاً عن أرواح حبايبنا:
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-stone-300 font-amiri">
                 {HONORED_PERSONS.map((person) => (
@@ -148,7 +147,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => { setActiveTab('owner_sadaqah'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   className="hover:text-amber-300 transition-colors cursor-pointer text-amber-300 font-medium"
                 >
-                  صدقة جارية لصاحب المشروع ✦
+                  صدقة جارية لصاحب المنصة ✦
                 </button>
               </li>
               <li>

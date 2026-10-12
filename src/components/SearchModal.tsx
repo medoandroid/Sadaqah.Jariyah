@@ -137,7 +137,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-300 font-semibold transition shrink-0 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>صدقة صاحب المشروع</span>
+            <span>صدقة صاحب المنصة</span>
           </button>
           <button
             onClick={() => {

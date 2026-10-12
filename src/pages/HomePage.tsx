@@ -379,11 +379,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     },
     {
       id: 'owner_sadaqah',
-      title: 'صدقة صاحب ومُنشئ المشروع',
-      subtitle: 'دعاء خالص وصدقة جارية لصاحب هذا العمل الصالح ولوالديه في حياته وبعد وفاته، سائلاً الله القبول والرضوان.',
+      title: 'صدقة صاحب ومُنشئ المنصة',
+      subtitle: 'دعوة حلوة من القلب وصدقة جارية لصاحب العمل ده ولوالديه في حياته وبعد وفاته، يا رب يتقبل منه ومننا.',
       icon: Sparkles,
       category: 'صدقة جارية',
-      actionText: 'عرض صفحة صاحب المشروع',
+      actionText: 'عرض صفحة صاحب المنصة',
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {
@@ -464,7 +464,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-6">
-            منصة إسلامية قرآنية جامعة كصدقة جارية عن عائلة الشهاوي وأرواح المغفور لهم بإذن الله، نسأل الله أن يتقبلها ويجعلها نوراً لهم في قبورهم:
+            المكان ده اتعمل بحب وخلوص نية لوجه الله الكريم، صدقة جارية عن عائلة الشهاوي وأرواح حبايب قلبي عمامي الأربعة ربنا يرحمهم ويجعل قبورهم روضة من رياض الجنة.. يا رب يتقبل منكم ومننا ويجعل كل حرف وتسبيحة نور وبركة:
           </p>
 
           {/* Context-Aware Time & Day Spiritual Recommendation Banner */}

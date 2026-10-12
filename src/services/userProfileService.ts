@@ -201,29 +201,29 @@ export const userProfileService = {
    */
   getGreetingText(p?: UserProfile): string {
     const profile = p || this.getProfile();
-    const displayName = profile.userName ? `يا ${profile.userName}` : 'يا ضيفنا الكريم';
+    const displayName = profile.userName ? `يا ${profile.userName}` : 'يا غالي';
 
     if (!profile.hasConfigured) {
-      return 'أهلاً بك يا كريم في روضة الصدقة الجارية المباركة.. تقبل الله طاعاتكم وصالح أعمالكم';
+      return 'أهلاً بيك ونورتنا.. ربنا يتقبل منك ومننا كل عمل صالح ويجعله في ميزان حسناتك';
     }
 
     const uncleName = UNCLE_NAMES[profile.targetUncleId];
 
     if (profile.connectionType === 'friend') {
       if (profile.targetUncleId === 'all') {
-        return `مرحباً بك ${displayName} يا رفيق درب العائلة وصديقهم الوفي.. جزاك الله خيراً على صدق الوفاء`;
+        return `أهلاً بيك ${displayName} يا صاحب العمر ورفيق الدرب الوفي.. تسلم على وفائك ودعواتك الصادقة`;
       }
-      return `مرحباً بك ${displayName} يا صاحب ورفيق درب ${uncleName} رحمه الله.. شكر الله وفاءك وبرك بصحبته الطيبة`;
+      return `أهلاً بيك ${displayName} يا صاحب وعِشرة عمر ${uncleName} ربنا يرحمه.. ربنا يجازيك كل خير على وفائك ودعائك الصادق`;
     }
 
     if (profile.connectionType === 'family_relative') {
       if (profile.targetUncleId === 'all') {
-        return `أهلاً بك ${displayName} يا كريم الأصل من أهلنا وذوي الأعمام الغاليين.. تقبل الله بركم المستمر ودعاءكم`;
+        return `أهلاً بيك ${displayName} يا غالي من أهلنا وحبايبنا الغاليين.. ربنا يديم المحبة والوصل ويتقبل دعواتكم المستمرة`;
       }
-      return `أهلاً بك ${displayName} من أهل وذوي ${uncleName} رحمه الله.. جمعكم الله به في جنات النعيم على سرر متقابلين`;
+      return `أهلاً بيك ${displayName} من أهل وريحة الغالي ${uncleName} ربنا يرحمه.. ربنا يجمعنا بيه في الفردوس الأعلى`;
     }
 
-    return `أهلاً بك ${displayName} يا باغي الخير ورافع أكف الضراعة.. كتب الله لك أجر كل حرف ودعوة مباركة`;
+    return `أهلاً بيك ${displayName} يا محب للخير ورافع إيدك بالدعاء.. ربنا يكتب لك أجر كل حرف وتسبيحة ودعوة مباركة`;
   },
 
   /**
@@ -373,13 +373,13 @@ export const userProfileService = {
 
     if (profile.connectionType === 'friend') {
       const uncleName = UNCLE_NAMES[profile.targetUncleId];
-      return `إهداء ثواب ${action} من رفيق وصاحب ${uncleName} وفاءً لعهده وصحبته المباركة.`;
+      return `إهداء ثواب ${action} من رفيق وصاحب ${uncleName} وفاءً لعشرة العمر الطيبة.`;
     }
 
     if (profile.connectionType === 'family_relative') {
-      return `إهداء ثواب ${action} من أهل وذوي المغفور لهم (${profile.kinshipTitle}) براً وصلة لأرواحهم الكريمة.`;
+      return `إهداء ثواب ${action} من أهل وحبايب المغفور لهم (${profile.kinshipTitle}) محبة ودعاء لأرواحهم الغالية.`;
     }
 
-    return `إهداء ثواب ${action} خالصاً لوجه الله تعالى عن أرواح عمامي الأربعة ولجميع موتى المسلمين.`;
+    return `إهداء ثواب ${action} خالص لوجه الله الكريم عن أرواح عمامي الأربعة وعن جميع موتى المسلمين.`;
   },
 };

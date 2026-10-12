@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'asma', label: 'أسماء الله', icon: Sparkles },
     { id: 'khatmah', label: 'الختمة', icon: Award },
     { id: 'persons', label: 'عنهم', icon: Users },
-    { id: 'owner_sadaqah', label: 'صدقة صاحب المشروع', icon: Sparkles },
+    { id: 'owner_sadaqah', label: 'صدقة صاحب المنصة', icon: Sparkles },
     { id: 'dedications', label: 'إهداء الثواب', icon: Gift },
   ];
 
