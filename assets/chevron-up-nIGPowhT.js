@@ -1,1 +1,0 @@
-import{s as e}from"./dedicationService-W-vRk9Nl.js";var t=e(`chevron-up`,[[`path`,{d:`m18 15-6-6-6 6`,key:`153udz`}]]);export{t};
