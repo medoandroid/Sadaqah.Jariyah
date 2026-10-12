@@ -1,11 +1,276 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="#12141A"/>
-  <circle cx="256" cy="256" r="210" fill="none" stroke="#D97706" stroke-width="14"/>
-  <circle cx="256" cy="256" r="190" fill="#1C1814" stroke="#F59E0B" stroke-width="2"/>
-  <!-- 8-pointed Islamic Star -->
-  <g transform="translate(256, 256) scale(1.3)" fill="#D97706">
-    <rect x="-60" y="-60" width="120" height="120" rx="6" />
-    <rect x="-60" y="-60" width="120" height="120" rx="6" transform="rotate(45)" />
-    <circle cx="0" cy="0" r="30" fill="#FEF3C7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Deep Royal Midnight Teal Gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#082229"/>
+      <stop offset="45%" stop-color="#05161B"/>
+      <stop offset="100%" stop-color="#02090C"/>
+    </linearGradient>
+
+    <!-- Radial Core Ambient Glow -->
+    <radialGradient id="ambientGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#18565A" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#0B3037" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#05161B" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Divine Light Burst from Center of Quran -->
+    <radialGradient id="bookCoreGlow" cx="50%" cy="55%" r="45%">
+      <stop offset="0%" stop-color="#FFF5D1" stop-opacity="0.65"/>
+      <stop offset="40%" stop-color="#ECC665" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#E5BB52" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Premium Multi-Stop Metallic Gold Gradients -->
+    <linearGradient id="goldPrime" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#876319"/>
+      <stop offset="20%" stop-color="#C2962D"/>
+      <stop offset="45%" stop-color="#FDE895"/>
+      <stop offset="60%" stop-color="#E1B442"/>
+      <stop offset="85%" stop-color="#F7DF84"/>
+      <stop offset="100%" stop-color="#946C1E"/>
+    </linearGradient>
+
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF8D9"/>
+      <stop offset="40%" stop-color="#F2CB67"/>
+      <stop offset="100%" stop-color="#9B7120"/>
+    </linearGradient>
+
+    <linearGradient id="goldGleam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9B7120"/>
+      <stop offset="35%" stop-color="#FDF4D4"/>
+      <stop offset="50%" stop-color="#FFFFFF"/>
+      <stop offset="65%" stop-color="#FDF4D4"/>
+      <stop offset="100%" stop-color="#9B7120"/>
+    </linearGradient>
+
+    <linearGradient id="goldDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6B4F12"/>
+      <stop offset="50%" stop-color="#423007"/>
+      <stop offset="100%" stop-color="#211803"/>
+    </linearGradient>
+
+    <!-- Quran Sculptural Pages Gradients -->
+    <linearGradient id="pageGradLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#EEF3F1"/>
+      <stop offset="80%" stop-color="#C0D0CC"/>
+      <stop offset="100%" stop-color="#9EABA7"/>
+    </linearGradient>
+
+    <linearGradient id="pageGradRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#EEF3F1"/>
+      <stop offset="80%" stop-color="#C0D0CC"/>
+      <stop offset="100%" stop-color="#9EABA7"/>
+    </linearGradient>
+
+    <linearGradient id="pageBackLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CCD9D5"/>
+      <stop offset="100%" stop-color="#617874"/>
+    </linearGradient>
+
+    <linearGradient id="pageBackRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#CCD9D5"/>
+      <stop offset="100%" stop-color="#617874"/>
+    </linearGradient>
+
+    <!-- Bezel Rim Gradient -->
+    <linearGradient id="rimGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE895" stop-opacity="0.6"/>
+      <stop offset="25%" stop-color="#C2962D" stop-opacity="0.25"/>
+      <stop offset="70%" stop-color="#18565A" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FDE895" stop-opacity="0.45"/>
+    </linearGradient>
+
+    <!-- Soft Ambient Drop Shadow -->
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="135%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dx="0" dy="14" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.45"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Luminous Glow Filter -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. Base Icon Squircle Canvas (512x512 with 108px radius) -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGradient)"/>
+  
+  <!-- Subtle Internal Radial Aura -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#ambientGlow)"/>
+
+  <!-- Subtle Islamic Sacred Geometry Watermark (8-fold Rosette / Rub el Hizb) -->
+  <g opacity="0.04" stroke="#FDE895" stroke-width="1.5" fill="none" transform="translate(256, 252) scale(1.45)">
+    <rect x="-70" y="-70" width="140" height="140" rx="4"/>
+    <rect x="-70" y="-70" width="140" height="140" rx="4" transform="rotate(45)"/>
+    <circle r="92"/>
+    <circle r="60"/>
+  </g>
+
+  <!-- Precision Metallic Rim Bezel -->
+  <rect x="17" y="17" width="478" height="478" rx="107" fill="none" stroke="url(#rimGradient)" stroke-width="2"/>
+
+  <!-- 2. MAIN EMBLEM COMPOSITION (Centered gracefully with safe margins) -->
+  <g id="main-icon-emblem" transform="translate(256, 250) scale(0.82) translate(-256, -260)" filter="url(#softShadow)">
+
+    <!-- Background Core Light Aura behind Quran -->
+    <ellipse cx="256" cy="270" rx="110" ry="70" fill="url(#bookCoreGlow)"/>
+
+    <!-- Subtle Divine Radiance Rays -->
+    <g opacity="0.32" stroke="url(#goldLight)" stroke-width="1.5" stroke-linecap="round">
+      <line x1="256" y1="175" x2="256" y2="125" stroke-dasharray="2 5"/>
+      <line x1="222" y1="184" x2="182" y2="140"/>
+      <line x1="290" y1="184" x2="330" y2="140"/>
+      <line x1="194" y1="202" x2="146" y2="175"/>
+      <line x1="318" y1="202" x2="366" y2="175"/>
+    </g>
+
+    <!-- Top Radiant Star: Stylized 8-Point Rub el Hizb Symbol of Divine Wisdom -->
+    <g transform="translate(256, 134) scale(0.62)" filter="url(#glow)">
+      <!-- Outer Rotated Squares -->
+      <polygon points="0,-30 8,-8 30,0 8,8 0,30 -8,8 -30,0 -8,-8" fill="url(#goldLight)"/>
+      <polygon points="0,-30 8,-8 30,0 8,8 0,30 -8,8 -30,0 -8,-8" fill="url(#goldPrime)" transform="rotate(45)"/>
+      <!-- Inner Pearl Core -->
+      <circle cx="0" cy="0" r="6.5" fill="#FFFFFF"/>
+    </g>
+
+    <!-- LAYER 1: Deep Base / Quran Leather Cover & Under-Pages -->
+    <g opacity="0.7">
+      <!-- Left Under-Page -->
+      <path d="M 256 310 
+               C 230 298, 160 262, 126 238
+               C 120 234, 120 220, 130 220
+               C 170 238, 235 270, 256 288 Z" 
+            fill="url(#pageBackLeft)"/>
+      <!-- Right Under-Page -->
+      <path d="M 256 310 
+               C 282 298, 352 262, 386 238
+               C 392 234, 392 220, 382 220
+               C 342 238, 277 270, 256 288 Z" 
+            fill="url(#pageBackRight)"/>
+    </g>
+
+    <!-- LAYER 2: Middle Sculptural Pages -->
+    <g opacity="0.9">
+      <!-- Left Mid-Page -->
+      <path d="M 256 320 
+               C 225 304, 164 258, 135 230
+               C 130 226, 133 214, 142 214
+               C 176 228, 236 264, 256 286 Z" 
+            fill="url(#pageGradLeft)"/>
+      <!-- Right Mid-Page -->
+      <path d="M 256 320 
+               C 287 304, 348 258, 377 230
+               C 382 226, 379 214, 370 214
+               C 336 228, 276 264, 256 286 Z" 
+            fill="url(#pageGradRight)"/>
+    </g>
+
+    <!-- LAYER 3: Forefront Quran Pages (Main Illuminated Leaves) -->
+    <g>
+      <!-- Left Primary Page -->
+      <path d="M 256 336 
+               C 220 314, 156 256, 146 218
+               C 144 210, 150 204, 158 204
+               C 192 216, 238 248, 256 278 Z" 
+            fill="url(#pageGradLeft)"/>
+      <!-- Left Page Gold Edge Foil -->
+      <path d="M 146 218 
+               C 152 210, 172 218, 194 226" 
+            fill="none" stroke="url(#goldLight)" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Right Primary Page -->
+      <path d="M 256 336 
+               C 292 314, 356 256, 366 218
+               C 368 210, 362 204, 354 204
+               C 320 216, 274 248, 256 278 Z" 
+            fill="url(#pageGradRight)"/>
+      <!-- Right Page Gold Edge Foil -->
+      <path d="M 366 218 
+               C 360 210, 340 218, 318 226" 
+            fill="none" stroke="url(#goldLight)" stroke-width="2.5" stroke-linecap="round"/>
+
+      <!-- Central Sacred Spine Crease (Exactly between pages) -->
+      <line x1="256" y1="278" x2="256" y2="338" stroke="url(#goldLight)" stroke-width="2" stroke-linecap="round"/>
+
+      <!-- Silk Bookmark Ribbon (Fasil) dangling gracefully from spine base -->
+      <path d="M 256 338 
+               C 256 352, 249 365, 247 380 
+               L 251 377 
+               L 255 380 
+               C 253 365, 257 352, 256 338 Z" 
+            fill="url(#goldLight)" opacity="0.95"/>
+    </g>
+
+    <!-- LAYER 4: THE CONTINUOUS CHARITY MOTIF (Sadaqah Jariyah Flow) -->
+    <!-- Stylized Möbius / Infinity Ribbon seamlessly cradling the Quran like an eternal golden pedestal (Rihal) -->
+    
+    <!-- Outer Deep Shadow Base of Ribbon -->
+    <path d="M 256 342 
+             C 275 365, 330 405, 375 390
+             C 415 376, 420 325, 370 305
+             C 325 288, 275 330, 256 352
+             C 237 330, 187 288, 142 305
+             C 92 325, 97 376, 137 390
+             C 182 405, 237 365, 256 342 Z"
+          fill="none" 
+          stroke="url(#goldDark)" 
+          stroke-width="24" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <!-- Main Solid Golden Ribbon -->
+    <path d="M 256 342 
+             C 275 365, 330 405, 375 390
+             C 415 376, 420 325, 370 305
+             C 325 288, 275 330, 256 352
+             C 237 330, 187 288, 142 305
+             C 92 325, 97 376, 137 390
+             C 182 405, 237 365, 256 342 Z"
+          fill="none" 
+          stroke="url(#goldPrime)" 
+          stroke-width="17" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <!-- High-Gloss Metallic Specular Spine Line -->
+    <path d="M 256 342 
+             C 275 365, 330 405, 375 390
+             C 415 376, 420 325, 370 305
+             C 325 288, 275 330, 256 352
+             C 237 330, 187 288, 142 305
+             C 92 325, 97 376, 137 390
+             C 182 405, 237 365, 256 342 Z"
+          fill="none" 
+          stroke="url(#goldGleam)" 
+          stroke-width="5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          opacity="0.9"/>
+
+    <!-- Bottom Pedestal Foundation Arc (Harmonic Support) -->
+    <path d="M 180 382 C 220 410, 292 410, 332 382" 
+          fill="none" 
+          stroke="url(#goldLight)" 
+          stroke-width="2.5" 
+          stroke-linecap="round"
+          opacity="0.45"/>
+
+    <!-- Central Radiant Pearl of Charity (Nuqtat al-Ajar) -->
+    <circle cx="256" cy="353" r="5" fill="#FFFFFF" filter="url(#glow)"/>
   </g>
 </svg>
