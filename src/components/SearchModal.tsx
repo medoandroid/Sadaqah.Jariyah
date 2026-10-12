@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X, BookOpen, Flame, CircleDot, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, X, BookOpen, Flame, CircleDot, ArrowRight, Sparkles, Clock, Tv, ShieldCheck } from 'lucide-react';
 import { ALL_SURAHS } from '../data/quranMeta';
 import { DUAS_LIST } from '../data/duas';
 import { ADHKAR_LIST } from '../data/adhkar';
 import { ASMA_AL_HUSNA } from '../data/asmaAlHusna';
 import { NAWAWI_HADITHS } from '../data/hadithData';
 import { RUQYAH_ITEMS } from '../data/ruqyahData';
-import { ShieldCheck } from 'lucide-react';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -124,6 +123,51 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             className="text-xs px-2.5 py-1 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800 rounded-md mr-2 cursor-pointer transition-colors"
           >
             إغلاق
+          </button>
+        </div>
+
+        {/* Quick Shortcuts Pill Bar */}
+        <div className="flex items-center gap-2 px-4 py-2 bg-stone-50/80 dark:bg-stone-900/60 border-b border-stone-200/60 dark:border-stone-800 text-xs overflow-x-auto scrollbar-none">
+          <span className="text-[11px] text-stone-400 shrink-0">انتقال سريع:</span>
+          <button
+            onClick={() => {
+              onNavigateTab('prayer');
+              onClose();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-300 font-semibold transition shrink-0 cursor-pointer"
+          >
+            <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>مواقيت الصلاة</span>
+          </button>
+          <button
+            onClick={() => {
+              onNavigateTab('haramain');
+              onClose();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-900 dark:text-red-300 font-semibold transition shrink-0 cursor-pointer"
+          >
+            <Tv className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+            <span>بث الحرمين</span>
+          </button>
+          <button
+            onClick={() => {
+              onNavigateTab('mushaf');
+              onClose();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-200/70 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold transition shrink-0 cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>المصحف الورقي</span>
+          </button>
+          <button
+            onClick={() => {
+              onNavigateTab('khatmah');
+              onClose();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-200/70 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold transition shrink-0 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>الختمة المهداة</span>
           </button>
         </div>
 

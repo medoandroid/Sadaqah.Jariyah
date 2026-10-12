@@ -6,109 +6,51 @@ import {
   Volume2,
   Calendar,
   LocateFixed,
-  Globe2,
-  ShieldCheck,
-  Check,
-  RefreshCw
+  RefreshCw,
+  Check
 } from 'lucide-react';
 import {
-  calculatePrayerTimes,
-  fetchRealPrayerTimes,
   POPULAR_CITIES,
   CALCULATION_METHODS,
-  CityLocation,
   PrayerTimesResult
 } from '../utils/prayerTimes';
-import { storageService } from '../services/storageService';
+import { prayerTimesService, PrayerSettings } from '../services/prayerTimesService';
 import { playPeacefulChime } from '../utils/soundEffects';
 import { CustomSelect } from '../components/CustomSelect';
 
 export const PrayerTimesPage: React.FC = () => {
-  // Selected city or custom GPS location (Default: Cairo, Egypt)
-  const [selectedCityId, setSelectedCityId] = useState<string>(() => {
-    return storageService.getString('prayer_selected_city', 'cairo');
-  });
-
-  const [selectedMethodId, setSelectedMethodId] = useState<number>(() => {
-    return storageService.getNumber('prayer_selected_method', 5); // 5 = Egyptian Survey Authority
-  });
-
-  const [customCoords, setCustomCoords] = useState<{ lat: number; lng: number; label: string } | null>(() => {
-    return storageService.get('prayer_custom_coords', null);
-  });
-
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult>(() => prayerTimesService.getPrayerTimes());
+  const [settings, setSettings] = useState<PrayerSettings>(() => prayerTimesService.getSettings());
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
-  const [apiSource, setApiSource] = useState<'api' | 'astronomical'>('astronomical');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Active location object
-  const activeLocation = useMemo<CityLocation>(() => {
-    if (customCoords) {
-      return {
-        id: 'custom',
-        name: customCoords.label,
-        country: 'موقعي الحالي',
-        latitude: customCoords.lat,
-        longitude: customCoords.lng,
-        timezone: -new Date().getTimezoneOffset() / 60,
-      };
-    }
-    const found = POPULAR_CITIES.find((c) => c.id === selectedCityId);
-    return found || POPULAR_CITIES[0];
-  }, [selectedCityId, customCoords]);
-
-  // Real-time prayer times recalculation
-  const [now, setNow] = useState(new Date());
-
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    return prayerTimesService.subscribe((res, setts) => {
+      setPrayerTimes(res);
+      setSettings(setts);
+    });
   }, []);
 
-  // Async API prayer times state with astronomical immediate fallback
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult>(() => {
-    return calculatePrayerTimes(now, activeLocation.latitude, activeLocation.longitude, activeLocation.timezone, selectedMethodId);
-  });
+  const activeLocation = useMemo(() => {
+    return prayerTimesService.getActiveLocation();
+  }, [settings]);
 
-  const loadTimes = (forceRefresh = false) => {
+  const loadTimes = async (forceRefresh = false) => {
     if (forceRefresh) setIsRefreshing(true);
-    fetchRealPrayerTimes(activeLocation, selectedMethodId, now).then((res) => {
-      setPrayerTimes(res);
-      setApiSource(res.source);
-      if (forceRefresh) {
-        setIsRefreshing(false);
-        setLocationStatus('تم تحديث المواقيت بنجاح 🤲');
-        setTimeout(() => setLocationStatus(null), 3000);
-      }
-    }).catch(() => {
-      if (forceRefresh) setIsRefreshing(false);
-    });
+    await prayerTimesService.refresh();
+    if (forceRefresh) {
+      setIsRefreshing(false);
+      setLocationStatus('تم تحديث المواقيت بنجاح 🤲');
+      setTimeout(() => setLocationStatus(null), 3000);
+    }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    fetchRealPrayerTimes(activeLocation, selectedMethodId, now).then((res) => {
-      if (isMounted) {
-        setPrayerTimes(res);
-        setApiSource(res.source);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [activeLocation, selectedMethodId]);
-
-  // Save selected city
-  const handleSelectCity = (cityId: string) => {
-    setSelectedCityId(cityId);
-    setCustomCoords(null);
-    storageService.setString('prayer_selected_city', cityId);
-    storageService.remove('prayer_custom_coords');
+  const handleSelectCity = async (cityId: string) => {
+    await prayerTimesService.setCity(cityId);
   };
 
-  const handleSelectMethod = (methodId: number) => {
-    setSelectedMethodId(methodId);
-    storageService.setNumber('prayer_selected_method', methodId);
+  const handleSelectMethod = async (methodId: number) => {
+    await prayerTimesService.setMethod(methodId);
   };
 
   // GPS Location detection
@@ -119,16 +61,15 @@ export const PrayerTimesPage: React.FC = () => {
     }
     setLocationStatus('جاري تحديد موقعك الجغرافي بدقة عبر GPS...');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const custom = { lat, lng, label: 'موقعي عبر GPS' };
-        setCustomCoords(custom);
-        storageService.set('prayer_custom_coords', custom);
+        await prayerTimesService.setCustomCoords(custom);
         setLocationStatus('تم تحديد موقعك بدقة وحساب المواقيت بنجاح');
         setTimeout(() => setLocationStatus(null), 3000);
       },
-      (err) => {
+      () => {
         setLocationStatus('تعذر الوصول إلى الموقع الجغرافي (تأكد من تفعيل إذن الموقع)');
         setTimeout(() => setLocationStatus(null), 4000);
       },
@@ -143,6 +84,7 @@ export const PrayerTimesPage: React.FC = () => {
   };
 
   const { hijriFormatted, gregorianFormatted } = useMemo(() => {
+    const now = new Date();
     let hijri = '';
     try {
       hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
@@ -162,7 +104,7 @@ export const PrayerTimesPage: React.FC = () => {
     }).format(now);
 
     return { hijriFormatted: hijri, gregorianFormatted: gregorian };
-  }, [now]);
+  }, []);
 
   const prayerCards = [
     { id: 'fajr', name: 'صلاة الفجر', icon: '🌅', time: prayerTimes.fajr, isNext: prayerTimes.nextPrayer.id === 'fajr' },
@@ -209,7 +151,7 @@ export const PrayerTimesPage: React.FC = () => {
               مواقيت الصلاة اليومية
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm font-sans leading-relaxed">
-              جدول مواقيت الصلوات الخمس والشروق حسب مدينتك وموقعك بدقة مع حساب الوقت المتبقي لكل أذان.
+              جدول مواقيت الصلوات الخمس والشروق حسب مدينتك وموقعك بدقة مع حساب الوقت المتبقي لكل أذان لحظياً.
             </p>
           </div>
 
@@ -241,12 +183,12 @@ export const PrayerTimesPage: React.FC = () => {
               اختر المدينة أو العاصمة:
             </label>
             <CustomSelect<string>
-              value={customCoords ? 'custom' : selectedCityId}
+              value={settings.customCoords ? 'custom' : settings.cityId}
               onChange={(newCityId) => handleSelectCity(newCityId)}
               options={
-                customCoords
+                settings.customCoords
                   ? [
-                      { value: 'custom', label: customCoords.label, sublabel: 'إحداثيات GPS' },
+                      { value: 'custom', label: settings.customCoords.label, sublabel: 'إحداثيات GPS' },
                       ...cityOptions,
                     ]
                   : cityOptions
@@ -263,7 +205,7 @@ export const PrayerTimesPage: React.FC = () => {
               طريقة الحساب الفقهية:
             </label>
             <CustomSelect<number>
-              value={selectedMethodId}
+              value={settings.methodId}
               onChange={(newMethod) => handleSelectMethod(newMethod)}
               options={methodOptions}
               placeholder="اختر طريقة الحساب..."
@@ -307,8 +249,8 @@ export const PrayerTimesPage: React.FC = () => {
           </div>
 
           <span className="inline-flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
-            <span className={`w-2 h-2 rounded-full ${apiSource === 'api' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-            <span>{apiSource === 'api' ? 'Aladhan API الحي المباشر' : 'الحساب الفلكي الشرعي المعتمد'}</span>
+            <span className={`w-2 h-2 rounded-full ${prayerTimes.source === 'api' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            <span>{prayerTimes.source === 'api' ? 'Aladhan API الحي المباشر' : 'الحساب الفلكي الشرعي المعتمد'}</span>
           </span>
         </div>
       </div>

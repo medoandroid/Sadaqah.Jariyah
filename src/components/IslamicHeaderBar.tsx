@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Heart, Sparkles, BookOpen, User, Wifi, WifiOff, Clock, Compass, FileJson } from 'lucide-react';
+import { Calendar, Heart, Sparkles, BookOpen, User, Wifi, WifiOff, Clock, FileJson } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { userProfileService, UserProfile } from '../services/userProfileService';
 import { useOfflineSync } from '../hooks/useOfflineSync';
-import { calculatePrayerTimes, POPULAR_CITIES } from '../utils/prayerTimes';
-import { storageService } from '../services/storageService';
+import { prayerTimesService } from '../services/prayerTimesService';
+import { PrayerTimesResult } from '../utils/prayerTimes';
 
 export const IslamicHeaderBar: React.FC<{
   onOpenKhatmah: () => void;
@@ -24,42 +24,16 @@ export const IslamicHeaderBar: React.FC<{
   onOpenEgyptianCompanion,
 }) => {
   const [profile, setProfile] = useState<UserProfile>(userProfileService.getProfile());
-  const { isOnline, isFullyOfflineReady, downloadedSurahsCount } = useOfflineSync();
-  const [now, setNow] = useState(() => new Date());
+  const { isOnline, isFullyOfflineReady } = useOfflineSync();
+  const [prayerData, setPrayerData] = useState<PrayerTimesResult>(() => prayerTimesService.getPrayerTimes());
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 10000);
-    return () => clearInterval(timer);
+    return prayerTimesService.subscribe((res) => {
+      setPrayerData(res);
+    });
   }, []);
 
-  const nextPrayerPreview = useMemo(() => {
-    try {
-      const cityId = storageService.getString('prayer_selected_city', 'cairo');
-      const customCoords = storageService.get<{ lat: number; lng: number } | null>('prayer_custom_coords', null);
-      const methodId = storageService.getNumber('prayer_selected_method', 5);
-      
-      let lat = 30.0444;
-      let lng = 31.2357;
-      let tz = -now.getTimezoneOffset() / 60;
-
-      if (customCoords) {
-        lat = customCoords.lat;
-        lng = customCoords.lng;
-      } else {
-        const found = POPULAR_CITIES.find((c) => c.id === cityId);
-        if (found) {
-          lat = found.latitude;
-          lng = found.longitude;
-          tz = found.timezone;
-        }
-      }
-
-      const res = calculatePrayerTimes(now, lat, lng, tz, methodId);
-      return res.nextPrayer;
-    } catch (e) {
-      return null;
-    }
-  }, [now]);
+  const nextPrayerPreview = prayerData.nextPrayer;
 
   useEffect(() => {
     return userProfileService.subscribe((updated) => {

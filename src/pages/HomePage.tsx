@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   Volume2,
   Calendar,
-  Compass,
   Award,
   User,
   ShieldCheck,
@@ -36,7 +35,8 @@ import { useAudio } from '../context/AudioContext';
 import { storageService } from '../services/storageService';
 import { userProfileService, UserProfile, UNCLE_NAMES, TargetUncleId } from '../services/userProfileService';
 import { playTasbeehBeadSound, playPeacefulChime } from '../utils/soundEffects';
-import { calculatePrayerTimes, POPULAR_CITIES, PrayerTimesResult } from '../utils/prayerTimes';
+import { prayerTimesService } from '../services/prayerTimesService';
+import { PrayerTimesResult } from '../utils/prayerTimes';
 import { dailyWirdService } from '../services/dailyWirdService';
 import { TadabburStationCard } from '../components/TadabburStationCard';
 import {
@@ -85,23 +85,18 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Real-time Clock & Prayer Countdown
   const [nowDate, setNowDate] = useState(() => new Date());
+  const [prayerResult, setPrayerResult] = useState<PrayerTimesResult>(() => prayerTimesService.getPrayerTimes());
 
   useEffect(() => {
     const timer = setInterval(() => setNowDate(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const prayerResult: PrayerTimesResult = useMemo(() => {
-    const selectedCityId = storageService.getString('prayer_selected_city', 'cairo');
-    const customCoords = storageService.get<{ lat: number; lng: number } | null>('prayer_custom_coords', null);
-    const methodId = storageService.getNumber('prayer_selected_method', 5);
-
-    if (customCoords) {
-      return calculatePrayerTimes(nowDate, customCoords.lat, customCoords.lng, -nowDate.getTimezoneOffset() / 60, methodId);
-    }
-    const city = POPULAR_CITIES.find((c) => c.id === selectedCityId) || POPULAR_CITIES[0];
-    return calculatePrayerTimes(nowDate, city.latitude, city.longitude, city.timezone, methodId);
-  }, [nowDate]);
+  useEffect(() => {
+    return prayerTimesService.subscribe((res) => {
+      setPrayerResult(res);
+    });
+  }, []);
 
   // Egyptian Companion Quick Widget State
   const [egyptianMood, setEgyptianMood] = useState<EgyptianMoodKey>('lazy_quran');
@@ -323,7 +318,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       id: 'asma',
       title: 'أسماء الله الحسنى ومعانيها',
       subtitle: '٩٩ اسماً مباركاً مع المعاني والشرح الإيماني المستفيض وتدبر صفات الجلال والجمال.',
-      icon: Compass,
+      icon: Sparkles,
       category: 'معرفة وتأمل',
       actionText: 'تدبر الأسماء',
       highlightColor: 'from-amber-600/10 to-amber-700/5',
@@ -412,14 +407,14 @@ export const HomePage: React.FC<HomePageProps> = ({
               <button
                 onClick={onOpenPrayerTimes}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-900 dark:text-amber-300 font-medium hover:bg-amber-500/15 transition-all cursor-pointer shadow-xs group"
-                title="اضغط لعرض مواقيت الصلوات اليومية وبوصلة القبلة (نظام ١٢ ساعة)"
+                title="اضغط لعرض مواقيت الصلوات اليومية (نظام ١٢ ساعة)"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>
                   الصلاة القادمة: <strong>{prayerResult.nextPrayer.arabicName} ({prayerResult.nextPrayer.time})</strong> (متبقي {prayerResult.nextPrayer.remainingFormatted})
                 </span>
-                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت والقبلة ↗</span>
+                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت ↗</span>
               </button>
             )}
 
