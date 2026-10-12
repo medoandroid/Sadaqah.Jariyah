@@ -457,8 +457,8 @@ export async function renderMushafPageCanvas(
   const {
     theme = 'gold',
     resolution = 'high',
-    customDedicationTitle = 'صَدَقَةٌ جَارِيَةٌ عَنْ عَمَامِي الأَرْبَعَةِ رَحِمَهُمُ اللَّهُ',
-    customDedicationNames = 'رمضان · الشهاوي · الشافعي · أحمد الشهاوي',
+    customDedicationTitle = 'صَدَقَةٌ جَارِيَةٌ - عائلة الشهاوي',
+    customDedicationNames = 'عن أرواح المغفور لهم بإذن الله ووالديهم وصاحب المنصة',
   } = options;
 
   const isStandard = resolution === 'standard';

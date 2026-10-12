@@ -35,14 +35,19 @@ export const Footer: React.FC<FooterProps> = ({
               <span className="w-9 h-9 rounded-full bg-amber-900/40 border border-amber-600/30 flex items-center justify-center text-amber-300 font-amiri text-xl font-bold">
                 ص
               </span>
-              <span className="font-amiri text-2xl font-bold text-stone-100">
-                صدقة جارية
-              </span>
+              <div className="flex flex-col">
+                <span className="font-amiri text-2xl font-bold text-stone-100">
+                  صدقة جارية
+                </span>
+                <span className="font-amiri text-xs text-amber-400 font-bold -mt-1">
+                  عائلة الشهاوي
+                </span>
+              </div>
             </div>
 
             <p className="font-amiri text-base text-stone-400 leading-relaxed max-w-md">
-              منصة قرآنية دينية مخصصة كصدقة جارية دائمة وإهداء للأعمال الصالحة والتلاوات والأدعية والأذكار،
-              نسأل المولى عز وجل أن يتقبلها ويجعل ثوابها نورا ورحمة في موازين حسناتهم.
+              منصة قرآنية دينية مخصصة كصدقة جارية دائمة عن عائلة الشهاوي وأرواح المغفور لهم بإذن الله،
+              نسأل المولى عز وجل أن يتقبلها ويجعل ثوابها نوراً ورحمة في موازين حسناتهم.
             </p>
 
             <div className="pt-2">
@@ -140,6 +145,14 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
+                  onClick={() => { setActiveTab('owner_sadaqah'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="hover:text-amber-300 transition-colors cursor-pointer text-amber-300 font-medium"
+                >
+                  صدقة جارية لصاحب المشروع ✦
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => { setActiveTab('prayer'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   className="hover:text-amber-300 transition-colors cursor-pointer text-amber-400 font-medium"
                 >
@@ -189,7 +202,7 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Credits & Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
           <div className="flex items-center gap-2">
-            <span>صدقة جارية · جميع الحقوق محفوظة لوجه الله تعالى</span>
+            <span>صدقة جارية - عائلة الشهاوي · جميع الحقوق محفوظة لوجه الله تعالى</span>
           </div>
 
           <div className="flex items-center gap-1.5 text-stone-400 dir-ltr text-left">

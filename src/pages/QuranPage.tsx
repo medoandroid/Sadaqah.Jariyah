@@ -52,6 +52,7 @@ import { TafseerModal } from '../components/TafseerModal';
 import { dailyWirdService } from '../services/dailyWirdService';
 import { offlineQuranService } from '../services/offlineQuranService';
 import { quranBookmarkService } from '../services/quranBookmarkService';
+import { userStateService } from '../services/userStateService';
 
 interface QuranPageProps {
   initialSurahNumber?: number;
@@ -195,7 +196,17 @@ export const QuranPage: React.FC<QuranPageProps> = ({
       if (isMounted) {
         setSurahDetail(data);
         setIsLoading(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const lastRead = userStateService.getLastReadAyah();
+        if (lastRead && lastRead.surahNumber === selectedSurahNumber && lastRead.ayahNumber > 1) {
+          setTimeout(() => {
+            const targetEl = ayahRefs.current[lastRead.ayahNumber];
+            if (targetEl) {
+              targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 350);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     });
 

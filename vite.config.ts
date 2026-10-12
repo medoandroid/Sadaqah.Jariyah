@@ -17,9 +17,9 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: base,
-          name: 'صدقة جارية | القرآن الكريم والمصحف والأذكار',
-          short_name: 'صدقة جارية',
-          description: 'منصة إسلامية قرآنية جامعة مهداة عن أرواح عمامي الأربعة رحمهم الله، تضم المصحف الشريف والتلاوات وحصن المسلم والسبحة الإلكترونية.',
+          name: 'صدقة جارية - عائلة الشهاوي',
+          short_name: 'عائلة الشهاوي',
+          description: 'منصة إسلامية قرآنية جامعة كصدقة جارية - عائلة الشهاوي، تضم المصحف الشريف والتلاوات والأذكار والسبحة والمواقيت وبث الحرمين.',
           theme_color: '#12141A',
           background_color: '#12141A',
           display: 'standalone',

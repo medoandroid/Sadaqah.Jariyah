@@ -3,6 +3,7 @@ import { X, Sparkles, CheckCircle2, Heart, BookOpen, CircleDot, Layers, User } f
 import { HONORED_PERSONS } from '../data/persons';
 import { recordDedication } from '../services/dedicationService';
 import { userProfileService } from '../services/userProfileService';
+import { projectOwnerService } from '../services/projectOwnerService';
 import { SingleChoiceList, SingleChoiceOption } from './SingleChoiceList';
 
 interface DedicationModalProps {
@@ -49,6 +50,13 @@ export const DedicationModal: React.FC<DedicationModalProps> = ({
       subtitle: 'لهم جميعاً بالرحمة والمغفرة والرضوان',
       badge: 'مشترك',
       icon: <Heart className="w-4 h-4 text-amber-700" />,
+    },
+    {
+      id: 'project_owner',
+      title: `صاحب المنصة: ${projectOwnerService.getOwnerProfile().name}`,
+      subtitle: 'صدقة جارية له ولوالديه في حياته وبعد مماته',
+      badge: 'صدقة صاحب المشروع',
+      icon: <Sparkles className="w-4 h-4 text-amber-600" />,
     },
     ...(profile.closestRelative
       ? [

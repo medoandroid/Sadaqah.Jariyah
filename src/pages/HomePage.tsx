@@ -378,6 +378,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {
+      id: 'owner_sadaqah',
+      title: 'صدقة صاحب ومُنشئ المشروع',
+      subtitle: 'دعاء خالص وصدقة جارية لصاحب هذا العمل الصالح ولوالديه في حياته وبعد وفاته، سائلاً الله القبول والرضوان.',
+      icon: Sparkles,
+      category: 'صدقة جارية',
+      actionText: 'عرض صفحة صاحب المشروع',
+      highlightColor: 'from-amber-600/10 to-amber-700/5',
+    },
+    {
       id: 'backup',
       title: 'النسخ الاحتياطي وحفظ البيانات',
       subtitle: 'تصدير نسخة احتياطية لبياناتك وعلاماتك وأدعيتك واسترجاعها بأمان على أي جهاز دون فقدان.',
@@ -448,11 +457,14 @@ export const HomePage: React.FC<HomePageProps> = ({
             <h1 className="font-amiri text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-900 dark:text-stone-100 tracking-tight leading-[1.25]">
               صَدَقَةٌ جَارِيَة
             </h1>
+            <div className="inline-block px-4 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-amiri text-sm sm:text-lg font-bold mt-2">
+              عائلة الشهاوي
+            </div>
             <div className="h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto mt-2" />
           </div>
 
           <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-6">
-            منصة إسلامية قرآنية جامعة، مهداة خالصاً لوجه الله تعالى من <span className="font-bold text-amber-900 dark:text-amber-400">محمد أيمن</span> عن أرواح عمامه الغاليين المغفور لهم بإذن الله:
+            منصة إسلامية قرآنية جامعة كصدقة جارية عن عائلة الشهاوي وأرواح المغفور لهم بإذن الله، نسأل الله أن يتقبلها ويجعلها نوراً لهم في قبورهم:
           </p>
 
           {/* Context-Aware Time & Day Spiritual Recommendation Banner */}

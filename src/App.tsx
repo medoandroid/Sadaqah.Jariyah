@@ -42,6 +42,10 @@ const RuqyahPage = lazy(() => import('./pages/RuqyahPage').then(m => ({ default:
 const HadithPage = lazy(() => import('./pages/HadithPage').then(m => ({ default: m.HadithPage })));
 const PrayerTimesPage = lazy(() => import('./pages/PrayerTimesPage').then(m => ({ default: m.PrayerTimesPage })));
 const HaramainLivePage = lazy(() => import('./pages/HaramainLivePage').then(m => ({ default: m.HaramainLivePage })));
+const OwnerSadaqahPage = lazy(() => import('./pages/OwnerSadaqahPage').then(m => ({ default: m.OwnerSadaqahPage })));
+
+import { SplashScreen } from './components/SplashScreen';
+import { userStateService } from './services/userStateService';
 
 function PageLoadingFallback() {
   return (
@@ -63,18 +67,12 @@ function AppContent() {
   const { isPlayerVisible, currentSurah } = useAudio();
   const isAudioActive = isPlayerVisible && !!currentSurah;
 
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    return storageService.getString('active_tab', 'home');
-  });
-  const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(() => {
-    return storageService.getNumber('selected_surah_number', 1);
-  });
-  const [selectedMushafPage, setSelectedMushafPage] = useState<number>(() => {
-    return storageService.getNumber('selected_mushaf_page', 1);
-  });
-  const [selectedPersonId, setSelectedPersonId] = useState<string>(() => {
-    return storageService.getString('selected_person_id', 'all');
-  });
+  const [initialState] = useState(() => userStateService.getInitialState());
+
+  const [activeTab, setActiveTab] = useState<string>(initialState.activeTab);
+  const [selectedSurahNumber, setSelectedSurahNumber] = useState<number>(initialState.selectedSurahNumber);
+  const [selectedMushafPage, setSelectedMushafPage] = useState<number>(initialState.selectedMushafPage);
+  const [selectedPersonId, setSelectedPersonId] = useState<string>(initialState.selectedPersonId);
   
   // Modals state
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
@@ -87,22 +85,64 @@ function AppContent() {
   const [dedicationPersonId, setDedicationPersonId] = useState<string>('all');
   const [dedicationType, setDedicationType] = useState<'surah' | 'tasbeeh' | 'dua' | 'khatmah'>('dua');
 
-  // Persist state across reloads and tab closes
+  // Persist state across reloads, tab closes, and page navigation
   useEffect(() => {
-    storageService.setString('active_tab', activeTab);
-  }, [activeTab]);
+    userStateService.saveState({
+      activeTab,
+      selectedSurahNumber,
+      selectedMushafPage,
+      selectedPersonId,
+    });
+  }, [activeTab, selectedSurahNumber, selectedMushafPage, selectedPersonId]);
 
+  // Native mobile back button handling (closing modals first, then restoring previous tab)
   useEffect(() => {
-    storageService.setNumber('selected_surah_number', selectedSurahNumber);
-  }, [selectedSurahNumber]);
+    const isAnyModalOpen =
+      isSearchOpen ||
+      isDedicationOpen ||
+      isProfileOpen ||
+      isOfflineModalOpen ||
+      isPrayerTimesOpen ||
+      isBackupOpen ||
+      isEgyptianCompanionOpen;
 
-  useEffect(() => {
-    storageService.setNumber('selected_mushaf_page', selectedMushafPage);
-  }, [selectedMushafPage]);
+    const handlePopState = (e: PopStateEvent) => {
+      if (isAnyModalOpen) {
+        setIsSearchOpen(false);
+        setIsDedicationOpen(false);
+        setIsProfileOpen(false);
+        setIsOfflineModalOpen(false);
+        setIsPrayerTimesOpen(false);
+        setIsBackupOpen(false);
+        setIsEgyptianCompanionOpen(false);
+        return;
+      }
 
-  useEffect(() => {
-    storageService.setString('selected_person_id', selectedPersonId);
-  }, [selectedPersonId]);
+      if (e.state && e.state.tab) {
+        setActiveTab(e.state.tab);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [
+    isSearchOpen,
+    isDedicationOpen,
+    isProfileOpen,
+    isOfflineModalOpen,
+    isPrayerTimesOpen,
+    isBackupOpen,
+    isEgyptianCompanionOpen,
+  ]);
+
+  const navigateToTab = (tabId: string) => {
+    if (tabId === activeTab) return;
+    try {
+      window.history.pushState({ tab: tabId }, '', window.location.pathname);
+    } catch {}
+    setActiveTab(tabId);
+    userStateService.saveState({ activeTab: tabId });
+  };
 
   // Scroll to top on tab switch
   useEffect(() => {
@@ -260,6 +300,15 @@ function AppContent() {
             <PersonsPage
               selectedPersonId={selectedPersonId}
               onOpenDedicationForPerson={(personId) => handleOpenDedication(personId, 'dua')}
+              onOpenOwnerSadaqah={() => { setActiveTab('owner_sadaqah'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            />
+          )}
+
+          {activeTab === 'owner_sadaqah' && (
+            <OwnerSadaqahPage
+              onOpenDedication={(type) => handleOpenDedication('project_owner', type || 'dua')}
+              onOpenQuran={() => { setActiveTab('quran'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onOpenPersons={() => { setActiveTab('persons'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             />
           )}
 
@@ -377,6 +426,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AudioProvider>
+          <SplashScreen />
           <AppContent />
         </AudioProvider>
       </ThemeProvider>

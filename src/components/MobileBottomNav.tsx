@@ -45,7 +45,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
     { id: 'personalDua', label: 'أدعيتي الخاصة', icon: Edit3, desc: 'مناجاة شخصية وأدعية محفوظة' },
     { id: 'asma', label: 'أسماء الله الحسنى', icon: Sparkles, desc: '٩٩ اسماً مباركاً مع معانيها' },
     { id: 'khatmah', label: 'الختمة التشاركية', icon: Award, desc: 'ختمة قرآنية مهداة' },
-    { id: 'persons', label: 'عنهم (سيرتهم)', icon: Users, desc: 'تخليد ذكرى الأعمام الكرام' },
+    { id: 'persons', label: 'عنهم (سيرتهم)', icon: Users, desc: 'تخليد ذكرى أفراد عائلة الشهاوي الكرام' },
+    { id: 'owner_sadaqah', label: 'صدقة صاحب المشروع', icon: Sparkles, desc: 'صدقة جارية ودعاء لصاحب ومنشئ المنصة' },
     { id: 'dedications', label: 'إهداء الثواب', icon: Gift, desc: 'سجل الإهداءات والأعمال' },
   ];
 

@@ -83,6 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'asma', label: 'أسماء الله', icon: Sparkles },
     { id: 'khatmah', label: 'الختمة', icon: Award },
     { id: 'persons', label: 'عنهم', icon: Users },
+    { id: 'owner_sadaqah', label: 'صدقة صاحب المشروع', icon: Sparkles },
     { id: 'dedications', label: 'إهداء الثواب', icon: Gift },
   ];
 
@@ -109,11 +110,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               ص
             </span>
             <div className="flex flex-col text-right">
-              <span className="font-amiri text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors leading-tight">
+              <span className="font-amiri text-lg sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors leading-tight">
                 صدقة جارية
               </span>
-              <span className="text-[10px] text-stone-400 dark:text-stone-500 font-amiri -mt-1 hidden sm:inline">
-                ثواب مستمر لوجه الله
+              <span className="text-[11px] text-amber-700 dark:text-amber-400 font-bold font-amiri -mt-0.5">
+                عائلة الشهاوي
               </span>
             </div>
           </button>

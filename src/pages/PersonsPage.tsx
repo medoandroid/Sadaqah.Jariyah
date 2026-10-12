@@ -22,11 +22,13 @@ import { Star8Rosette } from '../components/IslamicDecoration';
 interface PersonsPageProps {
   selectedPersonId?: string;
   onOpenDedicationForPerson: (personId: string, personName: string) => void;
+  onOpenOwnerSadaqah?: () => void;
 }
 
 export const PersonsPage: React.FC<PersonsPageProps> = ({
   selectedPersonId,
   onOpenDedicationForPerson,
+  onOpenOwnerSadaqah,
 }) => {
   const [activePersonId, setActivePersonId] = useState<string>(selectedPersonId || 'all');
   const [prayedMap, setPrayedMap] = useState<Record<string, number>>({});
@@ -135,7 +137,43 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
             {person.name}
           </button>
         ))}
+
+        {onOpenOwnerSadaqah && (
+          <button
+            onClick={onOpenOwnerSadaqah}
+            className="px-4 py-2 rounded-xl text-xs font-amiri font-bold bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>صدقة صاحب المشروع</span>
+          </button>
+        )}
       </div>
+
+      {/* Project Owner Banner Card */}
+      {onOpenOwnerSadaqah && (
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-950/40 via-stone-900 to-amber-950/20 border border-amber-600/30 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-center sm:text-right">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-amiri text-lg sm:text-xl font-bold text-amber-200">
+                صدقة جارية لصاحب المشروع ومُنشئ المنصة
+              </h3>
+              <p className="text-xs text-stone-300 max-w-xl leading-relaxed">
+                دعاء خالص بالرحمة والمغفرة ونور القبر لصاحب هذا العمل الصالح في حياته وبعد وفاته، سائلاً الله تعالى أن يتقبله خالصاً لوجهه الكريم.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenOwnerSadaqah}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs shrink-0 flex items-center gap-2 shadow-md cursor-pointer transition-all"
+          >
+            <span>زيارة صفحة صاحب المشروع</span>
+            <Sparkles className="w-4 h-4 text-amber-200" />
+          </button>
+        </div>
+      )}
 
       {/* Persons Memorial Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
