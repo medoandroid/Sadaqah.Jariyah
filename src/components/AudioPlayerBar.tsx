@@ -25,9 +25,12 @@ import { ReciterSelectModal } from './ReciterSelectModal';
 
 export const AudioPlayerBar: React.FC = () => {
   const {
+    audioMode,
     isPlaying,
     currentSurah,
     currentReciter,
+    currentRadio,
+    currentTafsir,
     currentTime,
     duration,
     volume,
@@ -88,7 +91,16 @@ export const AudioPlayerBar: React.FC = () => {
     }, 2600);
   };
 
-  if (!isPlayerVisible || !currentSurah) {
+  if (!isPlayerVisible) {
+    return null;
+  }
+  if (audioMode === 'surah' && !currentSurah) {
+    return null;
+  }
+  if (audioMode === 'radio' && !currentRadio) {
+    return null;
+  }
+  if (audioMode === 'tafsir' && !currentTafsir) {
     return null;
   }
 
@@ -155,46 +167,57 @@ export const AudioPlayerBar: React.FC = () => {
             </div>
           )}
 
-          {/* ROW 1: Scrubber timeline bar & Timestamps */}
-          <div className="space-y-1 px-1">
-            <div
-              className="w-full bg-stone-800/90 hover:bg-stone-700/80 h-2 sm:h-2.5 rounded-full cursor-pointer relative group transition-all"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const ratio = clickX / rect.width;
-                seekTo(ratio * duration);
-              }}
-            >
-              {/* Filled gradient bar */}
+          {/* ROW 1: Scrubber timeline bar OR Live Stream Header */}
+          {audioMode === 'radio' ? (
+            <div className="flex items-center justify-between px-3 py-1.5 bg-stone-900/80 rounded-2xl border border-amber-500/20 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-red-400 font-bold text-[11px]">بث مباشر 24/7</span>
+                <span className="text-stone-400 text-[11px] hidden sm:inline">· صوت نقي عبر شبكة إذاعات MP3Quran</span>
+              </div>
+              <span className="text-[11px] text-amber-300 font-mono font-bold tracking-wider">LIVE RADIO</span>
+            </div>
+          ) : (
+            <div className="space-y-1 px-1">
               <div
-                className="h-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-300 rounded-full relative transition-all"
-                style={{ width: `${progressPercent}%` }}
+                className="w-full bg-stone-800/90 hover:bg-stone-700/80 h-2 sm:h-2.5 rounded-full cursor-pointer relative group transition-all"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  const ratio = clickX / rect.width;
+                  seekTo(ratio * duration);
+                }}
               >
-                {/* Glowing Thumb */}
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white border-2 border-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] group-hover:scale-125 transition-transform" />
+                {/* Filled gradient bar */}
+                <div
+                  className="h-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-300 rounded-full relative transition-all"
+                  style={{ width: `${progressPercent}%` }}
+                >
+                  {/* Glowing Thumb */}
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white border-2 border-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] group-hover:scale-125 transition-transform" />
+                </div>
+              </div>
+
+              {/* Timestamps & Playlist Badge */}
+              <div className="flex items-center justify-between text-[11px] font-mono text-stone-400 px-0.5">
+                <span className="text-amber-300 font-semibold">{formatTime(currentTime)}</span>
+                
+                {playlistTitle && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-sans font-semibold flex items-center gap-1">
+                    <ListMusic className="w-3 h-3 text-emerald-400" />
+                    <span>قائمة: {playlistTitle}</span>
+                  </span>
+                )}
+
+                <span>{duration > 0 ? formatTime(duration) : '00:00'}</span>
               </div>
             </div>
-
-            {/* Timestamps & Playlist Badge */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-stone-400 px-0.5">
-              <span className="text-amber-300 font-semibold">{formatTime(currentTime)}</span>
-              
-              {playlistTitle && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-sans font-semibold flex items-center gap-1">
-                  <ListMusic className="w-3 h-3 text-emerald-400" />
-                  <span>قائمة: {playlistTitle}</span>
-                </span>
-              )}
-
-              <span>{duration > 0 ? formatTime(duration) : '00:00'}</span>
-            </div>
-          </div>
+          )}
 
           {/* ROW 2: Collision-Free Responsive Controls */}
           <div className="flex items-center justify-between gap-2 sm:gap-4 relative">
             
-            {/* ZONE 1: Surah Title & Sheikh Picker (Always compact and clearly bounded) */}
+            {/* ZONE 1: Metadata */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[42%] sm:max-w-[34%] shrink-0">
               
               {/* Equalizer Visualizer */}
@@ -212,20 +235,42 @@ export const AudioPlayerBar: React.FC = () => {
 
               {/* Text metadata */}
               <div className="min-w-0 text-right">
-                <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
-                  سورة {currentSurah.name}
-                </div>
+                {audioMode === 'radio' && currentRadio ? (
+                  <>
+                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                      {currentRadio.name}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-medium">
+                      <span>إذاعة إسلامية مباشرة</span>
+                    </span>
+                  </>
+                ) : audioMode === 'tafsir' && currentTafsir ? (
+                  <>
+                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                      {currentTafsir.title}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-medium">
+                      <span>تفسير سورة {currentTafsir.surahName}</span>
+                    </span>
+                  </>
+                ) : currentSurah ? (
+                  <>
+                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                      سورة {currentSurah.name}
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowReciterModal(true)}
-                  className="mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-white transition-all cursor-pointer text-[10px] sm:text-xs truncate max-w-full"
-                  title="تغيير الشيخ والقارئ"
-                >
-                  <User className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span className="truncate">{currentReciter.name}</span>
-                  <ChevronDown className="w-2.5 h-2.5 opacity-70 shrink-0" />
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowReciterModal(true)}
+                      className="mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-white transition-all cursor-pointer text-[10px] sm:text-xs truncate max-w-full"
+                      title="تغيير الشيخ والقارئ"
+                    >
+                      <User className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span className="truncate">{currentReciter.name}</span>
+                      <ChevronDown className="w-2.5 h-2.5 opacity-70 shrink-0" />
+                    </button>
+                  </>
+                ) : null}
               </div>
 
             </div>
@@ -233,27 +278,31 @@ export const AudioPlayerBar: React.FC = () => {
             {/* ZONE 2: Core Playback Transport (Prev, -10s, Play/Pause, +10s, Next) */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 shrink-0">
               {/* Previous Surah */}
-              <button
-                type="button"
-                onClick={playPreviousSurah}
-                className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
-                title="السورة السابقة"
-                aria-label="السورة السابقة"
-              >
-                <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              {audioMode === 'surah' && (
+                <button
+                  type="button"
+                  onClick={playPreviousSurah}
+                  className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
+                  title="السورة السابقة"
+                  aria-label="السورة السابقة"
+                >
+                  <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              )}
 
               {/* Rewind -10s (Desktop/Tablet) */}
-              <button
-                type="button"
-                onClick={handleSkipBackward}
-                className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
-                title="تراجع 10 ثوانٍ"
-                aria-label="تراجع 10 ثوانٍ"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span className="text-[9px] text-stone-400">١٠ث</span>
-              </button>
+              {audioMode !== 'radio' && (
+                <button
+                  type="button"
+                  onClick={handleSkipBackward}
+                  className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
+                  title="تراجع 10 ثوانٍ"
+                  aria-label="تراجع 10 ثوانٍ"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="text-[9px] text-stone-400">١٠ث</span>
+                </button>
+              )}
 
               {/* MAIN LIQUID GLASS PLAY / PAUSE BUTTON */}
               <button
@@ -261,8 +310,8 @@ export const AudioPlayerBar: React.FC = () => {
                 onClick={togglePlay}
                 disabled={isLoading}
                 className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 text-stone-950 flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold shrink-0 disabled:opacity-50 ring-2 ring-amber-400/50"
-                title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل التلاوة'}
-                aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل التلاوة'}
+                title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
+                aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
               >
                 {isPlaying && (
                   <span className="absolute inset-0 rounded-2xl bg-amber-400 animate-ping opacity-20 pointer-events-none" />
@@ -277,27 +326,31 @@ export const AudioPlayerBar: React.FC = () => {
               </button>
 
               {/* Fast Forward +10s (Desktop/Tablet) */}
-              <button
-                type="button"
-                onClick={handleSkipForward}
-                className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
-                title="تقديم 10 ثوانٍ"
-                aria-label="تقديم 10 ثوانٍ"
-              >
-                <RotateCw className="w-4 h-4" />
-                <span className="text-[9px] text-stone-400">١٠ث</span>
-              </button>
+              {audioMode !== 'radio' && (
+                <button
+                  type="button"
+                  onClick={handleSkipForward}
+                  className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
+                  title="تقديم 10 ثوانٍ"
+                  aria-label="تقديم 10 ثوانٍ"
+                >
+                  <RotateCw className="w-4 h-4" />
+                  <span className="text-[9px] text-stone-400">١٠ث</span>
+                </button>
+              )}
 
               {/* Next Surah */}
-              <button
-                type="button"
-                onClick={playNextSurah}
-                className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
-                title="السورة التالية"
-                aria-label="السورة التالية"
-              >
-                <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              {audioMode === 'surah' && (
+                <button
+                  type="button"
+                  onClick={playNextSurah}
+                  className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
+                  title="السورة التالية"
+                  aria-label="السورة التالية"
+                >
+                  <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              )}
             </div>
 
             {/* ZONE 3: Secondary Actions & Volume (Never overflows or collides) */}

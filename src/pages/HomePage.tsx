@@ -276,11 +276,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     },
     {
       id: 'recitations',
-      title: 'التلاوات العطرة',
-      subtitle: 'استماع متواصل وخاشع بأصوات كبار قراء العالم الإسلامي (العفاسي، الحصري، عبدالباسط، المعيقلي).',
+      title: 'التلاوات والإذاعات والوسائط',
+      subtitle: 'استماع لأكثر من ٢٤٠ قارئاً، و١٧٠ إذاعة مباشرة، وبث الحرمين الشريفين، وتفاسير صوتية وتدبر.',
       icon: Headphones,
-      category: 'تلاوات صوتية',
-      actionText: 'الاستماع الآن',
+      category: 'صوتيات وبث حي',
+      actionText: 'استماع وبث مباشر',
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {

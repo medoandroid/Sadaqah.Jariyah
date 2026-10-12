@@ -2,11 +2,24 @@ import React, { createContext, useContext, useState, useRef, useEffect } from 'r
 import { Reciter, SurahMeta } from '../types';
 import { RECITERS, EXPANDED_RECITERS, getSurahAudioUrl, getSurahFallbackAudioUrl } from '../data/reciters';
 import { ALL_SURAHS } from '../data/quranMeta';
+import { MP3QRadio } from '../types/mp3quran';
+
+export type AudioMode = 'surah' | 'radio' | 'tafsir' | 'custom';
+
+export interface AudioTafsirItem {
+  title: string;
+  surahNumber: number;
+  surahName: string;
+  url: string;
+}
 
 interface AudioContextType {
+  audioMode: AudioMode;
   isPlaying: boolean;
   currentSurah: SurahMeta | null;
   currentReciter: Reciter;
+  currentRadio: MP3QRadio | null;
+  currentTafsir: AudioTafsirItem | null;
   currentTime: number;
   duration: number;
   volume: number;
@@ -22,6 +35,8 @@ interface AudioContextType {
   playlistTitle: string | null;
   playSurah: (surahNumber: number, reciter?: Reciter) => void;
   playPlaylist: (surahNumbers: number[], title?: string, reciter?: Reciter) => void;
+  playRadio: (radio: MP3QRadio) => void;
+  playTafsir: (tafsir: AudioTafsirItem) => void;
   togglePlay: () => void;
   seekTo: (seconds: number) => void;
   setVolumeLevel: (vol: number) => void;
@@ -51,9 +66,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return RECITERS[0];
   };
 
+  const [audioMode, setAudioMode] = useState<AudioMode>('surah');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSurah, setCurrentSurah] = useState<SurahMeta | null>(null);
   const [currentReciter, setCurrentReciterState] = useState<Reciter>(getInitialReciter);
+  const [currentRadio, setCurrentRadio] = useState<MP3QRadio | null>(null);
+  const [currentTafsir, setCurrentTafsir] = useState<AudioTafsirItem | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.85);
@@ -190,6 +208,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!surah) return;
 
     const chosenReciter = reciter || currentReciterRef.current;
+    setAudioMode('surah');
+    setCurrentRadio(null);
+    setCurrentTafsir(null);
     setCurrentSurah(surah);
     currentSurahRef.current = surah;
     setCurrentReciterState(chosenReciter);
@@ -251,6 +272,98 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const playRadio = (radio: MP3QRadio) => {
+    setAudioMode('radio');
+    setCurrentRadio(radio);
+    setCurrentTafsir(null);
+    setCurrentSurah(null);
+    setIsPlayerVisible(true);
+    setIsLoading(true);
+    setAudioError(null);
+    hasTriedFallbackRef.current = false;
+
+    if (audioRef.current) {
+      audioRef.current.src = radio.url;
+      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.playbackRate = 1;
+      audioRef.current.loop = false;
+      audioRef.current.load();
+
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator && window.MediaMetadata) {
+        try {
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: radio.name,
+            artist: 'إذاعات القرآن الكريم المباشرة 24/7',
+            album: 'صدقة جارية | إذاعات القرآن',
+            artwork: [
+              { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+              { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            ],
+          });
+          navigator.mediaSession.setActionHandler('play', () => togglePlay());
+          navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+        } catch {}
+      }
+
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setIsLoading(false);
+        setAudioError(null);
+      }).catch(err => {
+        if (err.name === 'AbortError') return;
+        setIsPlaying(false);
+        setIsLoading(false);
+        setAudioError('تعذر الاتصال بالبث الإذاعي، حاول مرة أخرى');
+      });
+    }
+  };
+
+  const playTafsir = (tafsir: AudioTafsirItem) => {
+    setAudioMode('tafsir');
+    setCurrentTafsir(tafsir);
+    setCurrentRadio(null);
+    setCurrentSurah(null);
+    setIsPlayerVisible(true);
+    setIsLoading(true);
+    setAudioError(null);
+    hasTriedFallbackRef.current = false;
+
+    if (audioRef.current) {
+      audioRef.current.src = tafsir.url;
+      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.playbackRate = playbackSpeed;
+      audioRef.current.loop = isLooping;
+      audioRef.current.load();
+
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator && window.MediaMetadata) {
+        try {
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: tafsir.title,
+            artist: `تفسير سورة ${tafsir.surahName}`,
+            album: 'صدقة جارية | التفاسير الصوتية',
+            artwork: [
+              { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+              { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            ],
+          });
+          navigator.mediaSession.setActionHandler('play', () => togglePlay());
+          navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+        } catch {}
+      }
+
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setIsLoading(false);
+        setAudioError(null);
+      }).catch(err => {
+        if (err.name === 'AbortError') return;
+        setIsPlaying(false);
+        setIsLoading(false);
+        setAudioError('تعذر تشغيل الملف الصوتي للتفسير');
+      });
+    }
+  };
+
   const playPlaylist = (surahNumbers: number[], title?: string, reciter?: Reciter) => {
     if (!surahNumbers || surahNumbers.length === 0) return;
     setPlaylistQueue(surahNumbers);
@@ -264,6 +377,26 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const togglePlay = () => {
     if (!audioRef.current) return;
+
+    if (audioMode === 'radio') {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else if (currentRadio) {
+        playRadio(currentRadio);
+      }
+      return;
+    }
+
+    if (audioMode === 'tafsir') {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      }
+      return;
+    }
 
     if (!currentSurah) {
       playSurah(1, currentReciter);
@@ -421,9 +554,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <AudioContext.Provider
       value={{
+        audioMode,
         isPlaying,
         currentSurah,
         currentReciter,
+        currentRadio,
+        currentTafsir,
         currentTime,
         duration,
         volume,
@@ -439,6 +575,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         playlistTitle,
         playSurah,
         playPlaylist,
+        playRadio,
+        playTafsir,
         togglePlay,
         seekTo,
         setVolumeLevel,

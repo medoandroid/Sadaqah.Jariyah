@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Play,
   Pause,
@@ -20,7 +20,12 @@ import {
   Flame,
   X,
   Music,
-  UserCheck
+  UserCheck,
+  Tv,
+  Film,
+  Clock,
+  ExternalLink,
+  ChevronLeft
 } from 'lucide-react';
 import { ALL_SURAHS } from '../data/quranMeta';
 import { EXPANDED_RECITERS, RIWAYAT, getSurahAudioUrl } from '../data/reciters';
@@ -31,6 +36,21 @@ import { RiwayahDropdownSelector } from '../components/RiwayahDropdownSelector';
 import { ReciterDropdownSelector } from '../components/ReciterDropdownSelector';
 import { PlaylistsSection } from '../components/PlaylistsSection';
 import { ReciterSelectModal } from '../components/ReciterSelectModal';
+import { RadioStationsSection } from '../components/RadioStationsSection';
+import { AudioTafsirSection } from '../components/AudioTafsirSection';
+import { TadaborVideosSection } from '../components/TadaborVideosSection';
+import { LiveTVModal } from '../components/LiveTVModal';
+import { AyahTimingExplorerModal } from '../components/AyahTimingExplorerModal';
+import { mp3QuranService } from '../services/mp3QuranService';
+import { MP3QRecentRead } from '../types/mp3quran';
+
+export type MediaHubTab =
+  | 'surahs'
+  | 'radios'
+  | 'livetv'
+  | 'tafasir'
+  | 'tadabor'
+  | 'playlists';
 
 export const RecitationsPage: React.FC = () => {
   const {
@@ -42,9 +62,11 @@ export const RecitationsPage: React.FC = () => {
     setReciter,
   } = useAudio();
 
-  // Tab: 'playlists' (قوائم التشغيل) or 'surahs' (سور القرآن)
-  const [activeMediaTab, setActiveMediaTab] = useState<'playlists' | 'surahs'>('playlists');
+  // Active Hub Tab
+  const [activeMediaTab, setActiveMediaTab] = useState<MediaHubTab>('surahs');
   const [showReciterModal, setShowReciterModal] = useState(false);
+  const [showLiveTVModal, setShowLiveTVModal] = useState(false);
+  const [showTimingModal, setShowTimingModal] = useState(false);
 
   const [selectedRiwayah, setSelectedRiwayah] = useState<string>('all');
   const [reciterSearch, setReciterSearch] = useState<string>('');
@@ -55,13 +77,23 @@ export const RecitationsPage: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [showReciterGrid, setShowReciterGrid] = useState<boolean>(false);
 
+  // Recent reads from MP3Quran API
+  const [recentReads, setRecentReads] = useState<MP3QRecentRead[]>([]);
+  const [showRecentReads, setShowRecentReads] = useState<boolean>(false);
+
+  useEffect(() => {
+    mp3QuranService.getRecentReads('ar')
+      .then((reads) => setRecentReads(reads.slice(0, 8)))
+      .catch(() => {});
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 2500);
   };
 
   // Sync selectedReciter if currentReciter changed globally
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentReciter) {
       const match = EXPANDED_RECITERS.find((r) => r.id === currentReciter.id);
       if (match) {
@@ -127,13 +159,22 @@ export const RecitationsPage: React.FC = () => {
       `استماع لتلاوة سورة ${surahName} بصوت ${selectedReciter.name}`,
       'all',
       1,
-      'محمد أيمن'
+      'زائر كريم'
     );
     showToast(`تقبل الله استماعكم وأهدى ثوابه لأرواحهم الطاهرة`);
   };
 
+  const tabs: { key: MediaHubTab; label: string; icon: React.ElementType; badge?: string }[] = [
+    { key: 'surahs', label: 'المصاحف والسور', icon: BookOpen, badge: '١١٤ سورة' },
+    { key: 'radios', label: 'إذاعات القرآن', icon: Radio, badge: '١٧٠+ إذاعة' },
+    { key: 'livetv', label: 'بث الحرمين الشريفين', icon: Tv, badge: 'مباشر' },
+    { key: 'tafasir', label: 'التفاسير الصوتية', icon: BookOpen, badge: 'الطبري' },
+    { key: 'tadabor', label: 'التدبر والفيديوهات', icon: Film },
+    { key: 'playlists', label: 'قوائم التشغيل', icon: ListMusic },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-right">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-right select-none">
       
       {/* Toast Alert */}
       {toastMsg && (
@@ -143,67 +184,54 @@ export const RecitationsPage: React.FC = () => {
       )}
 
       {/* Page Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/80 dark:bg-stone-800 border border-amber-300 dark:border-amber-700/50 text-amber-900 dark:text-amber-300 text-xs font-semibold">
-          <Headphones className="w-3.5 h-3.5 text-amber-800 dark:text-amber-400" />
-          <span>المكتبة الصوتية والوسائط القرآنية</span>
+      <div className="text-center max-w-3xl mx-auto space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-stone-800 border border-amber-500/20 text-amber-900 dark:text-amber-300 text-xs font-semibold">
+          <Headphones className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span>المكتبة الصوتية والوسائط القرآنية المتكاملة (MP3Quran API)</span>
         </div>
         <h1 className="font-amiri text-3xl sm:text-5xl font-bold text-stone-900 dark:text-stone-100">
-          التلاوات القرآنية وقوائم التشغيل
+          التلاوات القرآنية والوسائط المباركة
         </h1>
         <p className="font-amiri text-base sm:text-lg text-stone-600 dark:text-stone-300 leading-relaxed">
-          استمع لكتاب الله بأصوات كبار أئمة الحرمين وقراء العالم الإسلامي بمختلف الروايات، أو اختر قوائم تشغيل متسلسلة للرقية الشرعية والأوراد اليومية.
+          استمع لكتاب الله بأصوات كبار قراء العالم الإسلامي بمختلف الروايات، وتصفح الإذاعات المباشرة، وبث الحرمين، والتفاسير الصوتية، ومقاطع التدبر.
         </p>
       </div>
 
-      {/* Main Tab Navigation Bar */}
-      <div className="flex items-center justify-center gap-2 sm:gap-3 p-1.5 rounded-2xl bg-stone-100 dark:bg-stone-850 max-w-lg mx-auto border border-stone-200 dark:border-stone-750 shadow-2xs">
-        <button
-          type="button"
-          onClick={() => setActiveMediaTab('playlists')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-            activeMediaTab === 'playlists'
-              ? 'bg-amber-800 text-white shadow-xs'
-              : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-white/60 dark:hover:bg-stone-800'
-          }`}
-        >
-          <ListMusic className="w-4 h-4" />
-          <span>قوائم التشغيل</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-            activeMediaTab === 'playlists' ? 'bg-amber-700 text-amber-200' : 'bg-amber-100 dark:bg-stone-750 text-amber-900 dark:text-amber-300'
-          }`}>
-            ٧ قوائم
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveMediaTab('surahs')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-            activeMediaTab === 'surahs'
-              ? 'bg-amber-800 text-white shadow-xs'
-              : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-white/60 dark:hover:bg-stone-800'
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span>فهرس السور (١١٤)</span>
-        </button>
+      {/* Multi-Tab Switcher Bar */}
+      <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-none max-w-4xl mx-auto">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const isSelected = activeMediaTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setActiveMediaTab(t.key)}
+              className={`flex items-center gap-2 py-2.5 px-3.5 sm:px-4 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 active:scale-95 ${
+                isSelected
+                  ? 'bg-amber-800 text-white shadow-xs'
+                  : 'bg-stone-100 dark:bg-stone-850 hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200/80 dark:border-stone-800'
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{t.label}</span>
+              {t.badge && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-medium ${
+                  isSelected ? 'bg-amber-700 text-amber-200' : 'bg-stone-200 dark:bg-stone-750 text-stone-600 dark:text-stone-300'
+                }`}>
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* TAB 1: CURATED PLAYLISTS SECTION */}
-      {activeMediaTab === 'playlists' && (
-        <PlaylistsSection
-          selectedReciter={selectedReciter}
-          onOpenReciterSelector={() => setShowReciterModal(true)}
-          showToast={showToast}
-        />
-      )}
-
-      {/* TAB 2: SURAHS DIRECTORY & RECITERS SELECTORS */}
+      {/* TAB 1: SURAHS DIRECTORY & RECITERS SELECTORS */}
       {activeMediaTab === 'surahs' && (
         <div className="space-y-8 animate-in fade-in duration-200">
           
-          {/* SECTION 1: Centralized, Space-Saving Dropdown Selectors */}
+          {/* Centralized Dropdown Selectors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto w-full">
             <RiwayahDropdownSelector
               selectedRiwayah={selectedRiwayah}
@@ -219,10 +247,68 @@ export const RecitationsPage: React.FC = () => {
             />
           </div>
 
-          {/* SECTION 2: Reciters Directory Cards Grid */}
+          {/* Quick Action Pills: Timing Explorer & Recent Reads */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-amber-50/70 dark:bg-stone-900 border border-amber-500/20 shadow-2xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                خدمات متقدمة للتلاوة:
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setShowTimingModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:border-amber-500 text-amber-900 dark:text-amber-300 text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+              >
+                <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>تزامن وتوقيت الآيات (Ayat Timing)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLiveTVModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+              >
+                <Tv className="w-3.5 h-3.5 text-amber-600" />
+                <span>بث مباشر للحرمين الشريفين</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowRecentReads(!showRecentReads)}
+              className="text-xs text-amber-800 dark:text-amber-400 hover:underline font-semibold cursor-pointer"
+            >
+              {showRecentReads ? 'إخفاء أحدث التسجيلات' : `أحدث التسجيلات المضافة (${recentReads.length})`}
+            </button>
+          </div>
+
+          {/* Recent Reads Box */}
+          {showRecentReads && recentReads.length > 0 && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-stone-50 dark:bg-stone-850/80 border border-stone-200 dark:border-stone-800 space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-xs font-bold text-stone-800 dark:text-stone-200">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>أحدث التلاوات المرفوعة حديثاً في خوادم MP3Quran:</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {recentReads.map((read) => (
+                  <div
+                    key={read.id}
+                    className="p-3 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-750 text-xs space-y-1"
+                  >
+                    <span className="font-bold text-stone-900 dark:text-stone-100 block truncate">
+                      {read.name}
+                    </span>
+                    <span className="text-[10px] text-stone-400 block truncate">
+                      {read.moshaf?.[0]?.name || 'مصحف كامل'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Reciters Directory Section */}
           <div className="space-y-4">
-            
-            {/* Reciters Bar Header & Search */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xs">
               <div className="flex items-center gap-3">
                 <Radio className="w-4 h-4 text-amber-800 dark:text-amber-400" />
@@ -316,7 +402,7 @@ export const RecitationsPage: React.FC = () => {
                             <Play className="w-3 h-3 fill-current" />
                             <span>اختيار القارئ</span>
                           </span>
-                          <span className="text-[11px] text-stone-400 dark:text-stone-500 group-hover:text-stone-600 dark:group-hover:text-stone-300 font-mono">
+                          <span className="text-[11px] text-stone-400 dark:text-stone-500 font-mono">
                             ١١٤ سورة
                           </span>
                         </div>
@@ -328,10 +414,8 @@ export const RecitationsPage: React.FC = () => {
             )}
           </div>
 
-          {/* SECTION 3: Surahs Audio Directory */}
+          {/* Surahs Audio Directory */}
           <div className="space-y-4">
-            
-            {/* Search & Active Info Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xs">
               <div className="flex items-center gap-2 text-xs font-semibold text-stone-800 dark:text-stone-200">
                 <ListMusic className="w-4 h-4 text-amber-700 dark:text-amber-400" />
@@ -445,12 +529,124 @@ export const RecitationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Reciter Selector Modal */}
+      {/* TAB 2: LIVE ISLAMIC RADIOS (177+ STATIONS) */}
+      {activeMediaTab === 'radios' && (
+        <RadioStationsSection showToast={showToast} />
+      )}
+
+      {/* TAB 3: LIVE TV BROADCASTS */}
+      {activeMediaTab === 'livetv' && (
+        <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-[#1C1A17] via-[#141210] to-[#0D0B0A] text-white border border-amber-900/40 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <h2 className="font-amiri text-2xl sm:text-3xl font-bold text-amber-200">
+                    البث المباشر للحرمين الشريفين (24/7)
+                  </h2>
+                </div>
+                <p className="text-xs sm:text-sm text-stone-400">
+                  شاهد البث الحي المباشر من المسجد الحرام بمكة المكرمة والمسجد النبوي الشريف بالمدينة المنورة
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowLiveTVModal(true)}
+                className="px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer shadow-md"
+              >
+                <Tv className="w-4 h-4" />
+                <span>فتح مشغل البث المباشر الكامل ↗</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick TV Channel Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              onClick={() => setShowLiveTVModal(true)}
+              className="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500/50 shadow-sm transition-all cursor-pointer space-y-3 group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 text-[11px] font-bold border border-red-500/20 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span>بث مباشر 24/7</span>
+                </span>
+                <span className="text-xs text-stone-400 font-mono">Saudi Quran TV</span>
+              </div>
+              <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                قناة القرآن الكريم (مكة المكرمة) 🕋
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                نقل حي ومباشر على مدار الساعة لصلوات الفريضة والتراويح والطواف حول الكعبة المشرفة وتلاوات خاشعة
+              </p>
+              <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-bold">
+                <span>مشاهدة البث الآن</span>
+                <span>▶</span>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setShowLiveTVModal(true)}
+              className="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500/50 shadow-sm transition-all cursor-pointer space-y-3 group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 text-[11px] font-bold border border-red-500/20 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span>بث مباشر 24/7</span>
+                </span>
+                <span className="text-xs text-stone-400 font-mono">Saudi Sunnah TV</span>
+              </div>
+              <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                قناة السنة النبوية (المدينة المنورة) 🕌
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                نقل مباشر من الروضة الشريفة والمسجد النبوي الشريف مع الأحاديث النبوية الشريفة وشروح السنة المطهرة
+              </p>
+              <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-bold">
+                <span>مشاهدة البث الآن</span>
+                <span>▶</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: AUDIO TAFASIR */}
+      {activeMediaTab === 'tafasir' && (
+        <AudioTafsirSection showToast={showToast} />
+      )}
+
+      {/* TAB 5: TADABOR & VIDEOS */}
+      {activeMediaTab === 'tadabor' && (
+        <TadaborVideosSection showToast={showToast} />
+      )}
+
+      {/* TAB 6: CURATED PLAYLISTS */}
+      {activeMediaTab === 'playlists' && (
+        <PlaylistsSection
+          selectedReciter={selectedReciter}
+          onOpenReciterSelector={() => setShowReciterModal(true)}
+          showToast={showToast}
+        />
+      )}
+
+      {/* Modals */}
       <ReciterSelectModal
         isOpen={showReciterModal}
         onClose={() => setShowReciterModal(false)}
         currentReciter={selectedReciter}
         onSelectReciter={handleSelectReciter}
+      />
+
+      <LiveTVModal
+        isOpen={showLiveTVModal}
+        onClose={() => setShowLiveTVModal(false)}
+      />
+
+      <AyahTimingExplorerModal
+        isOpen={showTimingModal}
+        onClose={() => setShowTimingModal(false)}
       />
 
     </div>
