@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Download,
   X,
@@ -27,6 +27,7 @@ import { ALL_SURAHS, ALL_JUZ_METADATA } from '../data/quranMeta';
 import { EXPANDED_RECITERS } from '../data/reciters';
 import { useAudio } from '../context/AudioContext';
 import { Reciter } from '../types';
+import { CustomSelect } from './CustomSelect';
 
 interface AudioDownloadManagerModalProps {
   isOpen: boolean;
@@ -59,6 +60,30 @@ export const AudioDownloadManagerModal: React.FC<AudioDownloadManagerModalProps>
   const [activeTab, setActiveTab] = useState<'manager' | 'download_new'>('manager');
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmFullQuran, setConfirmFullQuran] = useState(false);
+
+  const reciterSelectOptions = useMemo(() => {
+    return EXPANDED_RECITERS.map((r) => ({
+      value: r.id,
+      label: r.name,
+      sublabel: (r as any).riwayah || 'حفص عن عاصم',
+    }));
+  }, []);
+
+  const surahSelectOptions = useMemo(() => {
+    return ALL_SURAHS.map((s) => ({
+      value: s.number,
+      label: `${s.number}. سورة ${s.name}`,
+      badge: `${s.numberOfAyahs} آية`,
+    }));
+  }, []);
+
+  const juzSelectOptions = useMemo(() => {
+    return ALL_JUZ_METADATA.map((j) => ({
+      value: j.number,
+      label: j.name,
+      sublabel: `يبدأ من ${j.startSurah}`,
+    }));
+  }, []);
 
   // Subscribe to service
   useEffect(() => {
@@ -201,26 +226,17 @@ export const AudioDownloadManagerModal: React.FC<AudioDownloadManagerModalProps>
             <div className="space-y-5">
               {/* Reciter Selector for Download */}
               <div className="p-4 rounded-2xl bg-stone-900 border border-stone-800 space-y-2">
-                <label className="block text-xs font-bold text-stone-300">
-                  اختر القارئ والرواية المطلوب تنزيل الصوت بهما:
-                </label>
-                <div className="relative">
-                  <select
-                    value={downloadReciter.id}
-                    onChange={(e) => {
-                      const found = EXPANDED_RECITERS.find((r) => r.id === e.target.value);
-                      if (found) setDownloadReciter(found);
-                    }}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2.5 text-sm text-stone-100 appearance-none focus:outline-none focus:border-amber-500 cursor-pointer"
-                  >
-                    {EXPANDED_RECITERS.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} — {(r as any).riwayah || 'حفص عن عاصم'}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <CustomSelect<string>
+                  label="اختر القارئ والرواية المطلوب تنزيل الصوت بهما:"
+                  value={downloadReciter.id}
+                  onChange={(val) => {
+                    const found = EXPANDED_RECITERS.find((r) => r.id === val);
+                    if (found) setDownloadReciter(found);
+                  }}
+                  options={reciterSelectOptions}
+                  searchable
+                  searchPlaceholder="ابحث باسم القارئ أو الرواية..."
+                />
               </div>
 
               {/* Action 1: Single Surah */}
@@ -230,24 +246,19 @@ export const AudioDownloadManagerModal: React.FC<AudioDownloadManagerModalProps>
                   <span>١. تنزيل سورة منفردة بصيغة MP3</span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <select
+                  <div className="flex-1">
+                    <CustomSelect<number>
                       value={selectedSurahToDownload}
-                      onChange={(e) => setSelectedSurahToDownload(Number(e.target.value))}
-                      className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-stone-100 appearance-none cursor-pointer"
-                    >
-                      {ALL_SURAHS.map((s) => (
-                        <option key={s.number} value={s.number}>
-                          {s.number}. سورة {s.name} ({s.numberOfAyahs} آية)
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      onChange={(val) => setSelectedSurahToDownload(val)}
+                      options={surahSelectOptions}
+                      searchable
+                      searchPlaceholder="ابحث باسم السورة أو رقمها..."
+                    />
                   </div>
                   <button
                     type="button"
                     onClick={handleStartSingleSurah}
-                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <Download className="w-4 h-4" />
                     <span>تنزيل السورة</span>
@@ -262,24 +273,18 @@ export const AudioDownloadManagerModal: React.FC<AudioDownloadManagerModalProps>
                   <span>٢. تنزيل جزء قرآني كامل (مجموعة سور الجزء)</span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <select
+                  <div className="flex-1">
+                    <CustomSelect<number>
                       value={selectedJuzToDownload}
-                      onChange={(e) => setSelectedJuzToDownload(Number(e.target.value))}
-                      className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-sm text-stone-100 appearance-none cursor-pointer"
-                    >
-                      {ALL_JUZ_METADATA.map((j) => (
-                        <option key={j.number} value={j.number}>
-                          {j.name} (يبدأ من {j.startSurah})
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      onChange={(val) => setSelectedJuzToDownload(val)}
+                      options={juzSelectOptions}
+                      searchable={false}
+                    />
                   </div>
                   <button
                     type="button"
                     onClick={handleStartJuz}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <Download className="w-4 h-4" />
                     <span>تنزيل الجزء كاملاً</span>

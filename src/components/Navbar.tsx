@@ -20,7 +20,8 @@ import {
   Clock,
   FileJson,
   Trophy,
-  ShieldCheck
+  ShieldCheck,
+  Tv
 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { userProfileService, UserProfile } from '../services/userProfileService';
@@ -71,6 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'quran', label: 'القرآن', icon: BookOpen },
     { id: 'mushaf', label: 'المصحف الورقي', icon: BookMarked },
     { id: 'recitations', label: 'التلاوات', icon: Headphones },
+    { id: 'prayer', label: 'مواقيت الصلاة', icon: Clock },
+    { id: 'haramain', label: 'بث الحرمين', icon: Tv },
     { id: 'duas', label: 'الأدعية', icon: Heart },
     { id: 'personalDua', label: 'أدعيتي الخاصة', icon: Edit3 },
     { id: 'adhkar', label: 'الأذكار', icon: Moon },
@@ -175,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenPrayerTimes}
                 className="p-2 sm:px-2.5 sm:py-1.5 text-stone-600 dark:text-stone-300 hover:text-amber-900 dark:hover:text-amber-200 hover:bg-white/60 dark:hover:bg-stone-800/60 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-stone-200/50 dark:border-stone-700/50"
-                title="مواقيت الصلاة واتجاه القبلة"
+                title="مواقيت الصلاة اليومية"
                 aria-label="مواقيت الصلاة"
               >
                 <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />

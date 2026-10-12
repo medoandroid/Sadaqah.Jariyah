@@ -138,16 +138,22 @@ export const Footer: React.FC<FooterProps> = ({
                   صفحات الأشخاص الأربعة والدعاء لهم
                 </button>
               </li>
-              {onOpenPrayerTimes && (
-                <li>
-                  <button
-                    onClick={onOpenPrayerTimes}
-                    className="hover:text-amber-300 transition-colors cursor-pointer text-amber-400 font-medium"
-                  >
-                    مواقيت الصلاة واتجاه القبلة
-                  </button>
-                </li>
-              )}
+              <li>
+                <button
+                  onClick={() => { setActiveTab('prayer'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="hover:text-amber-300 transition-colors cursor-pointer text-amber-400 font-medium"
+                >
+                  مواقيت الصلاة اليومية (١٢ ساعة)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { setActiveTab('haramain'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="hover:text-amber-300 transition-colors cursor-pointer text-stone-300"
+                >
+                  البث المباشر للحرمين الشريفين (مكة والمدينة)
+                </button>
+              </li>
               {onOpenBackup && (
                 <li>
                   <button

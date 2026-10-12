@@ -40,6 +40,8 @@ const PaperMushafPage = lazy(() => import('./pages/PaperMushafPage').then(m => (
 const AsmaAlHusnaPage = lazy(() => import('./pages/AsmaAlHusnaPage').then(m => ({ default: m.AsmaAlHusnaPage })));
 const RuqyahPage = lazy(() => import('./pages/RuqyahPage').then(m => ({ default: m.RuqyahPage })));
 const HadithPage = lazy(() => import('./pages/HadithPage').then(m => ({ default: m.HadithPage })));
+const PrayerTimesPage = lazy(() => import('./pages/PrayerTimesPage').then(m => ({ default: m.PrayerTimesPage })));
+const HaramainLivePage = lazy(() => import('./pages/HaramainLivePage').then(m => ({ default: m.HaramainLivePage })));
 
 function PageLoadingFallback() {
   return (
@@ -277,6 +279,14 @@ function AppContent() {
             <HadithPage
               onOpenDedication={() => handleOpenDedication('all', 'dua')}
             />
+          )}
+
+          {activeTab === 'prayer' && (
+            <PrayerTimesPage />
+          )}
+
+          {activeTab === 'haramain' && (
+            <HaramainLivePage />
           )}
         </Suspense>
       </main>

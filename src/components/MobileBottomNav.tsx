@@ -15,7 +15,8 @@ import {
   Award,
   Edit3,
   Gift,
-  Moon
+  Moon,
+  Tv
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -36,10 +37,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
   ];
 
   const moreTabs = [
+    { id: 'prayer', label: 'مواقيت الصلاة', icon: Clock, desc: 'مواقيت الصلوات اليومية والعد التنازلي' },
+    { id: 'haramain', label: 'بث الحرمين الشريفين', icon: Tv, desc: 'بث مباشر حي من مكة المكرمة والمدينة المنورة' },
     { id: 'ruqyah', label: 'الرقية الشرعية', icon: ShieldCheck, desc: 'آيات وأدعية الشفاء والتحصين' },
     { id: 'hadith', label: 'الأربعون النووية', icon: BookOpen, desc: 'أحاديث نبوية جامعة مع الشرح' },
     { id: 'adhkar', label: 'أذكار المسلم', icon: Moon, desc: 'أذكار الصباح والمساء واليوم' },
-    { id: 'prayer', label: 'مواقيت الصلاة', icon: Clock, desc: 'مواقيت الصلاة وبوصلة القبلة' },
     { id: 'personalDua', label: 'أدعيتي الخاصة', icon: Edit3, desc: 'مناجاة شخصية وأدعية محفوظة' },
     { id: 'asma', label: 'أسماء الله الحسنى', icon: Sparkles, desc: '٩٩ اسماً مباركاً مع معانيها' },
     { id: 'khatmah', label: 'الختمة التشاركية', icon: Award, desc: 'ختمة قرآنية مهداة' },

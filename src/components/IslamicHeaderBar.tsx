@@ -148,12 +148,12 @@ export const IslamicHeaderBar: React.FC<{
             </button>
           )}
 
-          {/* Prayer Times & Qibla Modal Trigger with 12-Hour format */}
+          {/* Prayer Times Modal Trigger with 12-Hour format */}
           {onOpenPrayerTimes && (
             <button
               onClick={onOpenPrayerTimes}
               className="flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
-              title="مواقيت الصلاة واتجاه القبلة (نظام ١٢ ساعة)"
+              title="مواقيت الصلاة اليومية (نظام ١٢ ساعة)"
             >
               <Clock className="w-3.5 h-3.5 text-amber-400" />
               {nextPrayerPreview ? (
