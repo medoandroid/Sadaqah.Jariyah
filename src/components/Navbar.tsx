@@ -92,12 +92,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <header
         className={`max-w-7xl mx-auto pointer-events-auto rounded-3xl transition-all duration-300 relative overflow-hidden ${
           isScrolled
-            ? 'backdrop-blur-2xl bg-white/80 dark:bg-stone-900/85 border border-white/80 dark:border-amber-500/25 shadow-[0_16px_40px_-10px_rgba(217,119,6,0.18),0_4px_16px_rgba(0,0,0,0.06)]'
-            : 'backdrop-blur-xl bg-white/70 dark:bg-stone-900/75 border border-white/60 dark:border-amber-500/20 shadow-[0_10px_30px_-5px_rgba(180,120,40,0.1),0_2px_8px_rgba(0,0,0,0.04)]'
+            ? 'backdrop-blur-2xl bg-white/85 dark:bg-[#07130e]/90 border border-amber-500/25 shadow-[0_16px_40px_-10px_rgba(2,44,34,0.4),0_4px_16px_rgba(217,119,6,0.12)]'
+            : 'backdrop-blur-xl bg-white/75 dark:bg-[#07130e]/80 border border-amber-500/20 shadow-[0_10px_30px_-5px_rgba(2,44,34,0.25),0_2px_8px_rgba(217,119,6,0.06)]'
         }`}
       >
         {/* Specular Liquid Glass Top Rim Highlight */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 dark:via-amber-400/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent pointer-events-none" />
 
         <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
           
@@ -106,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-2.5 text-right group cursor-pointer focus:outline-hidden shrink-0"
           >
-            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-700/10 border border-amber-600/30 flex items-center justify-center text-amber-800 dark:text-amber-400 font-amiri text-lg sm:text-xl font-bold shadow-xs group-hover:scale-105 transition-all">
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-emerald-800 to-amber-700/80 border border-amber-500/40 flex items-center justify-center text-amber-200 font-amiri text-lg sm:text-xl font-bold shadow-md group-hover:scale-105 transition-all">
               ص
             </span>
             <div className="flex flex-col text-right">
@@ -119,8 +119,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Liquid Glass Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 p-1 rounded-2xl bg-stone-100/60 dark:bg-stone-800/50 border border-white/40 dark:border-white/5 backdrop-blur-md">
+          {/* Liquid Glass Navigation Links (Desktop with horizontal smooth scroll) */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 p-1 rounded-2xl bg-stone-100/70 dark:bg-emerald-950/30 border border-stone-200/50 dark:border-amber-500/15 backdrop-blur-md overflow-x-auto scrollbar-none max-w-[620px] xl:max-w-[720px]">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = activeTab === link.id;
@@ -128,22 +128,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={link.id}
                   onClick={() => setActiveTab(link.id)}
-                  className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 text-xs xl:text-[13px] font-medium transition-all whitespace-nowrap rounded-xl cursor-pointer group relative ${
+                  className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 text-xs xl:text-[13px] font-medium transition-all whitespace-nowrap rounded-xl cursor-pointer group relative shrink-0 ${
                     isActive
-                      ? 'text-amber-950 dark:text-amber-200 font-bold bg-white/90 dark:bg-stone-700/80 shadow-xs border border-amber-600/20 scale-102'
-                      : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-white/50 dark:hover:bg-stone-700/40'
+                      ? 'text-amber-950 dark:text-amber-200 font-bold bg-white/95 dark:bg-emerald-900/50 shadow-xs border border-amber-600/30'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-amber-100 hover:bg-white/50 dark:hover:bg-emerald-900/20'
                   }`}
                 >
                   <Icon
                     className={`w-3.5 h-3.5 transition-transform group-hover:scale-110 ${
                       isActive
                         ? 'text-amber-700 dark:text-amber-400 stroke-[2.4px]'
-                        : 'text-stone-400 dark:text-stone-500 group-hover:text-stone-700 stroke-[1.8px]'
+                        : 'text-stone-400 dark:text-stone-400 group-hover:text-stone-700 dark:group-hover:text-stone-200 stroke-[1.8px]'
                     }`}
                   />
                   <span>{link.label}</span>
                   {isActive && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent rounded-full" />
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded-full" />
                   )}
                 </button>
               );

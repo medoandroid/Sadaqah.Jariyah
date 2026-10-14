@@ -65,7 +65,7 @@ export const IslamicHeaderBar: React.FC<{
   }, []);
 
   return (
-    <div className="w-full bg-[#181614] text-stone-300 text-xs py-2 px-3 sm:px-6 border-b border-amber-950/60 transition-colors select-none">
+    <div className="w-full bg-[#03160e] text-stone-300 text-xs py-2 px-3 sm:px-6 border-b border-amber-900/35 transition-colors select-none">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
         
         {/* Date & User Greeting */}

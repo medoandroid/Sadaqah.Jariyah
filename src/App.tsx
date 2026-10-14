@@ -231,7 +231,10 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F4] dark:bg-[#12141A] text-stone-900 dark:text-stone-100 font-sans selection:bg-amber-100 selection:text-amber-950 transition-colors">
+    <div
+      data-dmda-engine="v1-enterprise"
+      className="min-h-screen flex flex-col bg-[#F8F7F4] dark:bg-[#07130e] text-stone-900 dark:text-stone-100 font-sans selection:bg-amber-100 selection:text-amber-950 transition-colors"
+    >
       
       {/* Top Date & Reminders Bar */}
       <IslamicHeaderBar

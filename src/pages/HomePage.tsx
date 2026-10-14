@@ -401,36 +401,38 @@ export const HomePage: React.FC<HomePageProps> = ({
     <div className="space-y-16 sm:space-y-24 pb-16">
       
       {/* Hero Section with Royal Islamic Arch Motif */}
-      <section className="relative overflow-hidden pt-8 pb-14 sm:pt-16 sm:pb-24 border-b border-stone-200/80 dark:border-stone-800 bg-gradient-to-b from-[#F7F4EC] via-[#F8F6F0] to-[#FAF8F3] dark:from-stone-925 dark:via-stone-900 dark:to-stone-950">
+      <section className="relative overflow-hidden pt-8 pb-14 sm:pt-16 sm:pb-24 border-b border-stone-200/80 dark:border-amber-900/25 bg-gradient-to-b from-[#FAF8F2] via-[#F5F2E9] to-[#FAF8F5] dark:from-[#03160e] dark:via-[#052317] dark:to-[#07130e]">
         
         {/* Subtle geometric watermark */}
-        <div className="absolute inset-0 opacity-[0.035] dark:opacity-[0.05] pointer-events-none flex items-center justify-center">
-          <Star8Rosette className="w-[640px] h-[640px] text-amber-950 dark:text-amber-200" />
+        <div className="absolute inset-0 opacity-[0.035] dark:opacity-[0.06] pointer-events-none flex items-center justify-center">
+          <Star8Rosette className="w-[640px] h-[640px] text-amber-950 dark:text-amber-300" />
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
-          {/* Top Live Prayer Status & Universal Search & Egyptian Companion Trigger Pills */}
+          {/* Top Live Prayer Status & Universal Search & Egyptian Companion Strip */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs">
             {prayerResult && (
               <button
                 onClick={onOpenPrayerTimes}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-900 dark:text-amber-300 font-medium hover:bg-amber-500/15 transition-all cursor-pointer shadow-xs group"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-amber-500/10 dark:bg-emerald-950/60 border border-amber-500/30 text-amber-950 dark:text-amber-300 font-medium hover:bg-amber-500/15 transition-all cursor-pointer shadow-xs group"
                 title="اضغط لعرض مواقيت الصلوات اليومية (نظام ١٢ ساعة)"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>
-                  الصلاة القادمة: <strong>{prayerResult.nextPrayer.arabicName} ({prayerResult.nextPrayer.time})</strong> (متبقي {prayerResult.nextPrayer.remainingFormatted})
+                  الصلاة القادمة: <strong className="tabular-nums">{prayerResult.nextPrayer.arabicName} ({prayerResult.nextPrayer.time})</strong>
                 </span>
-                <span className="text-[10px] text-stone-400 group-hover:text-amber-600">· المواقيت ↗</span>
+                <span className="text-stone-400 dark:text-stone-500">·</span>
+                <span className="text-[11px] text-amber-800 dark:text-amber-400 font-semibold tabular-nums">
+                  متبقي {prayerResult.nextPrayer.remainingFormatted}
+                </span>
               </button>
             )}
 
             {onOpenEgyptianCompanion && (
               <button
                 onClick={onOpenEgyptianCompanion}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-stone-100 dark:bg-stone-850 hover:bg-amber-500/10 dark:hover:bg-amber-950/30 border border-stone-200 dark:border-stone-750 hover:border-amber-500/30 text-stone-800 dark:text-stone-200 font-medium transition-all cursor-pointer shadow-xs active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white/80 dark:bg-emerald-950/40 hover:bg-amber-500/10 dark:hover:bg-emerald-900/40 border border-stone-200 dark:border-amber-500/20 text-stone-800 dark:text-amber-200 font-medium transition-all cursor-pointer shadow-xs active:scale-95"
                 title="خواطر وتذكير بالخير: كلمات تشرح الصدر وتشجعك على تلاوة القرآن"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
@@ -441,7 +443,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             {onOpenSearch && (
               <button
                 onClick={onOpenSearch}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 dark:bg-stone-850 border border-stone-200 dark:border-stone-750 text-stone-700 dark:text-stone-300 hover:border-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-all cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/80 dark:bg-emerald-950/40 border border-stone-200 dark:border-amber-500/20 text-stone-700 dark:text-stone-300 hover:border-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-all cursor-pointer shadow-xs"
               >
                 <Search className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>بحث سريع</span>
@@ -457,10 +459,10 @@ export const HomePage: React.FC<HomePageProps> = ({
             <h1 className="font-amiri text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-900 dark:text-stone-100 tracking-tight leading-[1.25]">
               صَدَقَةٌ جَارِيَة
             </h1>
-            <div className="inline-block px-4 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-amiri text-sm sm:text-lg font-bold mt-2">
+            <div className="inline-block px-4 py-1 rounded-2xl bg-amber-500/15 border border-amber-500/35 text-amber-900 dark:text-amber-300 font-amiri text-sm sm:text-lg font-bold mt-2 shadow-xs">
               عائلة الشهاوي
             </div>
-            <div className="h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-amber-700 to-transparent mx-auto mt-2" />
+            <div className="h-0.5 w-24 sm:w-36 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mt-2" />
           </div>
 
           <p className="font-amiri text-lg sm:text-2xl text-stone-700 dark:text-stone-300 max-w-3xl mx-auto leading-relaxed mb-6">
@@ -469,7 +471,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           {/* Context-Aware Time & Day Spiritual Recommendation Banner */}
           {spiritualRecommendation && (
-            <div className="max-w-2xl mx-auto p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-amber-500/10 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex items-center justify-between gap-3 text-right">
+            <div className="max-w-2xl mx-auto p-3.5 sm:p-4 rounded-2xl dmda-glass-card border border-amber-500/30 flex items-center justify-between gap-3 text-right">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0">
                   <spiritualRecommendation.icon className="w-4 h-4" />
@@ -485,7 +487,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
               <button
                 onClick={spiritualRecommendation.onClick}
-                className="px-3 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold shrink-0 transition-colors cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 rounded-xl dmda-gold-gradient text-white text-xs font-bold shrink-0 transition-all cursor-pointer shadow-xs dmda-tactile-btn"
               >
                 {spiritualRecommendation.actionText}
               </button>
@@ -501,9 +503,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onSelectPerson(person.id);
                   setActiveTab('persons');
                 }}
-                className="group relative p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/90 dark:border-stone-800 hover:border-amber-600/60 shadow-xs hover:shadow-md hover-lift transition-all duration-200 cursor-pointer text-center"
+                className="group relative p-4 sm:p-5 rounded-2xl dmda-glass-card border border-amber-600/20 hover:border-amber-600/50 cursor-pointer text-center"
               >
-                <div className="w-9 h-9 mx-auto mb-2 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-700/50 flex items-center justify-center text-amber-800 dark:text-amber-300 font-amiri font-bold text-sm group-hover:scale-105 transition-transform">
+                <div className="w-9 h-9 mx-auto mb-2 rounded-2xl bg-amber-50 dark:bg-emerald-950/60 border border-amber-200/80 dark:border-amber-600/40 flex items-center justify-center text-amber-800 dark:text-amber-300 font-amiri font-bold text-sm group-hover:scale-105 transition-transform">
                   ٠{index + 1}
                 </div>
                 <h3 className="font-amiri text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors">
@@ -524,15 +526,15 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={() => setActiveTab('quran')}
-              className="px-6 sm:px-7 py-3 rounded-2xl bg-amber-800 hover:bg-amber-900 text-white font-amiri text-lg font-bold shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+              className="px-6 sm:px-7 py-3 rounded-2xl dmda-gold-gradient dmda-tactile-btn text-white font-amiri text-lg font-bold shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
             >
-              <BookOpen className="w-5 h-5 text-amber-300" />
+              <BookOpen className="w-5 h-5 text-amber-200" />
               <span>القرآن الكريم والتلاوة</span>
             </button>
 
             <button
               onClick={() => setActiveTab('mushaf')}
-              className="px-6 sm:px-7 py-3 rounded-2xl bg-white dark:bg-stone-900 hover:bg-amber-50 dark:hover:bg-stone-800 border border-amber-700/30 text-amber-950 dark:text-amber-200 font-amiri text-lg font-bold shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+              className="px-6 sm:px-7 py-3 rounded-2xl bg-white dark:bg-emerald-950/50 hover:bg-amber-50 dark:hover:bg-emerald-900/40 border border-amber-600/30 text-amber-950 dark:text-amber-200 font-amiri text-lg font-bold shadow-xs hover:shadow-md dmda-tactile-btn cursor-pointer flex items-center gap-2"
             >
               <BookOpen className="w-5 h-5 text-amber-700 dark:text-amber-400" />
               <span>المصحف الورقي (٦٠٤ صفحة)</span>
@@ -540,7 +542,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             <button
               onClick={onOpenDedication}
-              className="px-6 sm:px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-700 to-amber-850 hover:from-amber-600 hover:to-amber-800 text-white font-amiri text-lg font-bold shadow-md hover:shadow-amber-900/20 transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+              className="px-6 sm:px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-850 via-emerald-800 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white font-amiri text-lg font-bold shadow-md dmda-tactile-btn border border-amber-500/30 cursor-pointer flex items-center gap-2"
             >
               <Sparkles className="w-5 h-5 text-amber-200" />
               <span>إهداء ثواب عمل صالح</span>
@@ -1005,6 +1007,10 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {portalCards.map((card) => {
             const Icon = card.icon;
+            const isFeaturedEmerald = card.id === 'quran';
+            const isFeaturedGold = card.id === 'owner_sadaqah';
+            const bentoSpan = isFeaturedEmerald || isFeaturedGold ? 'md:col-span-2 lg:col-span-2' : 'col-span-1';
+
             return (
               <div
                 key={card.id}
@@ -1020,29 +1026,43 @@ export const HomePage: React.FC<HomePageProps> = ({
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }
                 }}
-                className="group relative p-6 sm:p-7 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-amber-600/50 shadow-xs hover:shadow-xl hover-lift transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className={`group relative p-6 sm:p-8 rounded-3xl dmda-glass-card border cursor-pointer flex flex-col justify-between transition-all duration-300 ${bentoSpan} ${
+                  isFeaturedEmerald
+                    ? 'border-emerald-600/40 bg-gradient-to-br from-emerald-950/20 via-white/80 to-emerald-900/10 dark:from-emerald-950/50 dark:via-[#07130e]/80 dark:to-emerald-900/20'
+                    : isFeaturedGold
+                    ? 'border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-white/80 to-amber-700/10 dark:from-amber-950/40 dark:via-[#07130e]/80 dark:to-amber-900/20 shadow-[0_12px_32px_-8px_rgba(217,119,6,0.18)]'
+                    : 'border-stone-200/80 dark:border-stone-800'
+                }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-stone-800 border border-amber-200/70 dark:border-stone-700 text-amber-800 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 group-hover:bg-amber-100 dark:group-hover:bg-stone-750 transition-all">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-105 ${
+                      isFeaturedEmerald
+                        ? 'bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
+                        : isFeaturedGold
+                        ? 'bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-500/40'
+                        : 'bg-amber-50 dark:bg-emerald-950/40 border border-amber-200/70 dark:border-emerald-800/40 text-amber-800 dark:text-amber-400'
+                    }`}>
                       <Icon className="w-6 h-6 stroke-[1.8]" />
                     </div>
                     {/* Clean unboxed metadata separator */}
-                    <span className="text-xs text-stone-400 dark:text-stone-500 font-medium group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                    <span className="text-xs text-stone-400 dark:text-stone-400 font-medium group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                       {card.category}
                     </span>
                   </div>
 
-                  <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors mb-2">
+                  <h3 className={`font-amiri font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors mb-2 ${
+                    isFeaturedEmerald || isFeaturedGold ? 'text-2xl sm:text-3xl' : 'text-2xl'
+                  }`}>
                     {card.title}
                   </h3>
 
-                  <p className="font-amiri text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
+                  <p className="font-amiri text-sm sm:text-base text-stone-600 dark:text-stone-300 leading-relaxed mb-6">
                     {card.subtitle}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-800 text-xs font-semibold text-amber-800 dark:text-amber-400 group-hover:text-amber-950 dark:group-hover:text-amber-200">
+                <div className="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-800/80 text-xs font-semibold text-amber-800 dark:text-amber-400 group-hover:text-amber-950 dark:group-hover:text-amber-200">
                   <span>{card.actionText}</span>
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                 </div>

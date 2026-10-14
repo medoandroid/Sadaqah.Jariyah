@@ -245,19 +245,19 @@ export const FloatingSebhaWidget: React.FC<FloatingSebhaWidgetProps> = ({
       ) : (
         /* EXPANDED LUXURY 3D DIAL WIDGET MODE */
         <div
-          className={`${scaleStyles.cardWidth} rounded-3xl bg-stone-900/95 border border-amber-500/40 text-stone-100 shadow-2xl backdrop-blur-xl overflow-hidden flex flex-col transition-all duration-150`}
+          className={`${scaleStyles.cardWidth} rounded-3xl bg-[#03160e]/95 border border-amber-500/35 text-stone-100 shadow-[0_20px_50px_-10px_rgba(2,44,34,0.6),0_6px_20px_rgba(217,119,6,0.18)] backdrop-blur-2xl overflow-hidden flex flex-col transition-all duration-150`}
         >
           {/* Draggable Header Handle */}
           <div
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="px-3 py-2 bg-stone-950/80 border-b border-stone-800 flex items-center justify-between cursor-grab active:cursor-grabbing text-stone-400 hover:text-stone-200"
+            className="px-3 py-2 bg-[#022c22]/90 border-b border-amber-900/30 flex items-center justify-between cursor-grab active:cursor-grabbing text-stone-300 hover:text-white"
           >
-            <div className="flex items-center gap-1.5 text-[11px] text-amber-400 font-bold">
-              <Move className="w-3 h-3 text-amber-500" />
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-bold">
+              <Move className="w-3 h-3 text-amber-400" />
               <span>سبحة عائمة</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="متزامنة حياً مع السبحة الأساسية" />
+              <span className="text-[10px] text-emerald-400 font-normal">· متزامنة</span>
             </div>
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               {/* Size switch toggle */}

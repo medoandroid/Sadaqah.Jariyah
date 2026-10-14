@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenBackup,
 }) => {
   return (
-    <footer className="w-full bg-[#181614] text-stone-300 border-t border-stone-800 pt-16 pb-24 lg:pb-12 text-right transition-colors">
+    <footer className="w-full bg-[#03160e] text-stone-300 border-t border-amber-900/35 pt-16 pb-24 lg:pb-12 text-right transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Rosette Ribbon */}
@@ -180,17 +180,17 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Sincere Prayer & Deed (Col 9-12) */}
-          <div className="md:col-span-4 space-y-4 bg-stone-900/60 p-5 rounded-2xl border border-stone-800">
+          <div className="md:col-span-4 space-y-4 dmda-glass-card p-5 rounded-3xl border border-amber-500/25">
             <h4 className="text-sm font-semibold text-stone-200 flex items-center gap-2">
               <Heart className="w-4 h-4 text-amber-500" />
               <span>أثر مستمر ودعاء لا ينقطع</span>
             </h4>
-            <p className="font-amiri text-xs text-stone-400 leading-relaxed">
+            <p className="font-amiri text-xs text-stone-300 leading-relaxed">
               قال رسول الله ﷺ: «إِذَا مَاتَ الإنْسَانُ انْقَطَعَ عنْه عَمَلُهُ إِلَّا مِن ثَلَاثَةٍ: إِلَّا مِن صَدَقَةٍ جَارِيَةٍ، أَوْ عِلْمٍ يُنْتَفَعُ بِهِ، أَوْ وَلَدٍ صَالِحٍ يَدْعُو له».
             </p>
             <button
               onClick={onOpenDedication}
-              className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-amber-700/30 hover:bg-amber-700/40 border border-amber-600/40 text-amber-200 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-3 text-xs font-bold rounded-xl dmda-gold-gradient text-white shadow-xs dmda-tactile-btn transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <span>أهدِ ثواباً وقراءة الآن</span>
             </button>

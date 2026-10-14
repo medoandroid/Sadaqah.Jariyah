@@ -391,16 +391,18 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
             setIsFloatingActive(isOpen);
             showToast(isOpen ? 'تم تفعيل السبحة العائمة! ستظهر معك في جميع صفحات المنصة' : 'تم إغلاق السبحة العائمة');
           }}
-          className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer shadow-xs ${
+          className={`px-3.5 py-1.5 rounded-2xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer shadow-xs dmda-tactile-btn ${
             isFloatingActive
-              ? 'bg-amber-600 text-white border-amber-700 shadow-md'
-              : 'bg-white dark:bg-stone-900 border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-50'
+              ? 'dmda-gold-gradient text-white border-amber-600 shadow-md'
+              : 'bg-white dark:bg-emerald-950/40 border-amber-500/30 text-amber-900 dark:text-amber-300 hover:bg-amber-50'
           }`}
           title="تشغيل سبحة عائمة حرة تطفو فوق جميع الصفحات"
         >
           <Move className="w-3.5 h-3.5" />
           <span>السبحة العائمة</span>
-          <span className={`w-2 h-2 rounded-full ${isFloatingActive ? 'bg-emerald-300 animate-pulse' : 'bg-stone-400'}`} />
+          <span className="text-[10px] opacity-85 font-normal">
+            {isFloatingActive ? '· تعمل الآن' : '· تفعيل'}
+          </span>
         </button>
 
         {/* Notifications Modal Trigger */}
@@ -410,7 +412,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
             e.stopPropagation();
             setShowNotificationModal(true);
           }}
-          className="px-3.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs"
+          className="px-3.5 py-1.5 rounded-2xl border border-stone-200 dark:border-amber-500/20 bg-white dark:bg-emerald-950/40 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs dmda-tactile-btn"
           title="جدولة تنبيهات دورية للأذكار والصلاة على النبي ﷺ"
         >
           <Bell className="w-3.5 h-3.5 text-amber-500" />
@@ -425,7 +427,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
               e.stopPropagation();
               onNavigateToAdhkar();
             }}
-            className="px-3.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 rounded-2xl border border-stone-200 dark:border-amber-500/20 bg-white dark:bg-emerald-950/40 text-stone-700 dark:text-stone-300 hover:text-amber-900 hover:border-amber-400 flex items-center gap-1.5 font-semibold transition cursor-pointer shadow-xs dmda-tactile-btn"
             title="الانتقال إلى أذكار الصباح والمساء وحصن المسلم"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-500" />
@@ -436,15 +438,15 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
 
       {/* Stats Counters Bar (Total strictly starts at 0 for each user) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-lg mx-auto">
-        <div className="p-3 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xs">
+        <div className="p-3 sm:p-4 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20">
           <div className="text-[11px] text-stone-500 dark:text-stone-400">الجلسة الحالية</div>
-          <div className="font-mono text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-400 mt-0.5">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-amber-900 dark:text-amber-400 mt-0.5 tabular-nums">
             {count}
           </div>
         </div>
-        <div className="p-3 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xs">
+        <div className="p-3 sm:p-4 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20">
           <div className="text-[11px] text-stone-500 dark:text-stone-400">تسبيحات اليوم</div>
-          <div className="font-mono text-xl sm:text-2xl font-bold text-stone-800 dark:text-stone-200 mt-0.5">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-stone-800 dark:text-stone-200 mt-0.5 tabular-nums">
             {todayCount}
           </div>
         </div>
