@@ -450,7 +450,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
             {todayCount}
           </div>
         </div>
-        <div className="p-3 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xs relative group">
+        <div className="p-3 sm:p-4 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20 relative group">
           <div className="text-[11px] text-stone-500 dark:text-stone-400 flex items-center justify-center gap-1">
             <span>المجموع الإجمالي</span>
             <button
@@ -458,13 +458,13 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
                 e.stopPropagation();
                 setShowResetConfirm(true);
               }}
-              className="opacity-40 hover:opacity-100 p-0.5 text-stone-400 hover:text-red-500 transition-opacity"
+              className="opacity-40 hover:opacity-100 p-0.5 text-stone-400 hover:text-red-500 transition-opacity cursor-pointer"
               title="تصفير المجموع الإجمالي"
             >
               <Trash2 className="w-2.5 h-2.5" />
             </button>
           </div>
-          <div className="font-mono text-xl sm:text-2xl font-bold text-emerald-800 dark:text-emerald-400 mt-0.5">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-emerald-800 dark:text-emerald-400 mt-0.5 tabular-nums">
             {totalLifetimeCount}
           </div>
         </div>

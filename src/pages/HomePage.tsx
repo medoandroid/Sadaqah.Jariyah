@@ -550,10 +550,10 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Interactive Daily Wird Card (ورد اليوم المبارك) */}
-          <div className="max-w-3xl mx-auto p-5 sm:p-6 rounded-3xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/90 dark:border-stone-800 shadow-sm text-right space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-3">
+          <div className="max-w-3xl mx-auto p-5 sm:p-6 rounded-3xl dmda-glass-card border border-amber-500/25 shadow-sm text-right space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-200/60 dark:border-stone-800 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -576,7 +576,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
               <div className="text-left shrink-0">
                 <span className="text-[11px] text-stone-400 block font-mono">الإنجاز اليومي</span>
-                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {completedTasksCount} من ٤ ({tasksPercent}%)
                 </span>
               </div>
@@ -630,7 +630,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 text-right select-none ${
                       isDone
                         ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border-emerald-500/40 text-emerald-950 dark:text-emerald-200'
-                        : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200 dark:border-stone-750 hover:border-amber-400'
+                        : 'bg-stone-50/80 dark:bg-stone-800/60 border-stone-200 dark:border-stone-700 hover:border-amber-400'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -659,7 +659,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         e.stopPropagation();
                         item.onAction();
                       }}
-                      className="px-2 py-1 rounded-lg bg-stone-200/60 dark:bg-stone-700/60 hover:bg-amber-600 hover:text-white text-stone-700 dark:text-stone-300 text-[10px] font-bold shrink-0 transition-colors"
+                      className="px-2 py-1 rounded-lg bg-stone-200/60 dark:bg-stone-700/60 hover:bg-amber-600 hover:text-white text-stone-700 dark:text-stone-300 text-[10px] font-bold shrink-0 transition-colors cursor-pointer"
                     >
                       {item.actionText} ↗
                     </button>
@@ -1140,8 +1140,8 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 text-center relative z-10">
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
-              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+            <div className="p-4 sm:p-5 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20 shadow-xs hover:border-amber-500/50 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalSurahsRecited}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
@@ -1149,8 +1149,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
-              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+            <div className="p-4 sm:p-5 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20 shadow-xs hover:border-amber-500/50 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {totalTasbeehDisplay}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
@@ -1158,8 +1158,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
-              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+            <div className="p-4 sm:p-5 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20 shadow-xs hover:border-amber-500/50 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalPrayers}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
@@ -1167,8 +1167,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
 
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-stone-850 border border-stone-200/70 dark:border-stone-750 shadow-xs hover:border-amber-400/40 transition-all">
-              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-400 tabular-nums">
+            <div className="p-4 sm:p-5 rounded-2xl dmda-glass-card border border-stone-200/80 dark:border-amber-500/20 shadow-xs hover:border-amber-500/50 transition-all">
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalKhatmahs}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">

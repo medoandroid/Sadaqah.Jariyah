@@ -65,81 +65,79 @@ export const IslamicHeaderBar: React.FC<{
   }, []);
 
   return (
-    <div className="w-full bg-[#03160e] text-stone-300 text-xs py-2 px-3 sm:px-6 border-b border-amber-900/35 transition-colors select-none">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+    <div className="w-full bg-[#03160e] text-stone-200 text-xs py-2 px-3 sm:px-6 border-b border-amber-900/40 transition-colors select-none shadow-sm relative z-30">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5">
         
-        {/* Date & User Greeting */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 text-amber-400 font-semibold font-amiri text-xs sm:text-sm">
-            <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            {hijriFormatted && (
-              <>
-                <span>{hijriFormatted}</span>
-                <span className="text-stone-600">·</span>
-              </>
-            )}
-            <span className="text-stone-300 font-normal">{gregorianFormatted}</span>
+        {/* Date & User Kinship Greeting Zone */}
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-0.5">
+          <div className="flex items-center gap-2 whitespace-nowrap shrink-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 font-semibold font-amiri text-xs sm:text-[13px] shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>{hijriFormatted ? (hijriFormatted.includes('هـ') ? hijriFormatted : `${hijriFormatted} هـ`) : ''}</span>
+            </div>
+            <span className="text-emerald-500/50 select-none">·</span>
+            <span className="text-stone-300 font-medium text-xs sm:text-[12px] whitespace-nowrap">
+              {gregorianFormatted}
+            </span>
           </div>
 
-          <span className="hidden md:inline text-stone-600">|</span>
+          <span className="hidden md:inline text-stone-700">|</span>
 
-          {/* Local User Greeting & Kinship Badge Trigger */}
+          {/* Local User Greeting & Kinship Badge */}
           <button
             onClick={onOpenProfile}
-            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-stone-850 hover:bg-stone-800 border border-stone-750 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer text-[11px]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 border border-amber-500/30 text-amber-200 hover:text-amber-100 transition-all cursor-pointer text-xs shrink-0 whitespace-nowrap shadow-2xs active:scale-95"
             title="تحديد صلتك بالأعمام الكرام (صديق، قريب، فاعل خير)"
           >
-            <Heart className="w-3 h-3 text-amber-400 shrink-0" />
-            <span className="font-medium text-amber-200">
+            <Heart className="w-3 h-3 text-amber-400 shrink-0 fill-amber-400/40" />
+            <span className="font-semibold text-amber-300">
               {userProfileService.getConnectionBadge(profile)}
             </span>
             {profile.userName && (
-              <span className="text-stone-400 font-normal">({profile.userName})</span>
+              <span className="text-stone-300 font-normal truncate max-w-[75px]">({profile.userName})</span>
             )}
           </button>
         </div>
 
-        {/* Quick Direct Spiritual Actions */}
-        <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
+        {/* Quick Direct Spiritual Actions Strip */}
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 sm:gap-3 text-xs overflow-x-auto scrollbar-none py-0.5">
+          
+          {/* Prayer Times Modal Trigger with 12-Hour format */}
+          {onOpenPrayerTimes && (
+            <button
+              onClick={onOpenPrayerTimes}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-700/30 text-stone-200 hover:text-amber-200 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              title="مواقيت الصلاة اليومية (نظام ١٢ ساعة)"
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              {nextPrayerPreview ? (
+                <span>
+                  {nextPrayerPreview.arabicName} <strong className="text-amber-300 tabular-nums">{nextPrayerPreview.time}</strong>
+                </span>
+              ) : (
+                <span>مواقيت الصلاة</span>
+              )}
+            </button>
+          )}
+
+          {/* Khatmah Trigger */}
           <button
             onClick={onOpenKhatmah}
-            className="flex items-center gap-1 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
-            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
-            <span>ختمة القرآن (٣٠ جزءاً)</span>
+            <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>ختمة القرآن</span>
           </button>
 
           {/* Spiritual Reminders Trigger */}
           {onOpenEgyptianCompanion && (
             <button
               onClick={onOpenEgyptianCompanion}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-stone-850 hover:bg-stone-800 border border-stone-750 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer text-[11px] font-medium"
+              className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-700/30 text-stone-200 hover:text-amber-200 transition-all cursor-pointer text-xs whitespace-nowrap shrink-0"
               title="خواطر وتذكير بالخير: تذكير بالورد والقرآن ونصح طيب"
             >
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span className="hidden sm:inline">خواطر وتذكير بالخير</span>
-              <span className="sm:hidden">خواطر وتذكير</span>
-            </button>
-          )}
-
-          {/* Prayer Times Modal Trigger with 12-Hour format */}
-          {onOpenPrayerTimes && (
-            <button
-              onClick={onOpenPrayerTimes}
-              className="flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
-              title="مواقيت الصلاة اليومية (نظام ١٢ ساعة)"
-            >
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              {nextPrayerPreview ? (
-                <span>
-                  {nextPrayerPreview.arabicName} <strong className="text-amber-300">{nextPrayerPreview.time}</strong>
-                </span>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">مواقيت الصلاة (١٢ س)</span>
-                  <span className="sm:hidden">المواقيت</span>
-                </>
-              )}
+              <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+              <span>خواطر وتذكير</span>
             </button>
           )}
 
@@ -147,10 +145,10 @@ export const IslamicHeaderBar: React.FC<{
           {onOpenBackup && (
             <button
               onClick={onOpenBackup}
-              className="hidden lg:flex items-center gap-1 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer"
+              className="hidden xl:inline-flex items-center gap-1 text-stone-300 hover:text-amber-300 transition-colors cursor-pointer whitespace-nowrap shrink-0"
               title="النسخ الاحتياطي واستعادة البيانات"
             >
-              <FileJson className="w-3.5 h-3.5 text-amber-400" />
+              <FileJson className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>النسخ الاحتياطي</span>
             </button>
           )}
@@ -159,10 +157,10 @@ export const IslamicHeaderBar: React.FC<{
           {onOpenOfflineManager && (
             <button
               onClick={onOpenOfflineManager}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isOnline
-                  ? 'bg-stone-850 hover:bg-stone-800 border-stone-750 text-stone-300 hover:text-emerald-300'
-                  : 'bg-amber-950/80 hover:bg-amber-900 border-amber-500/50 text-amber-300'
+                  ? 'bg-emerald-950/60 hover:bg-emerald-900/70 border-emerald-700/30 text-stone-200 hover:text-emerald-300'
+                  : 'bg-amber-950/80 hover:bg-amber-900 border-amber-500/50 text-amber-300 animate-pulse'
               }`}
               title="إدارة العمل والمصحف بدون إنترنت ومزامنة البيانات"
             >
@@ -171,21 +169,21 @@ export const IslamicHeaderBar: React.FC<{
               ) : (
                 <WifiOff className="w-3 h-3 text-amber-400 shrink-0" />
               )}
-              <span>{isOnline ? (isFullyOfflineReady ? 'مصحف Offline جاهز' : 'وضع Offline') : 'بدون إنترنت'}</span>
+              <span className="hidden sm:inline">{isOnline ? (isFullyOfflineReady ? 'مصحف Offline جاهز' : 'وضع Offline') : 'بدون إنترنت'}</span>
+              <span className="sm:hidden">{isOnline ? 'Offline' : 'انقطاع'}</span>
             </button>
           )}
-
-          <span className="text-stone-700">·</span>
 
           {/* PWA Install Button */}
           <PWAInstallButton variant="badge" />
 
+          {/* Dedication Trigger */}
           <button
             onClick={onOpenDedication}
-            className="flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-xs active:scale-95"
           >
-            <Heart className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span>إهداء ثواب لروحه</span>
+            <Heart className="w-3 h-3 fill-amber-300 text-amber-300 shrink-0" />
+            <span>إهداء ثواب</span>
           </button>
         </div>
 
