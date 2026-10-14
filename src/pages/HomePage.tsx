@@ -514,7 +514,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <div className="text-xs text-amber-800/90 dark:text-amber-400/90 font-medium mt-1">
                   {person.relationTitle}
                 </div>
-                <div className="text-[11px] text-stone-400 mt-2.5 flex items-center justify-center gap-1 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                <div className="text-[11px] text-stone-600 dark:text-stone-300 font-semibold mt-2.5 flex items-center justify-center gap-1 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                   <span>دعاء خاص وإهداء</span>
                   <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
                 </div>
@@ -568,14 +568,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                  <p className="text-xs text-stone-600 dark:text-stone-300 font-medium">
                     أعمال يسيرة يومية تعمر أوقاتك بنور الذكر وإهداء الأجر للأرواح الغالية
                   </p>
                 </div>
               </div>
 
               <div className="text-left shrink-0">
-                <span className="text-[11px] text-stone-400 block font-mono">الإنجاز اليومي</span>
+                <span className="text-[11px] text-stone-600 dark:text-stone-300 block font-mono font-medium">الإنجاز اليومي</span>
                 <span className="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {completedTasksCount} من ٤ ({tasksPercent}%)
                 </span>
@@ -938,14 +938,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <h3 className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
                   محطة الذكر السريع بنقرة واحدة
                 </h3>
-                <p className="text-xs text-stone-500 dark:text-stone-400">
+                <p className="text-xs text-stone-600 dark:text-stone-300 font-medium">
                   انقر على أي ذكر ليُسجل فوراً في عداد حسناتك مع صوت تسبيح مريح
                 </p>
               </div>
             </div>
 
             <div className="text-left">
-              <span className="text-[11px] text-stone-400 block font-mono">عدادك الحالي</span>
+              <span className="text-[11px] text-stone-600 dark:text-stone-300 block font-mono font-medium">عدادك الحالي</span>
               <span className="font-mono text-lg font-bold text-emerald-700 dark:text-emerald-400">
                 {quickTasbeehCount}
               </span>
@@ -965,20 +965,20 @@ export const HomePage: React.FC<HomePageProps> = ({
               <button
                 key={idx}
                 onClick={() => handleQuickDhikr(phrase)}
-                className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/70 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-stone-200 dark:border-stone-750 hover:border-emerald-500/40 text-stone-900 dark:text-stone-100 transition-all active:scale-95 cursor-pointer text-center group"
+                className="p-3 rounded-2xl bg-white dark:bg-stone-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-stone-200/90 dark:border-stone-750 hover:border-emerald-500/40 text-stone-900 dark:text-stone-100 shadow-2xs transition-all active:scale-95 cursor-pointer text-center group"
               >
                 <span className="font-amiri text-sm font-bold group-hover:text-emerald-800 dark:group-hover:text-emerald-300 block leading-tight">
                   {phrase}
                 </span>
-                <span className="text-[10px] text-stone-400 mt-1 block">
+                <span className="text-[11px] text-stone-600 dark:text-stone-400 font-medium mt-1 block">
                   +١ تسبيحة
                 </span>
               </button>
             ))}
           </div>
 
-          <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
-            <span className="text-stone-500 dark:text-stone-400">
+          <div className="pt-2 border-t border-stone-200/80 dark:border-stone-800 flex items-center justify-between text-xs">
+            <span className="text-stone-600 dark:text-stone-300 font-medium">
               تريد سبحة تفاعلية كاملة مع أهداف وأصوات واهتزاز؟
             </span>
             <button
@@ -1046,7 +1046,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       <Icon className="w-6 h-6 stroke-[1.8]" />
                     </div>
                     {/* Clean unboxed metadata separator */}
-                    <span className="text-xs text-stone-400 dark:text-stone-400 font-medium group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                    <span className="text-xs text-stone-600 dark:text-stone-300 font-semibold group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                       {card.category}
                     </span>
                   </div>
@@ -1057,12 +1057,12 @@ export const HomePage: React.FC<HomePageProps> = ({
                     {card.title}
                   </h3>
 
-                  <p className="font-amiri text-sm sm:text-base text-stone-600 dark:text-stone-300 leading-relaxed mb-6">
+                  <p className="font-amiri text-sm sm:text-base text-stone-700 dark:text-stone-200 leading-relaxed mb-6">
                     {card.subtitle}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-800/80 text-xs font-semibold text-amber-800 dark:text-amber-400 group-hover:text-amber-950 dark:group-hover:text-amber-200">
+                <div className="flex items-center justify-between pt-4 border-t border-stone-200/80 dark:border-stone-800/80 text-xs font-bold text-amber-800 dark:text-amber-400 group-hover:text-amber-950 dark:group-hover:text-amber-200">
                   <span>{card.actionText}</span>
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                 </div>
@@ -1134,7 +1134,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <h3 className="font-amiri text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mb-1.5">
               سجل أعمالك الصالحة والتسابيح المهداة
             </h3>
-            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-medium">
               أرقام حقيقية دقيقة تبدأ من الصفر وتزداد مع كل تلاوة، تسبيحة، أو دعوة تهديها لأرواحهم الطاهرة.
             </p>
           </div>
@@ -1144,7 +1144,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalSurahsRecited}
               </div>
-              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+              <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1.5">
                 سور مقروءة ومستمعة
               </div>
             </div>
@@ -1153,7 +1153,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {totalTasbeehDisplay}
               </div>
-              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+              <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1.5">
                 تسبيحة واستغفار
               </div>
             </div>
@@ -1162,7 +1162,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalPrayers}
               </div>
-              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+              <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1.5">
                 دعوة خالصة بالرحمة
               </div>
             </div>
@@ -1171,7 +1171,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="font-mono text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                 {stats.totalKhatmahs}
               </div>
-              <div className="text-xs text-stone-600 dark:text-stone-300 font-semibold mt-1.5">
+              <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1.5">
                 ختمة وأجزاء مهداة
               </div>
             </div>

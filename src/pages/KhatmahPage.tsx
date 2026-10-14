@@ -213,7 +213,7 @@ export const KhatmahPage: React.FC<KhatmahPageProps> = ({ onOpenSurah }) => {
                           ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300'
                           : isReserved
                           ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300'
-                          : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'
+                          : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-semibold'
                       }`}
                     >
                       {isCompleted ? 'تمت القراءة' : isReserved ? 'قيد القراءة' : 'متاح للحجز'}
@@ -223,7 +223,7 @@ export const KhatmahPage: React.FC<KhatmahPageProps> = ({ onOpenSurah }) => {
                   <h4 className="font-amiri text-lg font-bold text-stone-900 dark:text-stone-100">
                     {juz.name}
                   </h4>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mb-3 truncate">
+                  <p className="text-[11px] text-stone-600 dark:text-stone-300 mb-3 truncate font-medium">
                     {juz.startSurah}
                   </p>
 

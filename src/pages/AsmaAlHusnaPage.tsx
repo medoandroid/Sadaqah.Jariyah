@@ -245,16 +245,16 @@ export const AsmaAlHusnaPage: React.FC = () => {
                   <h3 className="font-amiri text-3xl font-bold text-stone-900 dark:text-stone-100 mb-1 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors">
                     {item.name}
                   </h3>
-                  <div className="text-[11px] font-mono text-stone-400 dark:text-stone-500 mb-2">
+                  <div className="text-[11px] font-mono text-stone-600 dark:text-stone-400 mb-2 font-medium">
                     {item.transliteration}
                   </div>
 
-                  <p className="font-amiri text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-4 line-clamp-2">
+                  <p className="font-amiri text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-4 line-clamp-2 font-medium">
                     {item.meaning}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
+                <div className="pt-3 border-t border-stone-200/80 dark:border-stone-800 flex items-center justify-between">
                   <button
                     onClick={() => setSelectedName(item)}
                     className="text-xs text-amber-800 dark:text-amber-400 hover:text-amber-950 dark:hover:text-amber-200 font-bold flex items-center gap-1 cursor-pointer"
@@ -263,7 +263,7 @@ export const AsmaAlHusnaPage: React.FC = () => {
                     <span>التفاصيل والتدبر</span>
                   </button>
 
-                  <div className="flex items-center gap-1 text-stone-400 dark:text-stone-500">
+                  <div className="flex items-center gap-1 text-stone-600 dark:text-stone-400">
                     <button
                       onClick={(e) => handleSpeakName(item, e)}
                       className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-amber-800 dark:hover:text-amber-300 transition-colors cursor-pointer"

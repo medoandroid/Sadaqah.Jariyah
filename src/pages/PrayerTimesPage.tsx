@@ -240,15 +240,15 @@ export const PrayerTimesPage: React.FC = () => {
         </div>
 
         {/* Status Indicator */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
-          <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-200/80 dark:border-stone-800 text-xs">
+          <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300 font-medium">
             <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>الموقع الحالي:</span>
-            <span className="font-bold text-stone-800 dark:text-stone-200">{activeLocation.name}</span>
-            <span className="text-stone-400">({activeLocation.country})</span>
+            <span className="font-bold text-stone-900 dark:text-stone-100">{activeLocation.name}</span>
+            <span className="text-stone-600 dark:text-stone-400 font-medium">({activeLocation.country})</span>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-stone-700 dark:text-stone-300 font-medium">
             <span className={`w-2 h-2 rounded-full ${prayerTimes.source === 'api' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             <span>{prayerTimes.source === 'api' ? 'Aladhan API الحي المباشر' : 'الحساب الفلكي الشرعي المعتمد'}</span>
           </span>

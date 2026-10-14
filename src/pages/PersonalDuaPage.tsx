@@ -309,7 +309,7 @@ export const PersonalDuaPage: React.FC<PersonalDuaPageProps> = ({ onOpenDedicati
                 <p className="font-amiri text-sm sm:text-base text-stone-800 dark:text-stone-200 leading-relaxed text-justify">
                   «{p.arabic}»
                 </p>
-                <span className="text-[11px] text-stone-400 block font-sans">
+                <span className="text-[11px] text-stone-600 dark:text-stone-300 block font-sans font-medium">
                   ✨ {p.virtue}
                 </span>
               </div>

@@ -207,7 +207,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
                   </div>
                 ) : (
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                    <span className="text-[11px] text-stone-600 dark:text-stone-300 font-medium">
                       {isCompanion ? '🤝 رفيق درب' : isFamily ? '🌿 صلة قرابة' : 'رحمه الله وأسكنه الجنة'}
                     </span>
                     <button
@@ -236,8 +236,8 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
                     <h2 className="font-amiri text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
                       {person.name}
                     </h2>
-                    <div className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 mt-1">
-                      <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                    <div className="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300 font-medium mt-1">
+                      <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       <span>{person.deathDate || 'رحمه الله وأسكنه الفردوس'}</span>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
                 ١٠ أدعية جامعة
               </span>
             </h3>
-            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1">
+            <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 font-medium mt-1">
               أدعية جامعة ومباركة مهداة لأرواح عمامي الأربعة رحمهم الله جميعاً: عمي رمضان، وعمي الشهاوي، وعمي الشافعي، وعمي أحمد الشهاوي عبدالمجيد.
             </p>
           </div>
@@ -341,7 +341,7 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
                     </span>
                     <div>
                       <span className="font-semibold text-xs text-stone-900 dark:text-stone-100 block leading-tight">{msg.author}</span>
-                      <span className="text-[10px] text-stone-400 dark:text-stone-500 font-mono">دعاء جامع #{index + 1}</span>
+                      <span className="text-[10px] text-stone-600 dark:text-stone-400 font-mono font-medium">دعاء جامع #{index + 1}</span>
                     </div>
                   </div>
 
@@ -355,9 +355,9 @@ export const PersonsPage: React.FC<PersonsPageProps> = ({
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-xs border-t border-stone-100 dark:border-stone-800 pt-3 mt-2">
-                <div className="text-[11px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
+              <div className="flex items-center justify-between text-xs border-t border-stone-200/80 dark:border-stone-800 pt-3 mt-2">
+                <div className="text-[11px] text-stone-600 dark:text-stone-400 flex items-center gap-1 font-medium">
+                  <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                   <span>{formatTimestamp(msg.createdAt)}</span>
                 </div>
 

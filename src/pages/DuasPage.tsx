@@ -415,7 +415,7 @@ export const DuasPage: React.FC<DuasPageProps> = ({ onOpenDedication, onOpenProf
           {/* Sub-Filters specifically for Deceased Category */}
           {selectedCategory === 'deceased' && (
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
-              <span className="text-stone-400 font-medium">تصنيف فرعي للأموات:</span>
+              <span className="text-stone-700 dark:text-stone-300 font-bold">تصنيف فرعي للأموات:</span>
               {[
                 { id: 'all', label: 'جميع أدعية المتوفين' },
                 { id: 'parents', label: 'للوالدين المتوفين' },
@@ -499,7 +499,7 @@ export const DuasPage: React.FC<DuasPageProps> = ({ onOpenDedication, onOpenProf
                       <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-lg border border-amber-200/60 dark:border-amber-800/40">
                         {dua.categoryLabel}
                       </span>
-                      <span className="text-[11px] text-stone-400 dark:text-stone-500 truncate max-w-[200px]">
+                      <span className="text-[11px] text-stone-600 dark:text-stone-300 truncate max-w-[200px] font-medium">
                         {dua.source}
                       </span>
                     </div>
@@ -513,7 +513,7 @@ export const DuasPage: React.FC<DuasPageProps> = ({ onOpenDedication, onOpenProf
                     </p>
 
                     {dua.virtue && (
-                      <div className="text-xs text-stone-500 dark:text-stone-400 flex items-start gap-1.5 leading-relaxed pt-1">
+                      <div className="text-xs text-stone-700 dark:text-stone-300 flex items-start gap-1.5 leading-relaxed pt-1 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0 mt-1.5" />
                         <span>{dua.virtue}</span>
                       </div>

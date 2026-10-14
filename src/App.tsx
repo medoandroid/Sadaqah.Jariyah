@@ -69,8 +69,8 @@ function PageLoadingFallback() {
 }
 
 function AppContent() {
-  const { isPlayerVisible, currentSurah } = useAudio();
-  const isAudioActive = isPlayerVisible && !!currentSurah;
+  const { isPlayerVisible, currentSurah, currentRadio, currentTafsir } = useAudio();
+  const isAudioActive = isPlayerVisible && (!!currentSurah || !!currentRadio || !!currentTafsir);
 
   const [initialState] = useState(() => userStateService.getInitialState());
 
@@ -262,7 +262,7 @@ function AppContent() {
       {/* Main Body Content with Dynamic Padding when Player is Active */}
       <main
         className={`flex-1 w-full pt-2 sm:pt-4 transition-all duration-300 ${
-          isAudioActive ? 'pb-44 sm:pb-36 lg:pb-32' : 'pb-24 lg:pb-12'
+          isAudioActive ? 'pb-48 sm:pb-40 lg:pb-32' : 'pb-24 sm:pb-20 lg:pb-12'
         }`}
       >
         {activeTab === 'home' && (

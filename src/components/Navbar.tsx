@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className={`w-3.5 h-3.5 transition-transform group-hover:scale-110 ${
                         isActive
                           ? 'text-amber-700 dark:text-amber-400 stroke-[2.4px]'
-                          : 'text-stone-400 dark:text-stone-400 group-hover:text-stone-700 dark:group-hover:text-stone-200 stroke-[1.8px]'
+                          : 'text-stone-500 dark:text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 stroke-[1.8px]'
                       }`}
                     />
                     <span>{link.label}</span>
@@ -245,11 +245,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Quick Search Glass Pill */}
               <button
                 onClick={onOpenSearch}
-                className="p-2 sm:px-3 sm:py-1.5 text-stone-600 dark:text-stone-300 hover:text-amber-900 hover:bg-white/60 dark:hover:bg-stone-800/60 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-stone-200/50 dark:border-stone-700/50"
+                className="p-2 sm:px-3 sm:py-1.5 text-stone-700 dark:text-stone-200 hover:text-amber-900 hover:bg-white/60 dark:hover:bg-stone-800/60 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-stone-200/80 dark:border-stone-700/50"
                 aria-label="البحث في المنصة"
               >
-                <Search className="w-4 h-4 text-stone-500 dark:text-stone-400" />
-                <span className="hidden md:inline font-medium">بحث</span>
+                <Search className="w-4 h-4 text-stone-600 dark:text-stone-300" />
+                <span className="hidden md:inline font-semibold">بحث</span>
               </button>
 
               {/* Floating Glass Dedicate CTA */}

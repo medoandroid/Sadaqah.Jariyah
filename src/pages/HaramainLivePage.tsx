@@ -250,7 +250,7 @@ export const HaramainLivePage: React.FC = () => {
             <span className="text-2xl">🕋</span>
             <div>
               <span className="text-sm sm:text-base font-bold block">المسجد الحرام · مكة المكرمة</span>
-              <span className="text-xs text-stone-400">الكعبة المشرفة وصحن الطواف</span>
+              <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">الكعبة المشرفة وصحن الطواف</span>
             </div>
           </div>
           {selectedSanctuary === 'makkah' && (
@@ -270,7 +270,7 @@ export const HaramainLivePage: React.FC = () => {
             <span className="text-2xl">🕌</span>
             <div>
               <span className="text-sm sm:text-base font-bold block">المسجد النبوي · المدينة المنورة</span>
-              <span className="text-xs text-stone-400">الروضة الشريفة والقبة الخضراء</span>
+              <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">الروضة الشريفة والقبة الخضراء</span>
             </div>
           </div>
           {selectedSanctuary === 'madinah' && (

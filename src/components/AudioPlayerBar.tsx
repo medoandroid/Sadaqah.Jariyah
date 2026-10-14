@@ -143,21 +143,21 @@ export const AudioPlayerBar: React.FC = () => {
     <>
       {/* Floating Quranic Liquid Glass Player Island */}
       <div
-        className="fixed bottom-[4.75rem] sm:bottom-5 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[94%] sm:max-w-4xl z-50 text-stone-100 select-none animate-in slide-in-from-bottom-5 duration-300"
+        className="fixed bottom-[4.4rem] sm:bottom-4 lg:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:w-[94%] sm:max-w-3xl lg:max-w-4xl z-50 text-stone-100 select-none animate-in slide-in-from-bottom-4 duration-300"
         role="region"
         aria-label="المشغل القرآني العائم"
       >
-        <div className="relative rounded-3xl backdrop-blur-2xl bg-[#0D1016]/94 border border-amber-500/40 shadow-[0_20px_60px_-15px_rgba(217,119,6,0.22),0_8px_30px_rgba(0,0,0,0.85)] ring-1 ring-white/10 p-3 sm:p-4 flex flex-col gap-2 transition-all overflow-visible">
+        <div className="relative rounded-2xl sm:rounded-3xl backdrop-blur-2xl bg-[#09120e]/90 dark:bg-[#040e09]/92 border border-white/20 dark:border-amber-500/30 shadow-[0_16px_40px_-10px_rgba(0,0,0,0.55),0_4px_16px_rgba(217,119,6,0.14)] ring-1 ring-white/10 p-2 sm:p-2.5 sm:px-4 flex flex-col gap-1 transition-all overflow-visible">
           
-          {/* Top Liquid Glass Specular Reflection Line */}
-          <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none rounded-t-3xl" />
+          {/* Top Liquid Glass Specular Highlight Rim */}
+          <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
 
           {/* Ambient Golden Core Glow */}
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-80 h-14 bg-amber-500/20 blur-2xl pointer-events-none rounded-full" />
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-64 h-10 bg-amber-500/15 blur-xl pointer-events-none rounded-full" />
 
           {/* Feedback Toast Banner */}
           {toastMessage && (
-            <div className="absolute -top-11 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-stone-900/95 text-amber-300 text-xs font-semibold border border-amber-500/40 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 pointer-events-none z-50 flex items-center gap-1.5 whitespace-nowrap">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-stone-900/95 text-amber-300 text-xs font-semibold border border-amber-500/40 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 pointer-events-none z-50 flex items-center gap-1.5 whitespace-nowrap">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>{toastMessage}</span>
             </div>
@@ -165,141 +165,122 @@ export const AudioPlayerBar: React.FC = () => {
 
           {/* Error & Automatic Reconnection Message Alert */}
           {audioError && (
-            <div className="text-[11px] text-amber-300 bg-amber-950/80 px-3 py-1 rounded-xl border border-amber-500/30 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
+            <div className="text-[11px] text-amber-300 bg-amber-950/90 px-3 py-1 rounded-xl border border-amber-500/30 flex items-center justify-between mb-0.5">
+              <div className="flex items-center gap-1.5 min-w-0">
                 {radioConnectionState === 'reconnecting' && (
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400 shrink-0" />
                 )}
-                <span>{audioError}</span>
+                <span className="truncate">{audioError}</span>
               </div>
               <button
                 type="button"
                 onClick={togglePlay}
                 className="underline font-bold text-amber-200 hover:text-white cursor-pointer ml-2 shrink-0"
               >
-                إعادة المحاولة الآن
+                إعادة المحاولة
               </button>
             </div>
           )}
 
-          {/* ROW 1: Scrubber timeline bar OR Live Stream Header */}
+          {/* Integrated Slim Scrubber / Live Header (Height ~4px) */}
           {audioMode === 'radio' ? (
-            <div className="flex items-center justify-between px-3 py-1.5 bg-stone-900/80 rounded-2xl border border-amber-500/20 text-xs">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-2 py-0.5 text-[10px] text-amber-300/90 border-b border-amber-500/15 mb-0.5">
+              <div className="flex items-center gap-1.5">
                 {radioConnectionState === 'connecting' || radioConnectionState === 'reconnecting' ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                    <span className="text-amber-300 font-bold text-[11px]">
+                    <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                    <span className="font-bold">
                       {radioConnectionState === 'reconnecting'
-                        ? `محاولة إعادة الاتصال التلقائي (${radioRetryCount}/٣)...`
-                        : 'جاري الاتصال بالبث المباشر...'}
+                        ? `إعادة الاتصال (${radioRetryCount}/٣)...`
+                        : 'جاري الاتصال بالبث...'}
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-emerald-400 font-bold text-[11px]">بث مباشر 24/7 · صوت نقي</span>
-                    <span className="text-stone-400 text-[11px] hidden sm:inline">
-                      عبر شبكة إذاعات MP3Quran
-                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-emerald-300 font-bold">بث مباشر ٢٤/٧</span>
+                    <span className="text-stone-400 hidden sm:inline">· MP3Quran</span>
                   </>
                 )}
               </div>
-              <span className="text-[11px] text-amber-300 font-mono font-bold tracking-wider">
-                LIVE RADIO
+              <span className="font-mono text-[9px] tracking-wider text-amber-400/90 font-bold">
+                LIVE
               </span>
             </div>
           ) : (
-            <div className="space-y-1 px-1">
+            <div
+              className="w-full bg-stone-800/80 hover:bg-stone-700/80 h-1 sm:h-1.5 rounded-full cursor-pointer relative group transition-all my-0.5"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const ratio = clickX / rect.width;
+                seekTo(ratio * duration);
+              }}
+              title="شريط تقدم التلاوة"
+            >
               <div
-                className="w-full bg-stone-800/90 hover:bg-stone-700/80 h-2 sm:h-2.5 rounded-full cursor-pointer relative group transition-all"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickX = e.clientX - rect.left;
-                  const ratio = clickX / rect.width;
-                  seekTo(ratio * duration);
-                }}
+                className="h-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-300 rounded-full relative transition-all"
+                style={{ width: `${progressPercent}%` }}
               >
-                {/* Filled gradient bar */}
-                <div
-                  className="h-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-300 rounded-full relative transition-all"
-                  style={{ width: `${progressPercent}%` }}
-                >
-                  {/* Glowing Thumb */}
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white border-2 border-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] group-hover:scale-125 transition-transform" />
-                </div>
-              </div>
-
-              {/* Timestamps & Playlist Badge */}
-              <div className="flex items-center justify-between text-[11px] font-mono text-stone-400 px-0.5">
-                <span className="text-amber-300 font-semibold">{formatTime(currentTime)}</span>
-                
-                {playlistTitle && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-sans font-semibold flex items-center gap-1">
-                    <ListMusic className="w-3 h-3 text-emerald-400" />
-                    <span>قائمة: {playlistTitle}</span>
-                  </span>
-                )}
-
-                <span>{duration > 0 ? formatTime(duration) : '00:00'}</span>
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white border border-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.9)] opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           )}
 
-          {/* ROW 2: Collision-Free Responsive Controls */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4 relative">
+          {/* MAIN STREAMLINED CONTROLS ROW */}
+          <div className="flex items-center justify-between gap-1.5 sm:gap-3 relative">
             
-            {/* ZONE 1: Metadata */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[42%] sm:max-w-[34%] shrink-0">
+            {/* ZONE 1: Metadata (Surah / Reciter / Radio) */}
+            <div className="flex items-center gap-2 min-w-0 max-w-[42%] sm:max-w-[34%] shrink-0">
               
-              {/* Equalizer Visualizer */}
-              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-amber-950/70 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-xs">
+              {/* Mini Visualizer / Icon */}
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-950/70 border border-amber-500/35 flex items-center justify-center shrink-0 shadow-2xs">
                 {isPlaying ? (
-                  <div className="flex items-end gap-0.5 h-4">
-                    <span className="w-1 bg-amber-400 rounded-full animate-bounce [animation-delay:-0.3s] h-3.5" />
-                    <span className="w-1 bg-amber-300 rounded-full animate-bounce [animation-delay:-0.15s] h-4" />
-                    <span className="w-1 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.45s] h-2.5" />
+                  <div className="flex items-end gap-0.5 h-3.5">
+                    <span className="w-0.5 sm:w-1 bg-amber-400 rounded-full animate-bounce [animation-delay:-0.3s] h-3" />
+                    <span className="w-0.5 sm:w-1 bg-amber-300 rounded-full animate-bounce [animation-delay:-0.15s] h-3.5" />
+                    <span className="w-0.5 sm:w-1 bg-amber-500 rounded-full animate-bounce [animation-delay:-0.45s] h-2" />
                   </div>
                 ) : (
-                  <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                  <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
                 )}
               </div>
 
-              {/* Text metadata */}
+              {/* Text info */}
               <div className="min-w-0 text-right">
                 {audioMode === 'radio' && currentRadio ? (
                   <>
-                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                    <div className="font-amiri text-xs sm:text-sm font-bold text-white truncate leading-tight">
                       {currentRadio.name}
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-medium">
-                      <span>إذاعة إسلامية مباشرة</span>
+                    <span className="text-[10px] text-amber-300 font-medium block truncate">
+                      إذاعة إسلامية
                     </span>
                   </>
                 ) : audioMode === 'tafsir' && currentTafsir ? (
                   <>
-                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                    <div className="font-amiri text-xs sm:text-sm font-bold text-white truncate leading-tight">
                       {currentTafsir.title}
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-medium">
-                      <span>تفسير سورة {currentTafsir.surahName}</span>
+                    <span className="text-[10px] text-amber-300 font-medium block truncate">
+                      تفسير {currentTafsir.surahName}
                     </span>
                   </>
                 ) : currentSurah ? (
                   <>
-                    <div className="font-amiri text-sm sm:text-base font-bold text-white truncate leading-tight">
+                    <div className="font-amiri text-xs sm:text-sm font-bold text-white truncate leading-tight">
                       سورة {currentSurah.name}
                     </div>
 
                     <button
                       type="button"
                       onClick={() => setShowReciterModal(true)}
-                      className="mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-white transition-all cursor-pointer text-[10px] sm:text-xs truncate max-w-full"
+                      className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 hover:text-white transition-all cursor-pointer text-[10px] truncate max-w-full"
                       title="تغيير الشيخ والقارئ"
                     >
-                      <User className="w-3 h-3 text-amber-400 shrink-0" />
+                      <User className="w-2.5 h-2.5 text-amber-400 shrink-0" />
                       <span className="truncate">{currentReciter.name}</span>
-                      <ChevronDown className="w-2.5 h-2.5 opacity-70 shrink-0" />
+                      <ChevronDown className="w-2 h-2 opacity-70 shrink-0" />
                     </button>
                   </>
                 ) : null}
@@ -307,67 +288,64 @@ export const AudioPlayerBar: React.FC = () => {
 
             </div>
 
-            {/* ZONE 2: Core Playback Transport (Prev, -10s, Play/Pause, +10s, Next) */}
+            {/* ZONE 2: Transport Playback Center */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 shrink-0">
               {/* Previous Surah */}
               {audioMode === 'surah' && (
                 <button
                   type="button"
                   onClick={playPreviousSurah}
-                  className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
+                  className="p-1 sm:p-1.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer active:scale-95"
                   title="السورة السابقة"
                   aria-label="السورة السابقة"
                 >
-                  <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
 
-              {/* Rewind -10s (Desktop/Tablet) */}
+              {/* Rewind -10s (Tablet/Desktop) */}
               {audioMode !== 'radio' && (
                 <button
                   type="button"
                   onClick={handleSkipBackward}
-                  className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
+                  className="hidden md:flex p-1 sm:p-1.5 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-white/10 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-[10px] font-mono"
                   title="تراجع 10 ثوانٍ"
                   aria-label="تراجع 10 ثوانٍ"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span className="text-[9px] text-stone-400">١٠ث</span>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span className="text-[8px] text-stone-400">١٠ث</span>
                 </button>
               )}
 
-              {/* MAIN LIQUID GLASS PLAY / PAUSE BUTTON */}
+              {/* Central Luminous Play/Pause Button */}
               <button
                 type="button"
                 onClick={togglePlay}
                 disabled={isLoading && radioConnectionState !== 'reconnecting'}
-                className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 text-stone-950 flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold shrink-0 disabled:opacity-50 ring-2 ring-amber-400/50"
+                className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 text-stone-950 flex items-center justify-center shadow-md shadow-amber-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer font-bold shrink-0 disabled:opacity-50 ring-2 ring-amber-400/50"
                 title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
                 aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل الصوت'}
               >
-                {isPlaying && (
-                  <span className="absolute inset-0 rounded-2xl bg-amber-400 animate-ping opacity-20 pointer-events-none" />
-                )}
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-stone-950 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-stone-950 border-t-transparent rounded-full animate-spin" />
                 ) : isPlaying ? (
-                  <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-stone-950 stroke-stone-950" />
+                  <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-stone-950 stroke-stone-950" />
                 ) : (
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-stone-950 stroke-stone-950 ml-0.5" />
+                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-stone-950 stroke-stone-950 ml-0.5" />
                 )}
               </button>
 
-              {/* Fast Forward +10s (Desktop/Tablet) */}
+              {/* Fast Forward +10s (Tablet/Desktop) */}
               {audioMode !== 'radio' && (
                 <button
                   type="button"
                   onClick={handleSkipForward}
-                  className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-stone-800 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-xs font-mono"
+                  className="hidden md:flex p-1 sm:p-1.5 rounded-xl text-stone-300 hover:text-amber-200 hover:bg-white/10 transition-colors cursor-pointer items-center gap-0.5 active:scale-95 text-[10px] font-mono"
                   title="تقديم 10 ثوانٍ"
                   aria-label="تقديم 10 ثوانٍ"
                 >
-                  <RotateCw className="w-4 h-4" />
-                  <span className="text-[9px] text-stone-400">١٠ث</span>
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span className="text-[8px] text-stone-400">١٠ث</span>
                 </button>
               )}
 
@@ -376,38 +354,47 @@ export const AudioPlayerBar: React.FC = () => {
                 <button
                   type="button"
                   onClick={playNextSurah}
-                  className="p-1.5 sm:p-2 rounded-xl text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer active:scale-95"
+                  className="p-1 sm:p-1.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer active:scale-95"
                   title="السورة التالية"
                   aria-label="السورة التالية"
                 >
-                  <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <SkipBack className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
             </div>
 
-            {/* ZONE 3: Secondary Actions (Add to Playlist, Download, Speed, Timer, Volume, Close) */}
+            {/* ZONE 3: Time, Tools & Actions */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               
-              {/* Add Current Surah to Playlist (Desktop) */}
+              {/* Timestamps in Surah mode */}
+              {audioMode !== 'radio' && (
+                <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-stone-400 tabular-nums pl-1">
+                  <span className="text-amber-300 font-semibold">{formatTime(currentTime)}</span>
+                  <span>/</span>
+                  <span>{duration > 0 ? formatTime(duration) : '00:00'}</span>
+                </div>
+              )}
+
+              {/* Playlist button (Desktop) */}
               {audioMode === 'surah' && currentSurah && (
                 <button
                   type="button"
                   onClick={() => setShowPlaylistModal(true)}
-                  className="hidden md:flex p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-stone-800 transition-colors cursor-pointer"
-                  title="إضافة السورة الحالية إلى قائمة تشغيل"
+                  className="hidden lg:flex p-1 sm:p-1.5 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="إضافة السورة لقائمة تشغيل"
                 >
-                  <ListPlus className="w-4 h-4" />
+                  <ListPlus className="w-3.5 h-3.5" />
                 </button>
               )}
 
-              {/* Download Manager Modal Trigger (Desktop) */}
+              {/* Download Manager (Desktop) */}
               <button
                 type="button"
                 onClick={() => setShowDownloadModal(true)}
-                className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-stone-800 transition-colors cursor-pointer"
-                title="مدير التنزيلات والاستماع دون إنترنت"
+                className="hidden md:flex p-1 sm:p-1.5 rounded-xl text-stone-400 hover:text-amber-300 hover:bg-white/10 transition-colors cursor-pointer"
+                title="مدير التنزيلات أوفلاين"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5" />
               </button>
 
               {/* Mobile Extra Menu Pill */}
@@ -415,18 +402,18 @@ export const AudioPlayerBar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowMobileExtraMenu(!showMobileExtraMenu)}
-                  className={`p-1.5 rounded-xl border text-stone-300 transition-colors cursor-pointer ${
+                  className={`p-1 rounded-lg border text-stone-300 transition-colors cursor-pointer ${
                     isLooping || sleepTimerMinutes || playbackSpeed !== 1
                       ? 'bg-amber-500/25 border-amber-500/50 text-amber-300'
-                      : 'border-stone-800 hover:bg-stone-800'
+                      : 'border-stone-800 hover:bg-white/10'
                   }`}
-                  title="المزيد من خيارات التلاوة"
+                  title="خيارات إضافية"
                 >
-                  <Sliders className="w-3.5 h-3.5" />
+                  <Sliders className="w-3 h-3" />
                 </button>
 
                 {showMobileExtraMenu && (
-                  <div className="absolute bottom-full left-0 mb-3 w-52 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-2 z-50 text-right backdrop-blur-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-2 z-50 text-right backdrop-blur-2xl space-y-1.5 animate-in fade-in zoom-in-95 duration-150">
                     <div className="text-[10px] font-bold text-stone-400 px-1 border-b border-stone-800 pb-1">
                       خيارات المشغل والتلاوة
                     </div>
@@ -442,7 +429,7 @@ export const AudioPlayerBar: React.FC = () => {
                     >
                       <span className="flex items-center gap-1.5">
                         <Download className="w-3.5 h-3.5 text-amber-400" />
-                        <span>مدير التنزيلات أوفلاين</span>
+                        <span>مدير التنزيلات</span>
                       </span>
                     </button>
 
@@ -458,7 +445,7 @@ export const AudioPlayerBar: React.FC = () => {
                       >
                         <span className="flex items-center gap-1.5">
                           <ListPlus className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>إضافة السورة لقائمة</span>
+                          <span>إضافة لقائمة</span>
                         </span>
                       </button>
                     )}
@@ -468,7 +455,7 @@ export const AudioPlayerBar: React.FC = () => {
                       type="button"
                       onClick={() => {
                         toggleLoop();
-                        triggerToast(!isLooping ? 'تم تفعيل تكرار السورة' : 'تم إلغاء التكرار');
+                        triggerToast(!isLooping ? 'تم تفعيل التكرار' : 'تم إلغاء التكرار');
                       }}
                       className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs hover:bg-stone-800 text-stone-300"
                     >
@@ -476,12 +463,12 @@ export const AudioPlayerBar: React.FC = () => {
                         <Repeat className="w-3.5 h-3.5 text-amber-400" />
                         <span>تكرار السورة</span>
                       </span>
-                      {isLooping && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      {isLooping && <Check className="w-3 h-3 text-amber-400" />}
                     </button>
 
                     {/* Mobile Speed Toggle */}
                     <div className="flex items-center justify-between px-2 py-1 text-xs">
-                      <span className="text-stone-400 text-[11px]">السرعة:</span>
+                      <span className="text-stone-400 text-[10px]">السرعة:</span>
                       <div className="flex items-center gap-1">
                         {[1, 1.25, 1.5].map((spd) => (
                           <button
@@ -503,7 +490,7 @@ export const AudioPlayerBar: React.FC = () => {
 
                     {/* Mobile Sleep Timer Toggle */}
                     <div className="flex items-center justify-between px-2 py-1 text-xs">
-                      <span className="text-stone-400 text-[11px]">المؤقت:</span>
+                      <span className="text-stone-400 text-[10px]">المؤقت:</span>
                       <div className="flex items-center gap-1">
                         {[null, 15, 30].map((mins) => (
                           <button
@@ -511,7 +498,7 @@ export const AudioPlayerBar: React.FC = () => {
                             type="button"
                             onClick={() => {
                               setSleepTimer(mins);
-                              triggerToast(mins ? `مؤقت: ${mins} دقيقة` : 'إلغاء المؤقت');
+                              triggerToast(mins ? `مؤقت: ${mins}د` : 'إلغاء');
                             }}
                             className={`px-1.5 py-0.5 rounded text-[10px] ${
                               sleepTimerMinutes === mins ? 'bg-amber-600 text-white font-bold' : 'bg-stone-800 text-stone-300'
@@ -531,16 +518,16 @@ export const AudioPlayerBar: React.FC = () => {
                 type="button"
                 onClick={() => {
                   toggleLoop();
-                  triggerToast(!isLooping ? 'تم تفعيل تكرار السورة' : 'تم إلغاء التكرار');
+                  triggerToast(!isLooping ? 'تم تفعيل التكرار' : 'تم إلغاء التكرار');
                 }}
-                className={`hidden sm:flex p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
+                className={`hidden sm:flex p-1 sm:p-1.5 rounded-xl transition-all cursor-pointer ${
                   isLooping
-                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-xs'
-                    : 'text-stone-400 hover:text-white hover:bg-stone-800'
+                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-2xs'
+                    : 'text-stone-400 hover:text-white hover:bg-white/10'
                 }`}
                 title={isLooping ? 'تكرار السورة: مفعل' : 'تكرار السورة: معطل'}
               >
-                <Repeat className="w-4 h-4" />
+                <Repeat className="w-3.5 h-3.5" />
               </button>
 
               {/* Desktop Speed Menu */}
@@ -551,18 +538,18 @@ export const AudioPlayerBar: React.FC = () => {
                     setShowSpeedMenu(!showSpeedMenu);
                     setShowSleepMenu(false);
                   }}
-                  className={`flex items-center gap-0.5 px-2 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer border ${
+                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer border ${
                     playbackSpeed !== 1
-                      ? 'bg-amber-500/25 text-amber-300 border-amber-500/50 shadow-xs'
-                      : 'text-stone-400 hover:text-white border-stone-800 hover:bg-stone-800'
+                      ? 'bg-amber-500/25 text-amber-300 border-amber-500/50 shadow-2xs'
+                      : 'text-stone-400 hover:text-white border-stone-800 hover:bg-white/10'
                   }`}
-                  title="تغيير سرعة التلاوة"
+                  title="سرعة التلاوة"
                 >
                   <span>{playbackSpeed}x</span>
                 </button>
 
                 {showSpeedMenu && (
-                  <div className="absolute bottom-full left-0 mb-3 w-32 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-1.5 z-50 text-right backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute bottom-full left-0 mb-2 w-32 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-1.5 z-50 text-right backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
                     <div className="text-[10px] font-bold text-stone-400 px-2 py-0.5 border-b border-stone-800 mb-1">
                       سرعة التلاوة
                     </div>
@@ -575,7 +562,7 @@ export const AudioPlayerBar: React.FC = () => {
                           setShowSpeedMenu(false);
                           triggerToast(`سرعة التلاوة: ${spd}x`);
                         }}
-                        className={`w-full text-right px-2.5 py-1.5 rounded-xl text-xs font-mono transition-colors cursor-pointer flex items-center justify-between ${
+                        className={`w-full text-right px-2 py-1 rounded-xl text-xs font-mono transition-colors cursor-pointer flex items-center justify-between ${
                           playbackSpeed === spd
                             ? 'bg-amber-600/30 text-amber-300 font-bold border border-amber-500/30'
                             : 'text-stone-300 hover:bg-stone-800'
@@ -597,23 +584,23 @@ export const AudioPlayerBar: React.FC = () => {
                     setShowSleepMenu(!showSleepMenu);
                     setShowSpeedMenu(false);
                   }}
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer relative ${
+                  className={`p-1 sm:p-1.5 rounded-xl transition-all cursor-pointer relative ${
                     sleepTimerMinutes
-                      ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-xs'
-                      : 'text-stone-400 hover:text-white hover:bg-stone-800'
+                      ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-2xs'
+                      : 'text-stone-400 hover:text-white hover:bg-white/10'
                   }`}
                   title="مؤقت النوم"
                 >
-                  <Moon className="w-4 h-4" />
+                  <Moon className="w-3.5 h-3.5" />
                   {sleepTimerMinutes && (
-                    <span className="absolute -top-1 -right-1 text-[9px] font-mono bg-amber-500 text-stone-950 font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1 -right-1 text-[8px] font-mono bg-amber-500 text-stone-950 font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-2xs">
                       {sleepTimerMinutes}
                     </span>
                   )}
                 </button>
 
                 {showSleepMenu && (
-                  <div className="absolute bottom-full left-0 mb-3 w-40 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-1.5 z-50 text-right backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute bottom-full left-0 mb-2 w-36 bg-[#161820] border border-amber-500/40 rounded-2xl shadow-2xl p-1.5 z-50 text-right backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
                     <div className="text-[10px] font-bold text-stone-400 px-2 py-0.5 border-b border-stone-800 mb-1">
                       مؤقت النوم
                     </div>
@@ -632,7 +619,7 @@ export const AudioPlayerBar: React.FC = () => {
                           setShowSleepMenu(false);
                           triggerToast(item.val ? `مؤقت: ${item.val} دقيقة` : 'إلغاء المؤقت');
                         }}
-                        className={`w-full text-right px-2.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-between ${
+                        className={`w-full text-right px-2 py-1 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-between ${
                           sleepTimerMinutes === item.val
                             ? 'bg-amber-600/30 text-amber-300 font-bold border border-amber-500/30'
                             : 'text-stone-300 hover:bg-stone-800'
@@ -647,14 +634,14 @@ export const AudioPlayerBar: React.FC = () => {
               </div>
 
               {/* Volume Slider (Large Screens) */}
-              <div className="hidden lg:flex items-center gap-1.5 bg-stone-900/80 border border-stone-700/60 rounded-xl px-2 py-1">
+              <div className="hidden lg:flex items-center gap-1 bg-stone-900/80 border border-stone-750 rounded-xl px-1.5 py-0.5">
                 <button
                   type="button"
                   onClick={toggleMute}
                   className="text-stone-400 hover:text-white cursor-pointer"
                   title={isMuted ? 'إلغاء الكتم' : 'كتم الصوت'}
                 >
-                  {isMuted || volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  {isMuted || volume === 0 ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                 </button>
                 <input
                   type="range"
@@ -663,7 +650,7 @@ export const AudioPlayerBar: React.FC = () => {
                   step="0.05"
                   value={isMuted ? 0 : volume}
                   onChange={(e) => setVolumeLevel(parseFloat(e.target.value))}
-                  className="w-14 h-1 accent-amber-500 bg-stone-700 rounded-lg cursor-pointer"
+                  className="w-12 h-1 accent-amber-500 bg-stone-700 rounded-lg cursor-pointer"
                 />
               </div>
 
@@ -671,10 +658,10 @@ export const AudioPlayerBar: React.FC = () => {
               <button
                 type="button"
                 onClick={closePlayer}
-                className="p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-rose-300 hover:bg-stone-800 transition-colors cursor-pointer"
+                className="p-1 sm:p-1.5 rounded-xl text-stone-400 hover:text-rose-300 hover:bg-white/10 transition-colors cursor-pointer"
                 title="إغلاق المشغل القرآني"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
 
             </div>

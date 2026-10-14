@@ -202,7 +202,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
               ✦ {b}
             </span>
           ))}
-          <span className="px-3.5 py-1.5 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+          <span className="px-3.5 py-1.5 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium">
             {profile.dateCreated}
           </span>
         </div>
@@ -213,7 +213,7 @@ export const OwnerSadaqahPage: React.FC<OwnerSadaqahPageProps> = ({
             <h3 className="font-amiri text-lg font-bold text-amber-900 dark:text-amber-300">
               حبايب قلبي من عائلة الشهاوي
             </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400">
+            <p className="text-xs text-stone-700 dark:text-stone-300 font-medium">
               المنصة مهداة كمان عن أرواح عمامي الأربعة ربنا يرحمهم ويجعل قبورهم روضة من رياض الجنة: رمضان، الشهاوي، الشافعي، وأحمد.
             </p>
           </div>

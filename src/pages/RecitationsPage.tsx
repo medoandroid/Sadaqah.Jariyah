@@ -707,7 +707,7 @@ export const RecitationsPage: React.FC = () => {
                     البث المباشر للحرمين الشريفين (24/7)
                   </h2>
                 </div>
-                <p className="text-xs sm:text-sm text-stone-400">
+                <p className="text-xs sm:text-sm text-stone-200 font-medium">
                   شاهد البث الحي المباشر من المسجد الحرام بمكة المكرمة والمسجد النبوي الشريف بالمدينة المنورة
                 </p>
               </div>
@@ -733,12 +733,12 @@ export const RecitationsPage: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   <span>بث مباشر 24/7</span>
                 </span>
-                <span className="text-xs text-stone-400 font-mono">Saudi Quran TV</span>
+                <span className="text-xs text-stone-600 dark:text-stone-300 font-mono font-medium">Saudi Quran TV</span>
               </div>
               <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                 قناة القرآن الكريم (مكة المكرمة) 🕋
               </h3>
-              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+              <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-medium">
                 نقل حي ومباشر على مدار الساعة لصلوات الفريضة والتراويح والطواف حول الكعبة المشرفة وتلاوات خاشعة
               </p>
               <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-bold">
@@ -756,12 +756,12 @@ export const RecitationsPage: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   <span>بث مباشر 24/7</span>
                 </span>
-                <span className="text-xs text-stone-400 font-mono">Saudi Sunnah TV</span>
+                <span className="text-xs text-stone-600 dark:text-stone-300 font-mono font-medium">Saudi Sunnah TV</span>
               </div>
               <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                 قناة السنة النبوية (المدينة المنورة) 🕌
               </h3>
-              <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+              <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-medium">
                 نقل مباشر من الروضة الشريفة والمسجد النبوي الشريف مع الأحاديث النبوية الشريفة وشروح السنة المطهرة
               </p>
               <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-bold">

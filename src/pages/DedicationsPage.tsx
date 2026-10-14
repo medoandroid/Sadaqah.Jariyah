@@ -80,7 +80,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
           <div className="font-mono text-3xl font-bold text-amber-900 dark:text-amber-400 tabular-nums">
             {stats.totalSurahsRecited}
           </div>
-          <div className="text-xs text-stone-600 dark:text-stone-400 font-medium mt-1">
+          <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1">
             سور مقروءة ومستمعة
           </div>
         </div>
@@ -89,7 +89,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
           <div className="font-mono text-3xl font-bold text-amber-900 dark:text-amber-400 tabular-nums">
             {totalTasbeehDisplay}
           </div>
-          <div className="text-xs text-stone-600 dark:text-stone-400 font-medium mt-1">
+          <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1">
             تسبيحة واستغفار
           </div>
         </div>
@@ -98,7 +98,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
           <div className="font-mono text-3xl font-bold text-amber-900 dark:text-amber-400 tabular-nums">
             {stats.totalPrayers}
           </div>
-          <div className="text-xs text-stone-600 dark:text-stone-400 font-medium mt-1">
+          <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1">
             دعوة خالصة بالرحمة
           </div>
         </div>
@@ -107,7 +107,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
           <div className="font-mono text-3xl font-bold text-amber-900 dark:text-amber-400 tabular-nums">
             {stats.totalKhatmahs}
           </div>
-          <div className="text-xs text-stone-600 dark:text-stone-400 font-medium mt-1">
+          <div className="text-xs text-stone-700 dark:text-stone-200 font-bold mt-1">
             ختمة وأجزاء قرآنية
           </div>
         </div>
@@ -119,7 +119,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
           <h3 className="font-amiri text-2xl font-bold text-stone-900 dark:text-stone-100">
             أهدِ ثواب عمل صالح الآن
           </h3>
-          <p className="font-amiri text-sm text-stone-600 dark:text-stone-400">
+          <p className="font-amiri text-sm text-stone-700 dark:text-stone-300 font-medium">
             يمكنك إهداء ثواب قراءة سورة، أو تسبيح، أو دعاء مخلص ليصل إلى أرواحهم الكريمة فوراً.
           </p>
         </div>
@@ -138,7 +138,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
         
         {/* Person Filters */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
-          <span className="text-xs font-semibold text-stone-600 dark:text-stone-400">
+          <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
             تصفية الإهداءات حسب المتوفى:
           </span>
 
@@ -148,7 +148,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
               className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
                 filterPerson === 'all'
                   ? 'bg-amber-800 text-white font-bold'
-                  : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200'
+                  : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 font-medium'
               }`}
             >
               الجميع
@@ -160,7 +160,7 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
                 className={`px-3 py-1.5 rounded-lg text-xs font-amiri cursor-pointer transition-colors ${
                   filterPerson === p.id
                     ? 'bg-amber-800 text-white font-bold'
-                    : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200'
+                    : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 font-medium'
                 }`}
               >
                 {p.name}
@@ -209,11 +209,11 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
                 </div>
 
                 <div className="text-left shrink-0">
-                  <div className="text-[11px] text-stone-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
+                  <div className="text-[11px] text-stone-600 dark:text-stone-400 flex items-center gap-1 font-medium">
+                    <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                     <span>{formatTimestamp(item.timestamp)}</span>
                   </div>
-                  <div className="text-[11px] text-stone-500 dark:text-stone-400 font-medium mt-0.5">
+                  <div className="text-[11px] text-stone-700 dark:text-stone-300 font-semibold mt-0.5">
                     بواسطة: {item.donorName || 'مسبح كريم'}
                   </div>
                 </div>
@@ -225,12 +225,12 @@ export const DedicationsPage: React.FC<DedicationsPageProps> = ({ onOpenDedicati
       </div>
 
       {/* Islamic Scholarly Reference on Gifting Deeds */}
-      <div className="p-6 rounded-2xl bg-[#FAF9F5] dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-stone-700 dark:text-stone-300 space-y-2">
+      <div className="p-6 rounded-2xl bg-[#FAF9F5] dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-200 space-y-2">
         <h4 className="font-amiri text-lg font-bold text-amber-950 dark:text-amber-400 flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-amber-800 dark:text-amber-400" />
           <span>فضل وصول ثواب الأعمال الصالحة والدعاء للميت</span>
         </h4>
-        <p className="font-amiri text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+        <p className="font-amiri text-sm leading-relaxed text-stone-700 dark:text-stone-300 font-medium">
           أجمع علماء الأمة على انتفاع الميت بدعاء الأحياء واستغفارهم والصدقة عنه.
           وكذلك ذهب جمهور أهل السنة والجماعة إلى وصول ثواب قراءة القرآن الكريم والتسبيح إذا وهب القارئ ثوابها للميت وسأل الله أن يوصله إليه، ففضل الله واسع ورحمته تسع كل شيء.
         </p>

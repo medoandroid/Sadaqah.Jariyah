@@ -508,7 +508,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
 
         {/* Theme Picker */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-stone-400 hidden sm:inline">الخامة:</span>
+          <span className="text-[11px] text-stone-700 dark:text-stone-300 font-bold hidden sm:inline">الخامة:</span>
           {[
             { id: 'amber', label: 'كهرمان عسلي', color: 'bg-amber-600' },
             { id: 'royal_gold', label: 'ذهب ملكي', color: 'bg-amber-400' },
@@ -644,7 +644,7 @@ export const TasbeehPage: React.FC<TasbeehPageProps> = ({ onNavigateToAdhkar }) 
 
       {/* Target Presets & Custom Target Input Bar */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <span className="text-xs text-stone-400 font-medium">الهدف:</span>
+        <span className="text-xs text-stone-700 dark:text-stone-300 font-bold">الهدف:</span>
         {[33, 100, 1000, 0].map((tVal) => (
           <button
             key={tVal}
