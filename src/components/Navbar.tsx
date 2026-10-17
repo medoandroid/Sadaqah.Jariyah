@@ -217,6 +217,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                             <div className="flex items-center gap-2">
                               <Icon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                               <span>{sec.label}</span>
+                              {sec.id === 'haramain' && (
+                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
+                              )}
                             </div>
                             <span className="text-[10px] text-stone-400 font-normal">{sec.category}</span>
                           </button>
@@ -228,8 +231,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </nav>
 
-            {/* Action Zone: Audio pill, Search, and Mobile Menu Toggle */}
+            {/* Action Zone: Haramain Live Pill, Audio pill, Search, and Mobile Menu Toggle */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+              
+              {/* Haramain Live Fast Glass Pill with Glowing Red Pulse */}
+              <button
+                onClick={() => handleNavClick('haramain')}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative overflow-hidden group shadow-xs ${
+                  activeTab === 'haramain'
+                    ? 'bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/40 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
+                    : 'bg-stone-100/90 dark:bg-emerald-950/40 text-stone-700 dark:text-stone-200 border border-amber-500/25 hover:border-red-400 hover:text-red-600 dark:hover:text-red-300'
+                }`}
+                title="بث مباشر من الحرمين الشريفين على مدار الساعة"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                </span>
+                <Tv className="w-3.5 h-3.5 text-red-500" />
+                <span className="whitespace-nowrap font-medium">بث الحرمين</span>
+              </button>
+
               {/* Audio Mini Indicator if Playing */}
               {isPlaying && currentSurah && (
                 <button
@@ -394,14 +416,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <button
                           key={item.id}
                           onClick={() => handleNavClick(item.id)}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-right transition-colors ${
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-right transition-colors ${
                             isActive
                               ? 'bg-amber-600 text-white font-bold shadow-xs'
                               : 'text-stone-700 dark:text-stone-300 hover:bg-stone-200/60 dark:hover:bg-emerald-950/40'
                           }`}
                         >
-                          <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} />
-                          <span>{item.label}</span>
+                          <div className="flex items-center gap-2.5">
+                            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          {item.id === 'haramain' && (
+                            <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                              <span>مباشر 24/7</span>
+                            </span>
+                          )}
                         </button>
                       );
                     })}

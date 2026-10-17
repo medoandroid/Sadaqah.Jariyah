@@ -98,11 +98,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
                         : 'bg-stone-50 dark:bg-stone-850/60 border-stone-200/80 dark:border-stone-800 text-stone-900 dark:text-stone-200 hover:bg-amber-50/50 dark:hover:bg-emerald-950/40'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
-                        <Icon className="w-3.5 h-3.5 stroke-[2]" />
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
+                          <Icon className="w-3.5 h-3.5 stroke-[2]" />
+                        </div>
+                        <span className="text-xs font-bold leading-tight line-clamp-1">{tab.label}</span>
                       </div>
-                      <span className="text-xs font-bold leading-tight line-clamp-1">{tab.label}</span>
+                      {tab.id === 'haramain' && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold shrink-0 animate-pulse">
+                          بث حي
+                        </span>
+                      )}
                     </div>
                     <span className="text-[11px] text-stone-600 dark:text-stone-300 line-clamp-1 pr-1 font-medium">{tab.desc}</span>
                   </button>

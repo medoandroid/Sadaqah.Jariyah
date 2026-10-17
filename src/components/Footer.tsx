@@ -199,25 +199,25 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Credits & Copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-300">
           <div className="flex items-center gap-2">
-            <span>صدقة جارية - عائلة الشهاوي · جميع الحقوق محفوظة لوجه الله تعالى</span>
+            <span className="font-medium">صدقة جارية - عائلة الشهاوي · جميع الحقوق محفوظة لوجه الله تعالى</span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-stone-400 dir-ltr text-left">
-            <span className="text-stone-400 font-medium">Designed & Developed by</span>
+          <div className="flex items-center gap-1.5 text-stone-300 dir-ltr text-left">
+            <span className="text-stone-300 font-medium">Designed & Developed by</span>
             <a
               href="https://medoandroid.github.io/DevMeDoAnDrOiD/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-amber-400 hover:text-amber-300 underline underline-offset-4 decoration-amber-500/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1 group"
+              className="font-bold text-amber-400 hover:text-amber-300 underline underline-offset-4 decoration-amber-500/60 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1 group"
               title="Mohamed Ayman Portfolio"
             >
               <span>Mohamed Ayman</span>
-              <ExternalLink className="w-3 h-3 text-amber-400/70 group-hover:text-amber-300 transition-colors" />
+              <ExternalLink className="w-3 h-3 text-amber-400/80 group-hover:text-amber-300 transition-colors" />
             </a>
-            <span className="text-stone-500">&</span>
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/30 text-[10px] font-bold text-amber-300 shadow-2xs">
+            <span className="text-stone-400">&</span>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-[10px] font-bold text-amber-300 shadow-2xs">
               <Sparkles className="w-2.5 h-2.5 text-amber-400" />
               <span>AI</span>
             </span>

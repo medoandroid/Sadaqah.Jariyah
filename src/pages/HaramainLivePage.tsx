@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Tv,
   Radio,
@@ -13,48 +13,108 @@ import {
   Clock,
   ExternalLink,
   ShieldCheck,
-  Headphones
+  Headphones,
+  Sliders,
+  Check,
+  AlertTriangle,
+  RotateCcw,
+  Compass,
+  Layers,
+  ChevronRight,
+  Wifi,
+  Minimize2
 } from 'lucide-react';
 import Hls from 'hls.js';
 import { mp3QuranService } from '../services/mp3QuranService';
 import { MP3QLiveTV, MP3QRadio } from '../types/mp3quran';
 import { useAudio } from '../context/AudioContext';
+import { HARAMAIN_STREAMS, HaramainStream } from '../data/haramainStreams';
+import { calculatePrayerTimes, PrayerTimesResult } from '../utils/prayerTimes';
 
 export const HaramainLivePage: React.FC = () => {
-  const { playRadio } = useAudio();
-  const [activeMedium, setActiveMedium] = useState<'video' | 'audio'>('video');
-  const [selectedSanctuary, setSelectedSanctuary] = useState<'makkah' | 'madinah'>('makkah');
+  const { playRadio, isPlaying: isGlobalAudioPlaying, togglePlay: toggleGlobalAudio } = useAudio();
 
-  // Video TV channels from MP3Quran API
-  const [tvChannels, setTvChannels] = useState<MP3QLiveTV[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<MP3QLiveTV | null>(null);
+  // Selected Sanctuary: Makkah or Madinah
+  const [selectedSanctuary, setSelectedSanctuary] = useState<'makkah' | 'madinah'>('makkah');
+  const [activeMedium, setActiveMedium] = useState<'video' | 'audio'>('video');
+
+  // Stream source state: 0 = primary HLS, 1 = backup HLS, 2 = YouTube embed fallback
+  const [activeSourceIndex, setActiveSourceIndex] = useState<number>(0);
+  const [useYoutubeFallback, setUseYoutubeFallback] = useState<boolean>(false);
+
+  // Video player state
   const [isVideoLoading, setIsVideoLoading] = useState<boolean>(true);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(0.9);
+  const [isTheaterMode, setIsTheaterMode] = useState<boolean>(false);
+  const [isPiPActive, setIsPiPActive] = useState<boolean>(false);
+  const [reconnectCountdown, setReconnectCountdown] = useState<number | null>(null);
 
-  // Audio Radio streams from MP3Quran API
+  // Radios for audio mode
   const [radioStations, setRadioStations] = useState<MP3QRadio[]>([]);
   const [selectedRadio, setSelectedRadio] = useState<MP3QRadio | null>(null);
 
+  // Live Clock & Prayer Times at Holy Mosques
+  const [makkahTimeStr, setMakkahTimeStr] = useState<string>('');
+  const [sanctuaryPrayerTimes, setSanctuaryPrayerTimes] = useState<PrayerTimesResult | null>(null);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const playerContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Load live TV channels and radio stations from MP3Quran API
+  // Current active stream details
+  const activeStream: HaramainStream = useMemo(() => {
+    return HARAMAIN_STREAMS.find((s) => s.slug === selectedSanctuary) || HARAMAIN_STREAMS[0];
+  }, [selectedSanctuary]);
+
+  // Available stream URLs list for current sanctuary
+  const streamUrls = useMemo(() => {
+    return [activeStream.primaryStreamUrl, ...activeStream.backupStreamUrls];
+  }, [activeStream]);
+
+  // Compute live AST time (Makkah/Madinah UTC+3) and Mosque prayer times
+  useEffect(() => {
+    const updateTimes = () => {
+      const now = new Date();
+      // Format in AST (UTC+3)
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: 'Asia/Riyadh',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      };
+      setMakkahTimeStr(new Intl.DateTimeFormat('ar-SA', options).format(now));
+
+      // Calculate prayer times for active sanctuary using Umm Al-Qura (Method 4)
+      const pt = calculatePrayerTimes(
+        now,
+        activeStream.coordinates.lat,
+        activeStream.coordinates.lng,
+        3,
+        4
+      );
+      setSanctuaryPrayerTimes(pt);
+    };
+
+    updateTimes();
+    const timer = setInterval(updateTimes, 1000);
+    return () => clearInterval(timer);
+  }, [activeStream]);
+
+  // Load official radio stations from MP3Quran API
   useEffect(() => {
     let isMounted = true;
-    mp3QuranService.getLiveTV('ar').then((channels) => {
-      if (!isMounted) return;
-      setTvChannels(channels);
-      // Default to Makkah channel or first channel
-      const makkah = channels.find((c) => c.name.includes('مكة') || c.id === 3) || channels[0] || null;
-      setSelectedChannel(makkah);
-    }).catch(() => {});
-
     mp3QuranService.getRadios('ar').then((radios) => {
       if (!isMounted) return;
       setRadioStations(radios);
-      const haramRadio = radios.find((r) => r.name.includes('الحرم') || r.name.includes('مكة')) || radios[0] || null;
+      const haramRadio =
+        radios.find((r) => r.name.includes('الحرم') || r.name.includes('مكة')) ||
+        radios[0] ||
+        null;
       setSelectedRadio(haramRadio);
     }).catch(() => {});
 
@@ -63,25 +123,32 @@ export const HaramainLivePage: React.FC = () => {
     };
   }, []);
 
-  // Update selected channel when sanctuary changes
+  // When sanctuary or active source changes, reset states and reconnect
   const handleSelectSanctuary = (sanctuary: 'makkah' | 'madinah') => {
+    if (sanctuary === selectedSanctuary) return;
     setSelectedSanctuary(sanctuary);
-    if (tvChannels.length > 0) {
-      if (sanctuary === 'makkah') {
-        const found = tvChannels.find((c) => c.name.includes('مكة') || c.id === 3) || tvChannels[0];
-        setSelectedChannel(found);
-      } else {
-        const found = tvChannels.find((c) => c.name.includes('المدينة') || c.id === 4) || tvChannels[1] || tvChannels[0];
-        setSelectedChannel(found);
-      }
+    setActiveSourceIndex(0);
+    setUseYoutubeFallback(false);
+    setVideoError(null);
+    if (reconnectTimerRef.current) {
+      clearInterval(reconnectTimerRef.current);
+      setReconnectCountdown(null);
     }
   };
 
-  // Setup HLS Video player
+  // Setup and handle HLS Video stream
   useEffect(() => {
-    if (activeMedium !== 'video' || !selectedChannel || !videoRef.current) return;
+    if (activeMedium !== 'video' || useYoutubeFallback) {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      return;
+    }
 
     const video = videoRef.current;
+    if (!video) return;
+
     setVideoError(null);
     setIsVideoLoading(true);
 
@@ -90,51 +157,105 @@ export const HaramainLivePage: React.FC = () => {
       hlsRef.current = null;
     }
 
-    const streamUrl = selectedChannel.url;
+    const currentUrl = streamUrls[activeSourceIndex] || streamUrls[0];
+
+    const handleAutoRecovery = () => {
+      if (activeSourceIndex < streamUrls.length - 1) {
+        // Try next fallback stream
+        setActiveSourceIndex((prev) => prev + 1);
+      } else {
+        // Start countdown to retry
+        let count = 5;
+        setReconnectCountdown(count);
+        if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
+        reconnectTimerRef.current = setInterval(() => {
+          count -= 1;
+          if (count <= 0) {
+            if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
+            setReconnectCountdown(null);
+            setActiveSourceIndex(0);
+          } else {
+            setReconnectCountdown(count);
+          }
+        }, 1000);
+      }
+    };
 
     if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
-        backBufferLength: 60,
+        backBufferLength: 30,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingTimeOut: 10000,
+        fragLoadingTimeOut: 15000,
       });
       hlsRef.current = hls;
 
-      hls.loadSource(streamUrl);
+      hls.loadSource(currentUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsVideoLoading(false);
-        video.play().then(() => setIsVideoPlaying(true)).catch(() => setIsVideoPlaying(false));
+        setVideoError(null);
+        video
+          .play()
+          .then(() => setIsVideoPlaying(true))
+          .catch(() => {
+            // Autoplay with audio might be blocked by browsers, mute and retry
+            video.muted = true;
+            setIsMuted(true);
+            video.play().then(() => setIsVideoPlaying(true)).catch(() => setIsVideoPlaying(false));
+          });
       });
 
       hls.on(Hls.Events.ERROR, (_evt, data) => {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              setVideoError('انقطع الاتصال بالبث المباشر. جاري المحاولة الذكية تلقائياً...');
-              hls.startLoad();
+              setVideoError('انقطع الاتصال بالخادم. جاري التبديل للمصدر البديل تلقائياً...');
+              handleAutoRecovery();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              setVideoError('جاري استرجاع تدفق الفيديو...');
+              setVideoError('حدث عارض أثناء معالجة البث، جاري الاسترداد...');
               hls.recoverMediaError();
               break;
             default:
-              setVideoError('تعذر استلام البث المباشر حالياً.');
-              hls.destroy();
+              setVideoError('تعذر استقبال تدفق البث المباشر من هذا المصدر.');
+              handleAutoRecovery();
               break;
           }
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari / iOS HLS
-      video.src = streamUrl;
-      video.addEventListener('loadedmetadata', () => {
+      // iOS / Safari Native HLS
+      video.src = currentUrl;
+      const onLoaded = () => {
         setIsVideoLoading(false);
-        video.play().then(() => setIsVideoPlaying(true)).catch(() => setIsVideoPlaying(false));
-      });
+        setVideoError(null);
+        video
+          .play()
+          .then(() => setIsVideoPlaying(true))
+          .catch(() => {
+            video.muted = true;
+            setIsMuted(true);
+            video.play().then(() => setIsVideoPlaying(true)).catch(() => setIsVideoPlaying(false));
+          });
+      };
+      const onError = () => {
+        setVideoError('تعذر تحميل البث على Safari. جاري المحاولة من المصدر البديل...');
+        handleAutoRecovery();
+      };
+      video.addEventListener('loadedmetadata', onLoaded);
+      video.addEventListener('error', onError);
+
+      return () => {
+        video.removeEventListener('loadedmetadata', onLoaded);
+        video.removeEventListener('error', onError);
+      };
     } else {
-      setVideoError('المتصفح لا يدعم تنسيق بث HLS مباشرة.');
+      setVideoError('المتصفح يحتاج إلى دعم تقنية HLS، يمكنك التبديل إلى البث عبر يوتيوب أدناه.');
       setIsVideoLoading(false);
     }
 
@@ -143,9 +264,13 @@ export const HaramainLivePage: React.FC = () => {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      if (reconnectTimerRef.current) {
+        clearInterval(reconnectTimerRef.current);
+      }
     };
-  }, [selectedChannel, activeMedium]);
+  }, [activeStream, activeSourceIndex, activeMedium, useYoutubeFallback, streamUrls]);
 
+  // Video play/pause toggle
   const toggleVideoPlay = () => {
     if (!videoRef.current) return;
     if (isVideoPlaying) {
@@ -156,6 +281,7 @@ export const HaramainLivePage: React.FC = () => {
     }
   };
 
+  // Mute toggle
   const toggleMute = () => {
     if (!videoRef.current) return;
     const next = !isMuted;
@@ -163,270 +289,673 @@ export const HaramainLivePage: React.FC = () => {
     setIsMuted(next);
   };
 
-  const handleFullscreen = () => {
+  // Volume slider change
+  const handleVolumeChange = (newVol: number) => {
     if (!videoRef.current) return;
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen();
+    setVolume(newVol);
+    videoRef.current.volume = newVol;
+    if (newVol > 0 && isMuted) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
     }
   };
 
-  const handleRetryVideo = () => {
-    if (selectedChannel) {
-      const cur = selectedChannel;
-      setSelectedChannel(null);
-      setTimeout(() => setSelectedChannel(cur), 50);
+  // Picture in picture support
+  const handleTogglePiP = async () => {
+    if (!videoRef.current) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+      } else if (document.pictureInPictureEnabled && videoRef.current.requestPictureInPicture) {
+        await videoRef.current.requestPictureInPicture();
+        setIsPiPActive(true);
+      }
+    } catch {
+      // Ignored
     }
   };
 
-  // Play audio radio in global audio bar
-  const handlePlayAudioRadio = (radio: MP3QRadio) => {
-    setSelectedRadio(radio);
-    playRadio(radio);
+  // Fullscreen support
+  const handleFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // Force manual retry
+  const handleManualRetry = () => {
+    setVideoError(null);
+    setIsVideoLoading(true);
+    if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
+    setReconnectCountdown(null);
+    // Cycle source
+    setActiveSourceIndex((prev) => (prev + 1) % streamUrls.length);
+  };
+
+  // Switch to Audio Radio in Global Audio Player
+  const handlePlayAudioInGlobalBar = (radioItem?: MP3QRadio) => {
+    const targetRadio: MP3QRadio = radioItem || {
+      id: activeStream.id + 100,
+      name: activeStream.audioRadioName,
+      url: activeStream.audioStreamUrl,
+    };
+    setSelectedRadio(targetRadio);
+    // Pause video to avoid sound collision
+    if (videoRef.current && isVideoPlaying) {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+    playRadio(targetRadio);
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-6 text-right animate-in fade-in duration-200" dir="rtl">
-      
-      {/* Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-700 via-stone-900 to-black text-white p-6 sm:p-8 shadow-xl border border-amber-600/30">
+    <div
+      className={`mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-6 text-right transition-all duration-300 ${
+        isTheaterMode ? 'max-w-7xl' : 'max-w-5xl'
+      }`}
+      dir="rtl"
+    >
+      {/* 1. Header Banner & Identity with 3D Liquid Glass Glow */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1a14] via-[#091510] to-[#040a08] text-white p-5 sm:p-7 shadow-[0_16px_40px_-10px_rgba(2,44,34,0.4),0_4px_16px_rgba(217,119,6,0.12)] border border-amber-500/30">
+        {/* Specular top rim */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none rounded-t-3xl" />
+        
+        {/* Ambient radial glow */}
+        <div
+          className={`absolute -top-12 -left-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none ${
+            selectedSanctuary === 'makkah' ? 'bg-amber-500' : 'bg-emerald-500'
+          }`}
+        />
+
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
           <div className="space-y-2 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
-                <Tv className="w-5 h-5" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-inner">
+                <Tv className="w-5 h-5 text-amber-300" />
               </span>
-              <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/35 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
                 <span>بث حي ومباشر على مدار الساعة</span>
               </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-semibold">
+                ١٠٨٠p Full HD
+              </span>
             </div>
-            <h1 className="font-amiri text-3xl sm:text-4xl font-bold tracking-tight text-white">
-              البث المباشر للحرمين الشريفين
+
+            <h1 className="font-amiri text-2xl sm:text-4xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <span>البث المباشر للحرمين الشريفين</span>
+              <span className="text-xl sm:text-2xl">
+                {selectedSanctuary === 'makkah' ? '🕋' : '🕌'}
+              </span>
             </h1>
+
             <p className="text-stone-300 text-xs sm:text-sm font-sans leading-relaxed">
-              مشاهدة حية واستماع صوتي مباشر من المسجد الحرام بمكة المكرمة والمسجد النبوي الشريف بالمدينة المنورة عبر المصادر الرسمية.
+              مشاهدة مرئية عالية الدقة واستماع صوتي نقي مباشرة من رحاب الكعبة المشرفة والمسجد النبوي الشريف عبر القنوات السعودية الرسمية.
             </p>
           </div>
 
-          {/* Mode Switcher: Video vs Audio */}
-          <div className="flex items-center p-1.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
+          {/* Mode Switcher: Video Broadcast vs Audio Radio */}
+          <div className="flex items-center p-1.5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/15 shadow-inner shrink-0">
             <button
-              onClick={() => setActiveMedium('video')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              onClick={() => {
+                setActiveMedium('video');
+                setUseYoutubeFallback(false);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeMedium === 'video'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-stone-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-stone-950 shadow-md shadow-amber-500/20 font-bold'
+                  : 'text-stone-300 hover:text-white hover:bg-white/5'
               }`}
             >
               <Tv className="w-4 h-4" />
-              <span>بث مرئي (فيديو)</span>
+              <span>مشاهدة البث المرئي</span>
             </button>
             <button
               onClick={() => setActiveMedium('audio')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeMedium === 'audio'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-stone-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-stone-950 shadow-md shadow-amber-500/20 font-bold'
+                  : 'text-stone-300 hover:text-white hover:bg-white/5'
               }`}
             >
               <Headphones className="w-4 h-4" />
-              <span>استماع صوتي (إذاعة)</span>
+              <span>استماع صوتي مباشر</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sanctuary Switcher: Makkah vs Madinah */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => handleSelectSanctuary('makkah')}
-          className={`p-4 rounded-2xl border transition-all text-right flex items-center justify-between cursor-pointer ${
-            selectedSanctuary === 'makkah'
-              ? 'bg-amber-500/15 dark:bg-amber-950/40 border-amber-500 text-amber-950 dark:text-amber-200 font-bold shadow-md'
-              : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🕋</span>
-            <div>
-              <span className="text-sm sm:text-base font-bold block">المسجد الحرام · مكة المكرمة</span>
-              <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">الكعبة المشرفة وصحن الطواف</span>
-            </div>
-          </div>
-          {selectedSanctuary === 'makkah' && (
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          )}
-        </button>
-
-        <button
-          onClick={() => handleSelectSanctuary('madinah')}
-          className={`p-4 rounded-2xl border transition-all text-right flex items-center justify-between cursor-pointer ${
-            selectedSanctuary === 'madinah'
-              ? 'bg-amber-500/15 dark:bg-amber-950/40 border-amber-500 text-amber-950 dark:text-amber-200 font-bold shadow-md'
-              : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🕌</span>
-            <div>
-              <span className="text-sm sm:text-base font-bold block">المسجد النبوي · المدينة المنورة</span>
-              <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">الروضة الشريفة والقبة الخضراء</span>
-            </div>
-          </div>
-          {selectedSanctuary === 'madinah' && (
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          )}
-        </button>
-      </div>
-
-      {/* Main Content: Video Stream */}
-      {activeMedium === 'video' && (
-        <div className="rounded-3xl bg-stone-950 border border-stone-800 overflow-hidden shadow-2xl space-y-0">
-          
-          {/* Channels Selection Bar */}
-          <div className="p-3 bg-stone-900 border-b border-stone-800 flex items-center gap-2 overflow-x-auto">
-            <span className="text-xs text-stone-400 font-bold ml-2 shrink-0">القنوات المتاحة:</span>
-            {tvChannels.map((c) => {
-              const isSelected = selectedChannel?.id === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedChannel(c)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                    isSelected
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-stone-800 text-stone-300 hover:bg-stone-750 border border-stone-700'
-                  }`}
-                >
-                  <Radio className="w-3.5 h-3.5" />
-                  <span>{c.name}</span>
-                  {isSelected && <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Video Player Display */}
-          <div className="relative aspect-video bg-black w-full overflow-hidden flex items-center justify-center group">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-contain"
-              playsInline
-              muted={isMuted}
-            />
-
-            {/* Loading Indicator */}
-            {isVideoLoading && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-amber-300 z-10 backdrop-blur-2xs">
-                <RefreshCw className="w-8 h-8 animate-spin text-amber-400" />
-                <span className="text-xs font-bold font-sans">جاري الاتصال بالبث المباشر...</span>
-              </div>
-            )}
-
-            {/* Error Overlay with Retry */}
-            {videoError && (
-              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 text-white z-10 p-6 text-center">
-                <p className="text-xs sm:text-sm text-red-300 max-w-md">{videoError}</p>
-                <button
-                  onClick={handleRetryVideo}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer shadow-md"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>إعادة محاولة الاتصال</span>
-                </button>
-              </div>
-            )}
-
-            {/* Controls Overlay Bar */}
-            <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white z-20 opacity-90 group-hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleVideoPlay}
-                  className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
-                  title={isVideoPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-                >
-                  {isVideoPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </button>
-
-                <button
-                  onClick={toggleMute}
-                  className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
-                  title={isMuted ? 'إلغاء كتم الصوت' : 'كتم الصوت'}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-
-                <div className="flex items-center gap-2 text-xs font-bold text-stone-200">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span>{selectedChannel?.name || 'البث المباشر'}</span>
+      {/* 2. Fast Mosque Switcher with 3D Depth & Pulse (Makkah vs Madinah) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {HARAMAIN_STREAMS.map((sanctuary) => {
+          const isSelected = selectedSanctuary === sanctuary.slug;
+          const isMakkah = sanctuary.slug === 'makkah';
+          return (
+            <button
+              key={sanctuary.slug}
+              onClick={() => handleSelectSanctuary(sanctuary.slug)}
+              className={`p-4 sm:p-5 rounded-3xl border transition-all text-right flex items-center justify-between cursor-pointer relative overflow-hidden group ${
+                isSelected
+                  ? 'bg-gradient-to-br from-amber-500/15 via-white dark:via-[#091510] to-amber-500/5 dark:to-[#07130e] border-amber-500 text-stone-900 dark:text-amber-100 shadow-[0_10px_25px_-5px_rgba(217,119,6,0.18)] ring-1 ring-amber-500/30'
+                  : 'bg-white/80 dark:bg-[#07130e]/80 border-stone-200/80 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-400/50 hover:bg-white dark:hover:bg-[#091812]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <span className="text-3xl sm:text-4xl filter drop-shadow-md group-hover:scale-110 transition-transform">
+                  {isMakkah ? '🕋' : '🕌'}
+                </span>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-amiri text-base sm:text-lg font-bold block text-stone-950 dark:text-white">
+                      {sanctuary.shortName}
+                    </span>
+                    {isSelected && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>نشط الآن</span>
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-stone-600 dark:text-stone-300 block font-medium">
+                    {sanctuary.mosqueTitle}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handleRetryVideo}
-                  className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
-                  title="تحديث البث"
+                <span
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
+                    isSelected
+                      ? 'bg-amber-500 text-stone-950 shadow-sm'
+                      : 'bg-stone-100 dark:bg-stone-800 text-stone-400 group-hover:text-amber-600'
+                  }`}
                 >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
+                  <ChevronRight className="w-4 h-4 rotate-180" />
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. Sanctuary Live Timing & Next Prayer Bar (Real-time Umm Al-Qura) */}
+      <div className="rounded-2xl p-3.5 sm:p-4 bg-white/70 dark:bg-[#07130e]/70 backdrop-blur-xl border border-stone-200/80 dark:border-amber-500/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-stone-800 dark:text-stone-200 font-semibold">
+            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>التوقيت المحلي في {activeStream.city}:</span>
+            <span className="font-mono font-bold text-amber-700 dark:text-amber-300 text-sm px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20" dir="ltr">
+              {makkahTimeStr || '...'}
+            </span>
+          </div>
+
+          {sanctuaryPrayerTimes && (
+            <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+              <span className="text-stone-300 dark:text-stone-600 hidden sm:inline">|</span>
+              <span className="font-medium">
+                الصلاة القادمة بالحرم: <strong className="text-amber-700 dark:text-amber-300">{sanctuaryPrayerTimes.nextPrayer.arabicName}</strong> ({sanctuaryPrayerTimes.nextPrayer.time})
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-mono text-[11px] font-bold">
+                {sanctuaryPrayerTimes.nextPrayer.remainingFormatted}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Stream source badge */}
+        <div className="flex items-center gap-2 text-[11px] text-stone-600 dark:text-stone-300">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>المصدر: خادم البث الفضائي الرسمي المعتمد</span>
+        </div>
+      </div>
+
+      {/* 4. MAIN CINEMA VIDEO PLAYER */}
+      {activeMedium === 'video' && (
+        <div
+          ref={playerContainerRef}
+          className={`relative rounded-3xl bg-black overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.65)] border border-stone-800 transition-all duration-300 ${
+            isTheaterMode ? 'ring-2 ring-amber-500/40' : ''
+          }`}
+        >
+          {/* Ambient Glow behind player */}
+          <div
+            className={`absolute -inset-4 blur-3xl opacity-25 pointer-events-none transition-colors duration-500 ${
+              selectedSanctuary === 'makkah' ? 'bg-amber-500' : 'bg-emerald-500'
+            }`}
+          />
+
+          {/* Player Top Bar (Live Status & Channel Switcher) */}
+          <div className="relative z-10 px-4 py-3 bg-gradient-to-b from-stone-950/95 via-stone-950/80 to-transparent flex flex-wrap items-center justify-between gap-2 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-xl bg-red-600 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                <span>مباشر LIVE</span>
+              </span>
+              <span className="font-amiri text-sm sm:text-base font-bold text-white pr-1">
+                {activeStream.name}
+              </span>
+            </div>
+
+            {/* Source switcher buttons */}
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-[11px] text-stone-400 ml-1 hidden sm:inline">جودة ومصدر البث:</span>
+              
+              <button
+                onClick={() => {
+                  setUseYoutubeFallback(false);
+                  setActiveSourceIndex(0);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  !useYoutubeFallback && activeSourceIndex === 0
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-stone-800/80 text-stone-300 hover:bg-stone-700'
+                }`}
+                title="المصدر الفضائي المباشر الرئيسي"
+              >
+                رئيسي HLS
+              </button>
+
+              <button
+                onClick={() => {
+                  setUseYoutubeFallback(false);
+                  setActiveSourceIndex(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  !useYoutubeFallback && activeSourceIndex === 1
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-stone-800/80 text-stone-300 hover:bg-stone-700'
+                }`}
+                title="الخادم الاحتياطي الأول"
+              >
+                احتياطي
+              </button>
+
+              <button
+                onClick={() => setUseYoutubeFallback(true)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  useYoutubeFallback
+                    ? 'bg-red-600 text-white shadow-xs'
+                    : 'bg-stone-800/80 text-stone-300 hover:bg-stone-700'
+                }`}
+                title="المشغل البديل عبر يوتيوب الرسمي"
+              >
+                <span>يوتيوب الرسمي</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Video Display Zone (Aspect 16:9) */}
+          <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center group select-none">
+            {useYoutubeFallback ? (
+              /* YouTube Official Live Embed Fallback */
+              <div className="w-full h-full relative">
+                <iframe
+                  src={activeStream.youtubeEmbedUrl || `https://www.youtube-nocookie.com/embed/live_stream?channel=UC_0sPkWv9LdIvh-2r9jT_9A`}
+                  title={activeStream.name}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              /* High Performance HLS Video */
+              <>
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-contain bg-black cursor-pointer"
+                  playsInline
+                  muted={isMuted}
+                  onClick={toggleVideoPlay}
+                />
+
+                {/* Loading State Overlay */}
+                {isVideoLoading && !videoError && (
+                  <div className="absolute inset-0 bg-black/75 backdrop-blur-2xs flex flex-col items-center justify-center gap-3 text-amber-300 z-20">
+                    <div className="relative">
+                      <RefreshCw className="w-10 h-10 animate-spin text-amber-400" />
+                      <span className="absolute inset-0 flex items-center justify-center text-xs">🕋</span>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <span className="text-sm font-bold font-sans block text-white">
+                        جاري الاتصال بالبث المباشر لـ {activeStream.shortName}...
+                      </span>
+                      <span className="text-xs text-amber-300/80">
+                        استقبال التدفق الفضائي المعتمد عالي الدقة
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Intelligent Error & Recovery Overlay */}
+                {videoError && (
+                  <div className="absolute inset-0 bg-stone-950/90 backdrop-blur-md flex flex-col items-center justify-center gap-4 text-white z-20 p-6 text-center animate-in fade-in duration-200">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+
+                    <div className="space-y-1.5 max-w-md">
+                      <h3 className="font-amiri text-lg font-bold text-amber-300">
+                        تنبيه استقرار تدفق البث
+                      </h3>
+                      <p className="text-xs text-stone-300 leading-relaxed font-sans">
+                        {videoError}
+                      </p>
+                      {reconnectCountdown !== null && (
+                        <p className="text-xs text-amber-400 font-bold">
+                          إعادة الاتصال التلقائي خلال {reconnectCountdown} ثوانٍ...
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                      <button
+                        onClick={handleManualRetry}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer shadow-md transition-all active:scale-95"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>إعادة الاتصال الآن</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setVideoError(null);
+                          setActiveSourceIndex((prev) => (prev + 1) % streamUrls.length);
+                        }}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs cursor-pointer border border-stone-700"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-amber-400" />
+                        <span>تجربة سيرفر بديل</span>
+                      </button>
+
+                      <button
+                        onClick={() => setUseYoutubeFallback(true)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs cursor-pointer"
+                      >
+                        <Tv className="w-3.5 h-3.5" />
+                        <span>البث عبر يوتيوب</span>
+                      </button>
+
+                      <button
+                        onClick={() => handlePlayAudioInGlobalBar()}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs cursor-pointer"
+                      >
+                        <Headphones className="w-3.5 h-3.5" />
+                        <span>التحويل للصوت فقط</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Control Bar Overlay (Liquid Glass Bottom Bar) */}
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex items-center justify-between text-white z-20 opacity-90 group-hover:opacity-100 transition-opacity">
+                  {/* Left Controls: Play, Volume, Sanctuary title */}
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                      onClick={toggleVideoPlay}
+                      className="p-2 sm:p-2.5 rounded-xl bg-white/20 hover:bg-amber-500 hover:text-stone-950 text-white transition-all cursor-pointer shadow-md active:scale-95"
+                      title={isVideoPlaying ? 'إيقاف مؤقت' : 'تشغيل البث'}
+                      aria-label="تشغيل أو إيقاف"
+                    >
+                      {isVideoPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                    </button>
+
+                    {/* Volume Mute & Slider */}
+                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2 py-1 rounded-xl">
+                      <button
+                        onClick={toggleMute}
+                        className="p-1 rounded-lg text-stone-300 hover:text-white transition cursor-pointer"
+                        title={isMuted ? 'إلغاء كتم الصوت' : 'كتم الصوت'}
+                      >
+                        {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                        className="w-14 sm:w-20 accent-amber-500 h-1 rounded-lg bg-stone-700 cursor-pointer hidden xs:block"
+                        title="مستوى الصوت"
+                      />
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-stone-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>{activeStream.shortName}</span>
+                    </div>
+                  </div>
+
+                  {/* Right Controls: Retry, PiP, Theater, Fullscreen */}
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <button
+                      onClick={handleManualRetry}
+                      className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
+                      title="تحديث وتنشيط البث"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+
+                    {document.pictureInPictureEnabled && (
+                      <button
+                        onClick={handleTogglePiP}
+                        className={`p-2 rounded-xl transition cursor-pointer ${
+                          isPiPActive ? 'bg-amber-600 text-white' : 'bg-white/15 hover:bg-white/25 text-white'
+                        }`}
+                        title="نافذة عائمة (Picture in Picture)"
+                      >
+                        <Layers className="w-4 h-4" />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setIsTheaterMode(!isTheaterMode)}
+                      className={`p-2 rounded-xl transition cursor-pointer hidden sm:block ${
+                        isTheaterMode ? 'bg-amber-600 text-white' : 'bg-white/15 hover:bg-white/25 text-white'
+                      }`}
+                      title={isTheaterMode ? 'الخروج من وضع السينما' : 'وضع السينما الموسع'}
+                    >
+                      {isTheaterMode ? <Minimize2 className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
+                    </button>
+
+                    <button
+                      onClick={handleFullscreen}
+                      className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition cursor-pointer"
+                      title="ملء الشاشة الكاملة"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. Direct Audio Stream & Islamic Radio Mode */}
+      {activeMedium === 'audio' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Audio Mode Hero */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/15 via-white dark:via-[#091510] to-emerald-500/10 border border-amber-500/30 text-right space-y-3 shadow-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 block">
+                  إذاعة البث المباشر الرسمية
+                </span>
+                <h3 className="font-amiri text-xl font-bold text-stone-900 dark:text-white">
+                  {activeStream.audioRadioName}
+                </h3>
+                <p className="text-xs text-stone-600 dark:text-stone-300 font-sans">
+                  استماع صوتي نقي ومستمر على مدار الساعة يعمل بسلاسة في الخلفية أثناء قراءة المصحف أو تصفح الأذكار.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handlePlayAudioInGlobalBar()}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0 active:scale-95"
+              >
+                <Play className="w-4 h-4 fill-stone-950" />
+                <span>تشغيل إذاعة الحرم الآن</span>
+              </button>
+            </div>
+          </div>
+
+          {/* List of Haramain & Holy Radios */}
+          <div className="space-y-2">
+            <h4 className="font-amiri text-base font-bold text-stone-900 dark:text-stone-100 pr-1">
+              إذاعات الحرمين الشريفين والقرآن الكريم المعتمدة:
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Primary Mosque Radio Card */}
+              <div
+                className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                  selectedRadio?.name === activeStream.audioRadioName
+                    ? 'bg-amber-500/15 dark:bg-amber-950/40 border-amber-500 shadow-md ring-1 ring-amber-500/30'
+                    : 'bg-white dark:bg-[#07130e] border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                    <Radio className="w-5 h-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 block truncate">
+                      {activeStream.audioRadioName}
+                    </span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+                      بث مباشر مستمر 24/7
+                    </span>
+                  </div>
+                </div>
 
                 <button
-                  onClick={handleFullscreen}
-                  className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
-                  title="ملء الشاشة"
+                  onClick={() => handlePlayAudioInGlobalBar()}
+                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5 active:scale-95"
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>استماع</span>
                 </button>
               </div>
+
+              {/* Other MP3Quran Radios */}
+              {radioStations.slice(0, 8).map((radio) => {
+                const isSelected = selectedRadio?.id === radio.id;
+                return (
+                  <div
+                    key={radio.id}
+                    className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? 'bg-amber-500/15 dark:bg-amber-950/40 border-amber-500 shadow-md ring-1 ring-amber-500/30'
+                        : 'bg-white dark:bg-[#07130e] border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-10 h-10 rounded-2xl bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 flex items-center justify-center shrink-0">
+                        <Radio className="w-4 h-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 block truncate">
+                          {radio.name}
+                        </span>
+                        <span className="text-[10px] text-stone-600 dark:text-stone-300 block font-medium">إذاعة قرآنية MP3</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePlayAudioInGlobalBar(radio)}
+                      className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-amber-600 hover:text-white text-stone-700 dark:text-stone-300 font-bold text-xs transition cursor-pointer shrink-0 flex items-center gap-1.5"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>تشغيل</span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
-      {/* Audio Radios Section */}
-      {activeMedium === 'audio' && (
-        <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 flex items-center justify-between text-xs">
-            <span className="text-stone-700 dark:text-stone-300 font-medium">
-              الاستماع المباشر لبث الحرمين الشريفين وإذاعات القرآن الكريم:
-            </span>
-            <span className="text-amber-700 dark:text-amber-400 font-bold">
-              يعمل في الخلفية مع مشغل الصوت العائم 🎵
-            </span>
+      {/* 6. Sanctuary Spiritual Virtues & Landmarks Details */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Spiritual Hadith Card */}
+        <div className="md:col-span-2 rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-amber-500/10 via-white dark:via-[#07130e] to-stone-50 dark:to-[#040e09] border border-amber-500/25 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <Sparkles className="w-4 h-4" />
+            <span className="font-bold text-xs">فضل الصلاة في {activeStream.shortName}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {radioStations.slice(0, 12).map((radio) => {
-              const isSelected = selectedRadio?.id === radio.id;
+          <blockquote className="font-amiri text-base sm:text-lg font-bold text-stone-900 dark:text-amber-100 leading-relaxed border-r-2 border-amber-500 pr-3">
+            {activeStream.spiritualVirtue}
+          </blockquote>
+
+          <p className="text-xs text-stone-600 dark:text-stone-300 font-sans leading-relaxed">
+            {activeStream.description}
+          </p>
+        </div>
+
+        {/* Landmarks Card */}
+        <div className="rounded-3xl p-5 sm:p-6 bg-white dark:bg-[#07130e] border border-stone-200/80 dark:border-stone-800 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+            <MapPin className="w-4 h-4" />
+            <span>معالم {activeStream.city} المباركة</span>
+          </div>
+
+          <ul className="space-y-2 text-xs text-stone-700 dark:text-stone-300 font-medium">
+            {activeStream.landmarks.map((landmark, idx) => (
+              <li key={idx} className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span>{landmark}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* 7. Mosque Prayer Times Table */}
+      {sanctuaryPrayerTimes && (
+        <div className="rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#07130e]/80 backdrop-blur-xl border border-stone-200/80 dark:border-amber-500/20 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-stone-200/60 dark:border-stone-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="font-amiri text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100">
+                مواقيت الصلاة اليوم في {activeStream.shortName} (تقويم أم القرى)
+              </span>
+            </div>
+            <span className="text-[11px] text-stone-600 dark:text-stone-300 font-medium">توقيت مكة المكرمة (UTC+3)</span>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+            {[
+              { name: 'الفجر', time: sanctuaryPrayerTimes.fajr, id: 'fajr' },
+              { name: 'الشروق', time: sanctuaryPrayerTimes.sunrise, id: 'sunrise' },
+              { name: 'الظهر', time: sanctuaryPrayerTimes.dhuhr, id: 'dhuhr' },
+              { name: 'العصر', time: sanctuaryPrayerTimes.asr, id: 'asr' },
+              { name: 'المغرب', time: sanctuaryPrayerTimes.maghrib, id: 'maghrib' },
+              { name: 'العشاء', time: sanctuaryPrayerTimes.isha, id: 'isha' },
+            ].map((p) => {
+              const isNext = sanctuaryPrayerTimes.nextPrayer.id === p.id;
               return (
                 <div
-                  key={radio.id}
-                  className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'bg-amber-500/15 dark:bg-amber-950/40 border-amber-500 shadow-md'
-                      : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                  key={p.id}
+                  className={`p-2.5 rounded-2xl border transition-all ${
+                    isNext
+                      ? 'bg-amber-500/15 border-amber-500/50 shadow-xs ring-1 ring-amber-500/30'
+                      : 'bg-stone-50 dark:bg-stone-900/50 border-stone-200/60 dark:border-stone-800'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                      <Radio className="w-4 h-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <span className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 block truncate">
-                        {radio.name}
-                      </span>
-                      <span className="text-[10px] text-stone-400 block">بث مباشر MP3</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handlePlayAudioRadio(radio)}
-                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition cursor-pointer shrink-0 flex items-center gap-1.5"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>استماع</span>
-                  </button>
+                  <span className={`text-[11px] font-bold block ${isNext ? 'text-amber-700 dark:text-amber-300' : 'text-stone-600 dark:text-stone-300'}`}>
+                    {p.name}
+                  </span>
+                  <span className={`text-xs sm:text-sm font-mono font-bold mt-0.5 block ${isNext ? 'text-amber-800 dark:text-amber-200' : 'text-stone-900 dark:text-stone-100'}`}>
+                    {p.time}
+                  </span>
                 </div>
               );
             })}
@@ -434,12 +963,13 @@ export const HaramainLivePage: React.FC = () => {
         </div>
       )}
 
-      {/* Footer Info */}
-      <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400 text-center flex items-center justify-center gap-2">
-        <Sparkles className="w-4 h-4 text-amber-600" />
-        <span>البث موصول بالخوادم الرسمية المعتمدة عبر MP3Quran.net لخدمة المسلمين حول العالم</span>
+      {/* 8. Trust & Reliability Footnote */}
+      <div className="p-4 rounded-2xl bg-stone-100/70 dark:bg-stone-900/60 border border-stone-200/80 dark:border-stone-800 text-xs text-stone-700 dark:text-stone-300 text-center flex flex-wrap items-center justify-center gap-2">
+        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <span className="font-medium">
+          هذا البث موصول بالخوادم الفضائية المعتمدة لقناتي القرآن الكريم والسنة النبوية بإشراف هيئة الإذاعة والتلفزيون بالمملكة العربية السعودية لخدمة المسلمين في كل مكان.
+        </span>
       </div>
-
     </div>
   );
 };
