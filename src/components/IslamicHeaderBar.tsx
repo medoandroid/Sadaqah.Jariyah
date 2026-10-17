@@ -73,7 +73,7 @@ export const IslamicHeaderBar: React.FC<{
           <div className="flex items-center gap-2 whitespace-nowrap shrink-0">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 font-semibold font-amiri text-xs sm:text-[13px] shadow-2xs">
               <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>{hijriFormatted ? (hijriFormatted.includes('هـ') ? hijriFormatted : `${hijriFormatted} هـ`) : ''}</span>
+              <span>{prayerData.hijriDate?.fullFormatted || (hijriFormatted ? (hijriFormatted.includes('هـ') ? hijriFormatted : `${hijriFormatted} هـ`) : 'التقويم الهجري')}</span>
             </div>
             <span className="text-emerald-500/50 select-none">·</span>
             <span className="text-stone-300 font-medium text-xs sm:text-[12px] whitespace-nowrap">
@@ -102,17 +102,19 @@ export const IslamicHeaderBar: React.FC<{
         {/* Quick Direct Spiritual Actions Strip */}
         <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 sm:gap-3 text-xs overflow-x-auto scrollbar-none py-0.5">
           
-          {/* Prayer Times Modal Trigger with 12-Hour format */}
+          {/* Prayer Times Modal Trigger with 12-Hour format & countdown */}
           {onOpenPrayerTimes && (
             <button
               onClick={onOpenPrayerTimes}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-700/30 text-stone-200 hover:text-amber-200 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-600/40 text-stone-200 hover:text-amber-200 transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs group"
               title="مواقيت الصلاة اليومية (نظام ١٢ ساعة)"
             >
-              <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
               {nextPrayerPreview ? (
-                <span>
-                  {nextPrayerPreview.arabicName} <strong className="text-amber-300 tabular-nums">{nextPrayerPreview.time}</strong>
+                <span className="flex items-center gap-1">
+                  <span>{nextPrayerPreview.arabicName}</span>
+                  <strong className="text-amber-300 tabular-nums">{nextPrayerPreview.time}</strong>
+                  <span className="text-emerald-400/90 text-[10px] hidden sm:inline">· {nextPrayerPreview.remainingFormatted}</span>
                 </span>
               ) : (
                 <span>مواقيت الصلاة</span>

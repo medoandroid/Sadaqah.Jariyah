@@ -361,11 +361,11 @@ export const HomePage: React.FC<HomePageProps> = ({
     },
     {
       id: 'prayer',
-      title: 'مواقيت الصلاة والقبلة',
-      subtitle: 'حساب فلكي دقيق لمواقيت الصلاة اليومية مع عداد تنازلي وبوصلة مباشرة لاتجاه الكعبة المشرفة.',
+      title: 'مواقيت الصلاة والأذان والقبلة',
+      subtitle: 'مواقيت شرعية حية ومباشرة من AlAdhan API مع الأذان بأصوات كبار المؤذنين، وتحديد دقيق للموقع واتجاه القبلة.',
       icon: Clock,
-      category: 'شعائر وفلك',
-      actionText: 'عرض المواقيت والقبلة',
+      category: 'شعائر وأذان',
+      actionText: 'عرض المواقيت وسماع الأذان',
       highlightColor: 'from-amber-600/10 to-amber-700/5',
     },
     {

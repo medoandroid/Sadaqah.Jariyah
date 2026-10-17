@@ -25,7 +25,8 @@ import {
   Film,
   Clock,
   ExternalLink,
-  ChevronLeft
+  ChevronLeft,
+  Repeat
 } from 'lucide-react';
 import { ALL_SURAHS } from '../data/quranMeta';
 import { EXPANDED_RECITERS, RIWAYAT, getSurahAudioUrl } from '../data/reciters';
@@ -67,6 +68,12 @@ export const RecitationsPage: React.FC = () => {
     setReciter,
     lastListeningSession,
     resumeLastSession,
+    addToQueue,
+    listeningQueue,
+    clearQueue,
+    removeFromQueue,
+    repeatMode,
+    cycleRepeatMode,
   } = useAudio();
 
   // Active Hub Tab
@@ -85,7 +92,7 @@ export const RecitationsPage: React.FC = () => {
     EXPANDED_RECITERS.find((r) => r.id === currentReciter?.id) || EXPANDED_RECITERS[0]
   );
   const [surahSearch, setSurahSearch] = useState('');
-  const [surahFilterType, setSurahFilterType] = useState<'all' | 'favorites' | 'meccan' | 'medinan'>('all');
+  const [surahFilterType, setSurahFilterType] = useState<'all' | 'favorites' | 'downloaded' | 'meccan' | 'medinan'>('all');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [showReciterGrid, setShowReciterGrid] = useState<boolean>(false);
   const [playlistUpdateTick, setPlaylistUpdateTick] = useState<number>(0);
@@ -142,6 +149,8 @@ export const RecitationsPage: React.FC = () => {
     let list = ALL_SURAHS;
     if (surahFilterType === 'favorites') {
       list = list.filter((s) => customPlaylistsService.isFavoriteSurah(s.number));
+    } else if (surahFilterType === 'downloaded') {
+      list = list.filter((s) => audioDownloadService.isSurahDownloaded(s.number, selectedReciter.id));
     } else if (surahFilterType === 'meccan') {
       list = list.filter((s) => s.revelationType === 'Meccan');
     } else if (surahFilterType === 'medinan') {
@@ -485,7 +494,7 @@ export const RecitationsPage: React.FC = () => {
                 <span>سور القرآن الكريم كاملة بصوت {selectedReciter.name} ({selectedReciter.riwayah})</span>
               </div>
 
-              {/* Filter Pills and Search */}
+              {/* Filter Pills, Repeat Mode and Search */}
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-850 p-1 rounded-xl border border-stone-200 dark:border-stone-800 text-[11px] font-semibold">
                   <button
@@ -513,6 +522,18 @@ export const RecitationsPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setSurahFilterType('downloaded')}
+                    className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                      surahFilterType === 'downloaded'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Download className="w-3 h-3 text-emerald-500" />
+                    <span>المحفوظة أوفلاين</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setSurahFilterType('meccan')}
                     className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                       surahFilterType === 'meccan'
@@ -535,7 +556,36 @@ export const RecitationsPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="w-full sm:w-56">
+                {/* Repeat Mode Cycle Pill */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    cycleRepeatMode();
+                    const labels: Record<string, string> = {
+                      continuous: 'متتابع تلقائياً 🔁',
+                      'repeat-one': 'تكرار السورة 🔂',
+                      'repeat-all': 'تكرار الكل 🔁',
+                      shuffle: 'عشوائي 🔀'
+                    };
+                    const nextModes: Record<string, string> = {
+                      continuous: 'repeat-one',
+                      'repeat-one': 'repeat-all',
+                      'repeat-all': 'shuffle',
+                      shuffle: 'continuous'
+                    };
+                    const nextM = nextModes[repeatMode] || 'continuous';
+                    showToast(`نمط التشغيل: ${labels[nextM] || labels.continuous}`);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-stone-850 hover:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-500/25 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="تغيير نمط التشغيل المتتابع"
+                >
+                  <Repeat className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>
+                    {repeatMode === 'repeat-one' ? 'تكرار السورة 🔂' : repeatMode === 'repeat-all' ? 'تكرار الكل 🔁' : repeatMode === 'shuffle' ? 'عشوائي 🔀' : 'متتابع تلقائياً 🔁'}
+                  </span>
+                </button>
+
+                <div className="w-full sm:w-52">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
                     <input
@@ -558,6 +608,51 @@ export const RecitationsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Listening Queue Active Banner */}
+            {listeningQueue.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-emerald-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center font-bold">
+                    <ListMusic className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <span className="font-bold text-stone-900 dark:text-amber-200 block">
+                      طابور الاستماع المتتابع ({listeningQueue.length} سور مجدولة)
+                    </span>
+                    <span className="text-[11px] text-stone-600 dark:text-stone-300">
+                      السور التالية: {listeningQueue.slice(0, 3).map((n) => ALL_SURAHS.find(s => s.number === n)?.name).join('، ')} {listeningQueue.length > 3 ? 'وغيرها...' : ''}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstInQueue = listeningQueue[0];
+                      playSurah(firstInQueue, selectedReciter);
+                      showToast(`جاري تشغيل طابور الاستماع`);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow-xs"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>تشغيل الطابور</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearQueue();
+                      showToast('تم إفراغ طابور الاستماع');
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl text-stone-600 dark:text-stone-300 hover:bg-white/40 dark:hover:bg-stone-800 transition cursor-pointer"
+                  >
+                    مسح
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Surahs Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -641,6 +736,19 @@ export const RecitationsPage: React.FC = () => {
                           title={isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
                         >
                           <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                        </button>
+
+                        {/* Add to Sequential Queue button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addToQueue(surah.number);
+                            showToast(`تمت إضافة سورة ${surah.name} إلى طابور الاستماع المتتابع 🎧`);
+                          }}
+                          className="p-1.5 sm:p-2 rounded-xl text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                          title="تشغيل تالياً (إضافة لطابور الاستماع المتتابع)"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
                         </button>
 
                         {/* Add to Playlist button */}

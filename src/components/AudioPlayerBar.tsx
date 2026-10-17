@@ -11,6 +11,7 @@ import {
   X,
   Radio,
   Repeat,
+  Shuffle,
   Moon,
   Sparkles,
   User,
@@ -21,10 +22,12 @@ import {
   Download,
   ListPlus,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { EXPANDED_RECITERS } from '../data/reciters';
+import { ALL_SURAHS } from '../data/quranMeta';
 import { ReciterSelectModal } from './ReciterSelectModal';
 import { AudioDownloadManagerModal } from './AudioDownloadManagerModal';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
@@ -46,6 +49,8 @@ export const AudioPlayerBar: React.FC = () => {
     audioError,
     playbackSpeed,
     isLooping,
+    repeatMode,
+    listeningQueue,
     sleepTimerMinutes,
     playlistTitle,
     radioConnectionState,
@@ -57,6 +62,9 @@ export const AudioPlayerBar: React.FC = () => {
     setReciter,
     setPlaybackSpeed,
     toggleLoop,
+    cycleRepeatMode,
+    clearQueue,
+    removeFromQueue,
     setSleepTimer,
     playNextSurah,
     playPreviousSurah,
@@ -69,6 +77,7 @@ export const AudioPlayerBar: React.FC = () => {
   const [showMobileExtraMenu, setShowMobileExtraMenu] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showQueueModal, setShowQueueModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const speedMenuRef = useRef<HTMLDivElement>(null);
@@ -513,22 +522,55 @@ export const AudioPlayerBar: React.FC = () => {
                 )}
               </div>
 
-              {/* Desktop Repeat Toggle */}
+              {/* Desktop Multi-Repeat Mode Toggle (Continuous / Repeat 1 / Repeat All / Shuffle) */}
               <button
                 type="button"
                 onClick={() => {
-                  toggleLoop();
-                  triggerToast(!isLooping ? 'تم تفعيل التكرار' : 'تم إلغاء التكرار');
+                  cycleRepeatMode();
+                  const labels: Record<string, string> = {
+                    continuous: 'التشغيل المتتابع التلقائي 🔁',
+                    'repeat-one': 'تكرار السورة الحالية 🔂',
+                    'repeat-all': 'تكرار القائمة بالكامل 🔁',
+                    shuffle: 'التشغيل العشوائي 🔀'
+                  };
+                  const nextModes: Record<string, string> = {
+                    continuous: 'repeat-one',
+                    'repeat-one': 'repeat-all',
+                    'repeat-all': 'shuffle',
+                    shuffle: 'continuous'
+                  };
+                  const nextM = nextModes[repeatMode] || 'continuous';
+                  triggerToast(`نمط التشغيل: ${labels[nextM] || labels.continuous}`);
                 }}
-                className={`hidden sm:flex p-1 sm:p-1.5 rounded-xl transition-all cursor-pointer ${
-                  isLooping
+                className={`hidden sm:flex items-center gap-1 p-1 sm:p-1.5 rounded-xl transition-all cursor-pointer relative ${
+                  repeatMode !== 'continuous'
                     ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-2xs'
                     : 'text-stone-400 hover:text-white hover:bg-white/10'
                 }`}
-                title={isLooping ? 'تكرار السورة: مفعل' : 'تكرار السورة: معطل'}
+                title={`نمط التشغيل: ${repeatMode === 'repeat-one' ? 'تكرار السورة' : repeatMode === 'repeat-all' ? 'تكرار الكل' : repeatMode === 'shuffle' ? 'عشوائي' : 'متتابع تلقائياً'}`}
               >
-                <Repeat className="w-3.5 h-3.5" />
+                {repeatMode === 'shuffle' ? (
+                  <Shuffle className="w-3.5 h-3.5 text-amber-400" />
+                ) : (
+                  <Repeat className="w-3.5 h-3.5" />
+                )}
+                {repeatMode === 'repeat-one' && (
+                  <span className="text-[8px] font-bold font-mono text-amber-300 -mr-0.5">1</span>
+                )}
               </button>
+
+              {/* Listening Queue Indicator Button */}
+              {listeningQueue.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowQueueModal(true)}
+                  className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="عرض طابور الاستماع المتتابع"
+                >
+                  <ListMusic className="w-3.5 h-3.5" />
+                  <span>{listeningQueue.length}</span>
+                </button>
+              )}
 
               {/* Desktop Speed Menu */}
               <div className="relative hidden sm:block" ref={speedMenuRef}>
@@ -670,6 +712,93 @@ export const AudioPlayerBar: React.FC = () => {
 
         </div>
       </div>
+
+      {/* LISTENING QUEUE MODAL */}
+      {showQueueModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShowQueueModal(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[#121614] border border-amber-500/30 rounded-3xl p-5 shadow-2xl text-right space-y-4 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                  <ListMusic className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="font-amiri text-base font-bold text-white">طابور الاستماع المتتابع</h3>
+                  <span className="text-[10px] text-stone-400">السور المجدولة للتشغيل تلقائياً بالتتابع</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {listeningQueue.length > 0 && (
+                  <button
+                    onClick={() => {
+                      clearQueue();
+                      triggerToast('تم مسح طابور الاستماع');
+                    }}
+                    className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 text-xs flex items-center gap-1 cursor-pointer transition"
+                    title="مسح الكل"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>مسح</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowQueueModal(false)}
+                  className="p-1.5 rounded-xl text-stone-400 hover:text-white bg-stone-850 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {listeningQueue.length === 0 ? (
+              <div className="py-8 text-center text-stone-500 text-xs">
+                لا توجد سور في طابور الانتظار حالياً. أضف سوراً من صفحة التلاوات!
+              </div>
+            ) : (
+              <div className="max-h-64 overflow-y-auto space-y-2 p-0.5">
+                {listeningQueue.map((sNum, index) => {
+                  const s = ALL_SURAHS.find((item) => item.number === sNum);
+                  return (
+                    <div
+                      key={`${sNum}_${index}`}
+                      className="p-2.5 rounded-2xl bg-stone-900 border border-stone-800 flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-400 font-mono text-xs flex items-center justify-center font-bold">
+                          {index + 1}
+                        </span>
+                        <div>
+                          <span className="font-amiri text-sm font-bold text-white block">
+                            سورة {s?.name || sNum}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {s?.revelationArabic} · {s?.numberOfAyahs} آية
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => removeFromQueue(index)}
+                        className="p-1 rounded-lg text-stone-500 hover:text-rose-400 cursor-pointer"
+                        title="إزالة من الطابور"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* DEDICATED RECITER SELECTOR MODAL */}
       <ReciterSelectModal

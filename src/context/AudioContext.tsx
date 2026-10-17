@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import { Reciter, SurahMeta } from '../types';
+import { Reciter, SurahMeta, RepeatMode } from '../types';
 import { RECITERS, EXPANDED_RECITERS, getSurahAudioUrl, getSurahFallbackAudioUrl } from '../data/reciters';
 import { ALL_SURAHS } from '../data/quranMeta';
 import { MP3QRadio } from '../types/mp3quran';
@@ -41,10 +41,12 @@ interface AudioContextType {
   audioError: string | null;
   playbackSpeed: number;
   isLooping: boolean;
+  repeatMode: RepeatMode;
   sleepTimerMinutes: number | null;
   activeAyahNumber: number | null;
   playlistQueue: number[] | null;
   playlistTitle: string | null;
+  listeningQueue: number[];
   radioConnectionState: RadioConnectionState;
   radioRetryCount: number;
   lastListeningSession: LastListeningSession | null;
@@ -59,6 +61,11 @@ interface AudioContextType {
   setReciter: (reciter: Reciter) => void;
   setPlaybackSpeed: (speed: number) => void;
   toggleLoop: () => void;
+  setRepeatMode: (mode: RepeatMode) => void;
+  cycleRepeatMode: () => void;
+  addToQueue: (surahNumber: number) => void;
+  removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
   setSleepTimer: (minutes: number | null) => void;
   setActiveAyahNumber: (num: number | null) => void;
   playNextSurah: () => void;
@@ -97,10 +104,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [audioError, setAudioError] = useState<string | null>(null);
   const [playbackSpeed, setPlaybackSpeedState] = useState<number>(1);
   const [isLooping, setIsLooping] = useState<boolean>(false);
+  const [repeatMode, setRepeatModeState] = useState<RepeatMode>('continuous');
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [activeAyahNumber, setActiveAyahNumber] = useState<number | null>(null);
   const [playlistQueue, setPlaylistQueue] = useState<number[] | null>(null);
   const [playlistTitle, setPlaylistTitle] = useState<string | null>(null);
+  const [listeningQueue, setListeningQueue] = useState<number[]>([]);
   const [radioConnectionState, setRadioConnectionState] = useState<RadioConnectionState>('idle');
   const [radioRetryCount, setRadioRetryCount] = useState<number>(0);
 
@@ -121,6 +130,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const audioModeRef = useRef<AudioMode>(audioMode);
   const playlistQueueRef = useRef<number[] | null>(null);
   const playlistTitleRef = useRef<string | null>(null);
+  const listeningQueueRef = useRef<number[]>([]);
+  const repeatModeRef = useRef<RepeatMode>('continuous');
   const hasTriedFallbackRef = useRef<boolean>(false);
 
   // Radio reconnect refs
@@ -153,6 +164,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     playlistTitleRef.current = playlistTitle;
   }, [playlistTitle]);
+
+  useEffect(() => {
+    listeningQueueRef.current = listeningQueue;
+  }, [listeningQueue]);
+
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
 
   // Clean radio timers helper
   const clearRadioTimers = () => {
@@ -673,9 +692,40 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleLoop = () => {
     const nextLoop = !isLooping;
     setIsLooping(nextLoop);
+    setRepeatModeState(nextLoop ? 'repeat-one' : 'continuous');
+    repeatModeRef.current = nextLoop ? 'repeat-one' : 'continuous';
     if (audioRef.current) {
       audioRef.current.loop = nextLoop;
     }
+  };
+
+  const setRepeatMode = (mode: RepeatMode) => {
+    setRepeatModeState(mode);
+    repeatModeRef.current = mode;
+    const looping = mode === 'repeat-one';
+    setIsLooping(looping);
+    if (audioRef.current) {
+      audioRef.current.loop = looping;
+    }
+  };
+
+  const cycleRepeatMode = () => {
+    const modes: RepeatMode[] = ['continuous', 'repeat-one', 'repeat-all', 'shuffle'];
+    const currentIdx = modes.indexOf(repeatModeRef.current);
+    const nextMode = modes[(currentIdx + 1) % modes.length];
+    setRepeatMode(nextMode);
+  };
+
+  const addToQueue = (surahNumber: number) => {
+    setListeningQueue((prev) => [...prev, surahNumber]);
+  };
+
+  const removeFromQueue = (index: number) => {
+    setListeningQueue((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearQueue = () => {
+    setListeningQueue([]);
   };
 
   const setSleepTimer = (minutes: number | null) => {
@@ -699,7 +749,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const cur = currentSurahRef.current;
     if (!cur) return;
 
-    // Check if in playlist queue
+    // 1. Check if user has explicit surahs in listeningQueue
+    if (listeningQueueRef.current && listeningQueueRef.current.length > 0) {
+      const nextSurahNum = listeningQueueRef.current[0];
+      setListeningQueue((prev) => prev.slice(1));
+      playSurah(nextSurahNum, currentReciterRef.current);
+      return;
+    }
+
+    // 2. Check if in active playlistQueue
     if (playlistQueueRef.current && playlistQueueRef.current.length > 0) {
       const q = playlistQueueRef.current;
       const idx = q.indexOf(cur.number);
@@ -707,7 +765,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         playSurah(q[idx + 1], currentReciterRef.current);
         return;
       } else if (idx === q.length - 1) {
-        if (isLooping) {
+        if (repeatModeRef.current === 'repeat-all' || isLooping) {
           playSurah(q[0], currentReciterRef.current);
         } else {
           setIsPlaying(false);
@@ -716,8 +774,28 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    const nextNum = cur.number < 114 ? cur.number + 1 : 1;
-    playSurah(nextNum, currentReciterRef.current);
+    // 3. Normal sequential playback according to repeatMode
+    if (repeatModeRef.current === 'shuffle') {
+      let randomNum = Math.floor(Math.random() * 114) + 1;
+      if (randomNum === cur.number) {
+        randomNum = (randomNum % 114) + 1;
+      }
+      playSurah(randomNum, currentReciterRef.current);
+      return;
+    }
+
+    if (repeatModeRef.current === 'repeat-all') {
+      const nextNum = cur.number < 114 ? cur.number + 1 : 1;
+      playSurah(nextNum, currentReciterRef.current);
+      return;
+    }
+
+    // Default 'continuous' mode
+    if (cur.number < 114) {
+      playSurah(cur.number + 1, currentReciterRef.current);
+    } else {
+      setIsPlaying(false);
+    }
   };
 
   const playPreviousSurah = () => {
@@ -775,6 +853,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         audioError,
         playbackSpeed,
         isLooping,
+        repeatMode,
+        listeningQueue,
         sleepTimerMinutes,
         activeAyahNumber,
         playlistQueue,
@@ -793,6 +873,11 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setReciter,
         setPlaybackSpeed,
         toggleLoop,
+        setRepeatMode,
+        cycleRepeatMode,
+        addToQueue,
+        removeFromQueue,
+        clearQueue,
         setSleepTimer,
         setActiveAyahNumber,
         playNextSurah,

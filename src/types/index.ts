@@ -143,3 +143,5 @@ export interface DailyWirdData {
   totalCompleted: number;
   history: Record<string, number>;
 }
+
+export type RepeatMode = 'continuous' | 'repeat-one' | 'repeat-all' | 'shuffle';
